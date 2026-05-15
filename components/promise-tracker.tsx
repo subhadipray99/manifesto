@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Calendar,
   LogIn,
+  Zap,
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<
@@ -847,6 +848,30 @@ export default function PromiseTracker() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [hydrated, setHydrated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [latestUpdates, setLatestUpdates] = useState<Array<{
+    id: string
+    promise_id: string
+    title: string
+    link: string
+    submitted_by: string | null
+    created_at: string
+  }>>([])
+
+  // Fetch latest approved updates for the slider
+  useEffect(() => {
+    async function fetchLatestUpdates() {
+      try {
+        const res = await fetch("/api/promises/latest-updates")
+        if (res.ok) {
+          const data = await res.json()
+          setLatestUpdates(data)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching latest updates:", error)
+      }
+    }
+    fetchLatestUpdates()
+  }, [])
 
   // Check admin status
   useEffect(() => {
@@ -1029,6 +1054,60 @@ export default function PromiseTracker() {
           </p>
         </div>
       </div>
+
+      {/* Latest Updates Slider */}
+      {latestUpdates.length > 0 && (
+        <div className="border-b border-border bg-card/60 py-3">
+          <div className="mb-2 flex items-center gap-2 px-4">
+            <Zap className="h-3.5 w-3.5 text-orange-500" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Latest Updates
+            </span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none" style={{ scrollbarWidth: "none" }}>
+            {latestUpdates.map((update) => {
+              // Find the promise and its category
+              let foundPromise: PromiseType | null = null
+              let foundCategory: Category | null = null
+              for (const cat of CATEGORIES) {
+                const p = cat.promises.find((p) => p.id === update.promise_id)
+                if (p) {
+                  foundPromise = p
+                  foundCategory = cat
+                  break
+                }
+              }
+              if (!foundPromise || !foundCategory) return null
+
+              return (
+                <button
+                  key={update.id}
+                  onClick={() => {
+                    setSelectedPromise({ promise: foundPromise!, category: foundCategory! })
+                    fetchTimelineUpdatesFromDB(foundPromise!.id).then((updates) => {
+                      setTimelines((prev) => ({ ...prev, [foundPromise!.id]: updates }))
+                    })
+                  }}
+                  className="group flex w-48 flex-shrink-0 flex-col gap-1.5 rounded-xl border border-border bg-background p-3 text-left transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
+                >
+                  <span className="inline-block rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
+                    {foundCategory.bengali}
+                  </span>
+                  <p className="line-clamp-2 text-xs font-semibold leading-snug text-foreground group-hover:text-orange-600">
+                    {update.title}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(update.created_at).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Category Cards */}
       <div className="mx-auto max-w-2xl px-4 pt-6">

@@ -1043,9 +1043,13 @@ export default function PromiseTracker() {
       const dbStatuses = await fetchStatusesFromDB()
       setStatuses(dbStatuses)
       // Calculate days in power client-side to avoid hydration mismatch
-      const startDate = new Date(2026, 4, 9) // May 9, 2026
-      const days = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-      setDaysInPower(days)
+      // Start date: May 9, 2026
+      const startDate = new Date(2026, 4, 9)
+      const today = new Date()
+      // If current real date is before May 9, 2026, simulate as if it's May 16, 2026
+      const effectiveToday = today < startDate ? new Date(2026, 4, 16) : today
+      const days = Math.floor((effectiveToday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+      setDaysInPower(Math.max(0, days))
       setHydrated(true)
     }
     initializeData()

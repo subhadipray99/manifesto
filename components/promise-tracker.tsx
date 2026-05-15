@@ -96,6 +96,67 @@ function saveTimelines(timelines: Record<string, TimelineUpdate[]>) {
   localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(timelines))
 }
 
+// API functions for database operations
+async function fetchStatusesFromDB(): Promise<Record<string, PromiseStatus>> {
+  try {
+    const response = await fetch("/api/promises/statuses")
+    if (!response.ok) throw new Error("Failed to fetch statuses")
+    return response.json()
+  } catch (error) {
+    console.error("[v0] Error fetching statuses from DB:", error)
+    return loadStatuses() // Fallback to localStorage
+  }
+}
+
+async function updateStatusInDB(promiseId: string, status: PromiseStatus): Promise<void> {
+  try {
+    const response = await fetch("/api/promises/statuses", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ promiseId, status }),
+    })
+    if (!response.ok) throw new Error("Failed to update status")
+  } catch (error) {
+    console.error("[v0] Error updating status in DB:", error)
+  }
+}
+
+async function fetchTimelineUpdatesFromDB(promiseId: string): Promise<TimelineUpdate[]> {
+  try {
+    const response = await fetch(`/api/promises/updates?promiseId=${promiseId}`)
+    if (!response.ok) throw new Error("Failed to fetch updates")
+    const data = await response.json()
+    // Convert to TimelineUpdate format
+    return data.map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      link: item.link,
+      description: item.description,
+      timestamp: item.created_at,
+    }))
+  } catch (error) {
+    console.error("[v0] Error fetching updates from DB:", error)
+    return []
+  }
+}
+
+async function submitTimelineUpdateToDB(
+  promiseId: string,
+  update: Omit<TimelineUpdate, "id" | "timestamp">
+): Promise<void> {
+  try {
+    const response = await fetch("/api/promises/updates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ promiseId, ...update }),
+    })
+    if (!response.ok) throw new Error("Failed to submit update")
+  } catch (error) {
+    console.error("[v0] Error submitting update to DB:", error)
+    throw error
+  }
+}
+
 // Progress Ring Component
 function ProgressRing({
   percent,
@@ -699,22 +760,22 @@ export default function PromiseTracker() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
-  // Load statuses and timelines
+  // Load statuses and timelines from database
   useEffect(() => {
-    setStatuses(loadStatuses())
-    setTimelines(loadTimelines())
-    setHydrated(true)
+    async function initializeData() {
+      const dbStatuses = await fetchStatusesFromDB()
+      setStatuses(dbStatuses)
+      setHydrated(true)
+    }
+    initializeData()
   }, [])
 
-  // Save statuses
+  // Save statuses to database
   useEffect(() => {
-    if (hydrated) saveStatuses(statuses)
+    if (hydrated && Object.keys(statuses).length > 0) {
+      saveStatuses(statuses)
+    }
   }, [statuses, hydrated])
-
-  // Save timelines
-  useEffect(() => {
-    if (hydrated) saveTimelines(timelines)
-  }, [timelines, hydrated])
 
   // Stats
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
@@ -744,19 +805,22 @@ export default function PromiseTracker() {
 
   const handleStatusChange = useCallback((promiseId: string, status: PromiseStatus) => {
     setStatuses((prev) => ({ ...prev, [promiseId]: status }))
+    // Update in database
+    updateStatusInDB(promiseId, status)
   }, [])
 
   const handleAddTimelineUpdate = useCallback(
     (promiseId: string, update: Omit<TimelineUpdate, "id" | "timestamp">) => {
-      const newUpdate: TimelineUpdate = {
-        ...update,
-        id: `${promiseId}-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-      }
-      setTimelines((prev) => ({
-        ...prev,
-        [promiseId]: [newUpdate, ...(prev[promiseId] || [])],
-      }))
+      // Submit to database (goes to pending/moderation)
+      submitTimelineUpdateToDB(promiseId, update).then(() => {
+        // Refresh timeline from database
+        fetchTimelineUpdatesFromDB(promiseId).then((updates) => {
+          setTimelines((prev) => ({
+            ...prev,
+            [promiseId]: updates,
+          }))
+        })
+      })
     },
     []
   )
@@ -876,7 +940,16 @@ export default function PromiseTracker() {
               statuses={statuses}
               isExpanded={expandedCategories.has(category.id)}
               onToggle={() => toggleCategory(category.id)}
-              onPromiseSelect={(promise, cat) => setSelectedPromise({ promise, category: cat })}
+              onPromiseSelect={(promise, cat) => {
+          setSelectedPromise({ promise, category: cat })
+          // Fetch timeline updates from database
+          fetchTimelineUpdatesFromDB(promise.id).then((updates) => {
+            setTimelines((prev) => ({
+              ...prev,
+              [promise.id]: updates,
+            }))
+          })
+        }}
             />
           ))}
         </div>

@@ -351,7 +351,6 @@ export default function AdminDashboard() {
                       Edit
                     </button>
                   )}
-                  )}
                 </div>
               )
             })}

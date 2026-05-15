@@ -1,12 +1,25 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@clerk/nextjs/server"
 
 const sql = neon(process.env.DATABASE_URL!)
+
+// Helper to check if user is admin
+function isAdmin(userId: string | null): boolean {
+  if (!userId) return false
+  const adminIds = process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || []
+  return adminIds.includes(userId)
+}
 
 // GET /api/admin/pending-updates - Get all pending submissions for moderation
 export async function GET(request: NextRequest) {
   try {
-    // Note: In production, you'd check admin status from Clerk JWT or database
+    const { userId } = await auth()
+
+    if (!isAdmin(userId)) {
+      return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
+    }
+
     const updates = await sql`
       SELECT 
         tu.id, tu.promise_id, tu.title, tu.link, tu.description,
@@ -28,6 +41,12 @@ export async function GET(request: NextRequest) {
 // PUT /api/admin/pending-updates - Approve or reject an update
 export async function PUT(request: NextRequest) {
   try {
+    const { userId } = await auth()
+
+    if (!isAdmin(userId)) {
+      return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
+    }
+
     const { updateId, action } = await request.json()
 
     if (!updateId || !["approve", "reject"].includes(action)) {

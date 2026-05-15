@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, X, ExternalLink, Clock } from "lucide-react"
+import { useAuth } from "@clerk/nextjs"
+import { Check, X, ExternalLink, Clock, ShieldX } from "lucide-react"
 
 interface PendingUpdate {
   id: string
@@ -16,19 +17,30 @@ interface PendingUpdate {
 }
 
 export default function AdminDashboard() {
+  const { isSignedIn, isLoaded } = useAuth()
   const [updates, setUpdates] = useState<PendingUpdate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [accessDenied, setAccessDenied] = useState(false)
   const [processing, setProcessing] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    fetchPendingUpdates()
-  }, [])
+    if (isLoaded) {
+      fetchPendingUpdates()
+    }
+  }, [isLoaded])
 
   const fetchPendingUpdates = async () => {
     try {
       setLoading(true)
+      setAccessDenied(false)
       const response = await fetch("/api/admin/pending-updates")
+      
+      if (response.status === 403) {
+        setAccessDenied(true)
+        return
+      }
+      
       if (!response.ok) throw new Error("Failed to fetch updates")
       const data = await response.json()
       setUpdates(data)
@@ -94,14 +106,28 @@ export default function AdminDashboard() {
         <h1 className="font-serif text-4xl font-black text-foreground">Admin Dashboard</h1>
         <p className="mt-2 text-muted-foreground">Review and moderate timeline submissions</p>
 
-        {error && (
+        {!isLoaded || loading ? (
+          <div className="mt-6 text-center text-muted-foreground">Loading...</div>
+        ) : accessDenied || !isSignedIn ? (
+          <div className="mt-10 rounded-xl border-2 border-red-200 bg-red-50 p-8 text-center">
+            <ShieldX className="mx-auto h-12 w-12 text-red-500" />
+            <h2 className="mt-4 text-xl font-black text-red-700">Access Denied</h2>
+            <p className="mt-2 text-red-600">
+              {!isSignedIn 
+                ? "You must be signed in to access this page." 
+                : "You do not have admin privileges to access this dashboard."}
+            </p>
+            <a
+              href="/"
+              className="mt-6 inline-block rounded-lg bg-red-600 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700"
+            >
+              Go Back Home
+            </a>
+          </div>
+        ) : error ? (
           <div className="mt-6 rounded-lg bg-red-50 p-4 text-red-700">
             {error}
           </div>
-        )}
-
-        {loading ? (
-          <div className="mt-6 text-center text-muted-foreground">Loading...</div>
         ) : updates.length === 0 ? (
           <div className="mt-6 rounded-lg border-2 border-dashed border-border bg-muted/50 p-8 text-center">
             <Clock className="mx-auto h-8 w-8 text-muted-foreground/50" />

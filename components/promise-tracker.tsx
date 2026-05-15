@@ -415,7 +415,7 @@ function PromiseDetail({
           title: formTitle.trim(),
           link: formLink.trim(),
           description: formDescription.trim() || undefined,
-          userName: user?.firstName || "Anonymous",
+          userName: user?.fullName || user?.firstName || user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "Anonymous",
           userEmail: user?.primaryEmailAddress?.emailAddress || null,
           userId: userId,
         }),

@@ -26,6 +26,7 @@ import {
   LogIn,
   Zap,
   Search,
+  Trophy,
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<
@@ -978,6 +979,11 @@ export default function PromiseTracker() {
     submitted_by: string | null
     created_at: string
   }>>([])
+  const [contributors, setContributors] = useState<Array<{
+    name: string
+    contribution_count: number
+    last_contribution: string
+  }>>([])
 
   // Fetch latest approved updates for the slider
   useEffect(() => {
@@ -993,6 +999,22 @@ export default function PromiseTracker() {
       }
     }
     fetchLatestUpdates()
+  }, [])
+
+  // Fetch top contributors
+  useEffect(() => {
+    async function fetchContributors() {
+      try {
+        const res = await fetch("/api/contributors")
+        if (res.ok) {
+          const data = await res.json()
+          setContributors(data)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching contributors:", error)
+      }
+    }
+    fetchContributors()
   }, [])
 
   // Check admin status
@@ -1313,6 +1335,54 @@ export default function PromiseTracker() {
 
       {/* Share Modal */}
       {showShareModal && <ShareModal stats={stats} onClose={() => setShowShareModal(false)} />}
+
+      {/* Contributor Leaderboard */}
+      {contributors.length > 0 && (
+        <section className="border-t-2 border-border bg-gradient-to-b from-orange-50/50 to-background px-4 py-8">
+          <div className="mx-auto max-w-2xl">
+            <div className="mb-5 flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-500" />
+              <h3 className="font-serif text-lg font-black text-foreground">Top Contributors</h3>
+            </div>
+            <div className="grid gap-3">
+              {contributors.slice(0, 5).map((contributor, index) => (
+                <div
+                  key={contributor.name}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-all hover:border-orange-300 hover:shadow-sm"
+                >
+                  <div
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-black text-white ${
+                      index === 0
+                        ? "bg-amber-500"
+                        : index === 1
+                          ? "bg-neutral-400"
+                          : index === 2
+                            ? "bg-amber-700"
+                            : "bg-neutral-300"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate font-bold text-foreground">{contributor.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {contributor.contribution_count} verified update{contributor.contribution_count !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+                      +{contributor.contribution_count}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Submit verified updates to appear on the leaderboard
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Footer - How to Read */}
       <footer className="border-t-2 border-border bg-card px-4 py-6">

@@ -64,3 +64,29 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Failed to update submission" }, { status: 500 })
   }
 }
+
+// PATCH /api/admin/pending-updates - Edit an update's content
+export async function PATCH(request: NextRequest) {
+  try {
+    const { updateId, title, link, description, userId } = await request.json()
+
+    if (!isAdmin(userId)) {
+      return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
+    }
+
+    if (!updateId || !title || !link) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    await sql`
+      UPDATE timeline_updates
+      SET title = ${title}, link = ${link}, description = ${description || null}
+      WHERE id = ${updateId}
+    `
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[v0] Error editing submission:", error)
+    return NextResponse.json({ error: "Failed to edit submission" }, { status: 500 })
+  }
+}

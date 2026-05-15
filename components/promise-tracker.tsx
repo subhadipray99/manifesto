@@ -1107,7 +1107,7 @@ export default function PromiseTracker() {
                   href="https://observerfiles.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex text-[9px] font-semibold uppercase tracking-widest text-white/70 hover:text-white/90 transition-colors"
+                  className="mt-2 inline-flex text-[9px] font-semibold uppercase tracking-widest text-black hover:text-black/80 transition-colors"
                 >
                   Powered by ObserverFiles
                 </a>

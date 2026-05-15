@@ -221,7 +221,8 @@ function CategoryCard({
   const inProgress = category.promises.filter((p) => statuses[p.id] === "in-progress").length
   const broken = category.promises.filter((p) => statuses[p.id] === "broken").length
 
-  const progressPercent = total > 0 ? Math.round(((fulfilled + inProgress) / total) * 100) : 0
+  // Weighted progress: Fulfilled = 1 point, In Progress = 0.5 points, Broken/Pending = 0
+  const progressPercent = total > 0 ? Math.round(((fulfilled * 1 + inProgress * 0.5) / total) * 100) : 0
 
   return (
     <div className="overflow-hidden rounded-2xl border-2 border-border bg-card transition-all">
@@ -895,8 +896,9 @@ export default function PromiseTracker() {
     pending: allPromises.filter((p) => (statuses[p.id] || "pending") === "pending").length,
   }
 
+  // Weighted progress: Fulfilled = 1 point, In Progress = 0.5 points, Broken/Pending = 0
   const overallProgress =
-    total > 0 ? Math.round(((stats.fulfilled + stats.inProgress) / total) * 100) : 0
+    total > 0 ? Math.round(((stats.fulfilled * 1 + stats.inProgress * 0.5) / total) * 100) : 0
 
   const toggleCategory = useCallback((categoryId: string) => {
     setExpandedCategories((prev) => {
@@ -1088,6 +1090,47 @@ export default function PromiseTracker() {
 
       {/* Share Modal */}
       {showShareModal && <ShareModal stats={stats} onClose={() => setShowShareModal(false)} />}
+
+      {/* Footer - How to Read */}
+      <footer className="border-t-2 border-border bg-card px-4 py-6">
+        <div className="mx-auto max-w-2xl">
+          <h3 className="font-serif text-lg font-black text-foreground">How to Read This Tracker</h3>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">1</span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-bold text-green-600">Fulfilled</span> = Promise completed (1 point)
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">0.5</span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-bold text-amber-600">In Progress</span> = Work started but not complete (0.5 points)
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">0</span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-bold text-red-600">Broken</span> = Promise not kept or reversed (0 points)
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-xs font-bold text-white">0</span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-bold text-neutral-500">Not Rated</span> = No action taken yet (0 points)
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 rounded-lg bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total Promises x 100
+            </p>
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Bhorosha Tracker - Citizen-powered accountability for West Bengal
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

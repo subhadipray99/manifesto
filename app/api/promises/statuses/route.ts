@@ -42,9 +42,11 @@ export async function PUT(request: NextRequest) {
     }
 
     await sql`
-      UPDATE promise_statuses
-      SET status = ${status}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${promiseId}
+      INSERT INTO promise_statuses (id, status, updated_at)
+      VALUES (${promiseId}, ${status}, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) DO UPDATE SET
+        status = EXCLUDED.status,
+        updated_at = CURRENT_TIMESTAMP
     `
 
     return NextResponse.json({ success: true, promiseId, status })

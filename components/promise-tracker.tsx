@@ -137,7 +137,6 @@ function CategoryCard({
   const fulfilled = category.promises.filter((p) => statuses[p.id] === "fulfilled").length
   const inProgress = category.promises.filter((p) => statuses[p.id] === "in-progress").length
   const broken = category.promises.filter((p) => statuses[p.id] === "broken").length
-  const pending = total - fulfilled - inProgress - broken
 
   const progressPercent = total > 0 ? Math.round(((fulfilled + inProgress) / total) * 100) : 0
 
@@ -152,7 +151,7 @@ function CategoryCard({
         <div className="relative flex-shrink-0">
           <ProgressRing
             percent={progressPercent}
-            color={progressPercent === 100 ? "var(--green)" : "var(--saffron)"}
+            color={progressPercent === 100 ? "#16a34a" : "#c2410c"}
           />
           <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-foreground">
             {progressPercent}%
@@ -164,30 +163,24 @@ function CategoryCard({
           <h3 className="truncate font-serif text-lg font-black text-foreground">{category.name}</h3>
           <p className="text-xs font-medium text-muted-foreground">{category.bengali}</p>
           
-          {/* Mini Status Pills */}
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          {/* Status Summary Counts */}
+          <div className="mt-2 flex items-center gap-3 text-xs font-bold">
             {fulfilled > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-green/15 px-2 py-0.5 text-[10px] font-bold text-green">
-                <CheckCircle2 className="h-3 w-3" />
+              <span className="flex items-center gap-1 text-green-600">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 {fulfilled}
               </span>
             )}
             {inProgress > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-bold text-amber">
-                <Clock className="h-3 w-3" />
+              <span className="flex items-center gap-1 text-amber-600">
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
                 {inProgress}
               </span>
             )}
             {broken > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-red/15 px-2 py-0.5 text-[10px] font-bold text-red">
-                <XCircle className="h-3 w-3" />
+              <span className="flex items-center gap-1 text-red-600">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 {broken}
-              </span>
-            )}
-            {pending > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                <Circle className="h-3 w-3" />
-                {pending}
               </span>
             )}
           </div>
@@ -202,6 +195,35 @@ function CategoryCard({
           )}
         </div>
       </button>
+
+      {/* Promises Preview - Always visible colored dots grid */}
+      <div className="border-t border-border bg-muted/20 px-4 py-3">
+        <div className="flex flex-wrap gap-1.5">
+          {category.promises.map((promise) => {
+            const status = statuses[promise.id] || "pending"
+            const colorMap: Record<PromiseStatus, string> = {
+              pending: "bg-neutral-300",
+              "in-progress": "bg-amber-500",
+              fulfilled: "bg-green-500",
+              broken: "bg-red-500",
+            }
+            return (
+              <button
+                key={promise.id}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPromiseSelect(promise, category)
+                }}
+                className={`h-4 w-4 rounded-sm ${colorMap[status]} transition-transform hover:scale-125 active:scale-110`}
+                title={promise.title}
+              />
+            )
+          })}
+        </div>
+        <p className="mt-2 text-[10px] font-medium text-muted-foreground">
+          Tap any square to view and update status
+        </p>
+      </div>
 
       {/* Expanded Promises List */}
       {isExpanded && (
@@ -266,12 +288,12 @@ function PromiseDetail({
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
-        <span className="rounded-full bg-saffron px-4 py-1.5 text-xs font-black uppercase text-white">
+        <span className="rounded-full bg-orange-600 px-4 py-1.5 text-xs font-black uppercase text-white">
           {category.bengali}
         </span>
         <button
           onClick={onShare}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-saffron text-white transition-colors active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 text-white transition-colors active:scale-95"
         >
           <Share2 className="h-5 w-5" />
         </button>
@@ -307,7 +329,7 @@ function PromiseDetail({
       </div>
 
       {/* Status Actions */}
-      <div className="flex-shrink-0 border-t-4 border-saffron bg-card px-4 pb-8 pt-5">
+      <div className="flex-shrink-0 border-t-4 border-orange-500 bg-card px-4 pb-8 pt-5">
         <p className="mb-4 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Update Status
         </p>
@@ -529,11 +551,11 @@ export default function PromiseTracker() {
   return (
     <div className="min-h-dvh bg-background pb-8">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-4 border-green bg-saffron px-4 py-4">
+      <header className="sticky top-0 z-40 border-b-4 border-green-600 bg-orange-600 px-4 py-4">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white font-serif text-2xl font-black text-saffron">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white font-serif text-2xl font-black text-orange-600">
                 B
               </div>
               <div>
@@ -555,7 +577,7 @@ export default function PromiseTracker() {
               </button>
               <button
                 onClick={() => setShowShareModal(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-saffron transition-colors active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-orange-600 transition-colors active:scale-95"
                 title="Share"
               >
                 <Share2 className="h-5 w-5" />
@@ -575,7 +597,7 @@ export default function PromiseTracker() {
                 percent={overallProgress}
                 size={100}
                 strokeWidth={8}
-                color={overallProgress >= 50 ? "var(--green)" : "var(--saffron)"}
+                color={overallProgress >= 50 ? "#16a34a" : "#c2410c"}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-black text-foreground">{overallProgress}%</span>
@@ -585,33 +607,33 @@ export default function PromiseTracker() {
 
             {/* Stats Grid */}
             <div className="grid flex-1 grid-cols-2 gap-3">
-              <div className="rounded-xl bg-green/10 p-3">
+              <div className="rounded-xl bg-green-50 p-3">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green" />
-                  <span className="text-2xl font-black text-green">{stats.fulfilled}</span>
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <span className="text-2xl font-black text-green-700">{stats.fulfilled}</span>
                 </div>
-                <p className="text-xs font-medium text-green/80">Fulfilled</p>
+                <p className="text-xs font-medium text-green-600">Fulfilled</p>
               </div>
-              <div className="rounded-xl bg-amber/10 p-3">
+              <div className="rounded-xl bg-amber-50 p-3">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber" />
-                  <span className="text-2xl font-black text-amber">{stats.inProgress}</span>
+                  <Clock className="h-5 w-5 text-amber-600" />
+                  <span className="text-2xl font-black text-amber-700">{stats.inProgress}</span>
                 </div>
-                <p className="text-xs font-medium text-amber/80">In Progress</p>
+                <p className="text-xs font-medium text-amber-600">In Progress</p>
               </div>
-              <div className="rounded-xl bg-red/10 p-3">
+              <div className="rounded-xl bg-red-50 p-3">
                 <div className="flex items-center gap-2">
-                  <XCircle className="h-5 w-5 text-red" />
-                  <span className="text-2xl font-black text-red">{stats.broken}</span>
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  <span className="text-2xl font-black text-red-700">{stats.broken}</span>
                 </div>
-                <p className="text-xs font-medium text-red/80">Broken</p>
+                <p className="text-xs font-medium text-red-600">Broken</p>
               </div>
-              <div className="rounded-xl bg-muted p-3">
+              <div className="rounded-xl bg-neutral-100 p-3">
                 <div className="flex items-center gap-2">
-                  <Circle className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-2xl font-black text-muted-foreground">{stats.pending}</span>
+                  <Circle className="h-5 w-5 text-neutral-500" />
+                  <span className="text-2xl font-black text-neutral-600">{stats.pending}</span>
                 </div>
-                <p className="text-xs font-medium text-muted-foreground/80">Not Rated</p>
+                <p className="text-xs font-medium text-neutral-500">Not Rated</p>
               </div>
             </div>
           </div>

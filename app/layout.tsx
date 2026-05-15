@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { ClerkProvider } from "@clerk/nextjs"
 import "./globals.css"
 
 const inter = Inter({
@@ -36,11 +37,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`}>
-      <body className="font-sans antialiased">
-        {children}
-        {process.env.NODE_ENV === "production" && <Analytics />}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`}>
+        <body className="font-sans antialiased">
+          {children}
+          {process.env.NODE_ENV === "production" && <Analytics />}
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

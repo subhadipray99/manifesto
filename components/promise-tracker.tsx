@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useAuth, useUser } from "@clerk/nextjs"
 import {
   CATEGORIES,
   totalPromises,
@@ -23,6 +24,7 @@ import {
   Plus,
   ExternalLink,
   Calendar,
+  LogIn,
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<
@@ -361,16 +363,29 @@ function PromiseDetail({
   onClose: () => void
   onShare: () => void
 }) {
+  const { isSignedIn, openSignUp } = useAuth()
+  const { user } = useUser()
   const config = STATUS_CONFIG[status]
   const [showAddForm, setShowAddForm] = useState(false)
   const [formTitle, setFormTitle] = useState("")
   const [formLink, setFormLink] = useState("")
   const [formDescription, setFormDescription] = useState("")
   const [titleError, setTitleError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+  const [submitSuccess, setSubmitSuccess] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError("")
+    setSubmitSuccess("")
     
+    if (!isSignedIn) {
+      setSubmitError("Please sign in to submit updates")
+      openSignUp()
+      return
+    }
+
     // Validate title (max 10 words)
     const wordCount = formTitle.trim().split(/\s+/).filter(Boolean).length
     if (wordCount > 10) {
@@ -381,18 +396,39 @@ function PromiseDetail({
       return
     }
 
-    onAddUpdate({
-      title: formTitle.trim(),
-      link: formLink.trim(),
-      description: formDescription.trim() || undefined,
-    })
+    setSubmitting(true)
+    try {
+      const response = await fetch("/api/promises/updates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          promiseId: promise.id,
+          title: formTitle.trim(),
+          link: formLink.trim(),
+          description: formDescription.trim() || undefined,
+        }),
+      })
 
-    // Reset form
-    setFormTitle("")
-    setFormLink("")
-    setFormDescription("")
-    setTitleError("")
-    setShowAddForm(false)
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to submit update")
+      }
+
+      setSubmitSuccess("Update submitted for review! Thank you for your contribution.")
+      setFormTitle("")
+      setFormLink("")
+      setFormDescription("")
+      setTitleError("")
+      
+      setTimeout(() => {
+        setShowAddForm(false)
+        setSubmitSuccess("")
+      }, 2000)
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Failed to submit update")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const formatDate = (timestamp: string) => {
@@ -461,18 +497,38 @@ function PromiseDetail({
         <div className="border-t-2 border-border bg-muted/30 px-6 py-5">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-lg font-black text-foreground">Updates Timeline</h2>
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="flex items-center gap-1.5 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              Add Update
-            </button>
+            {isSignedIn ? (
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="flex items-center gap-1.5 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
+              >
+                <Plus className="h-4 w-4" />
+                Add Update
+              </button>
+            ) : (
+              <button
+                onClick={() => openSignUp()}
+                className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Add Update Form */}
-          {showAddForm && (
+          {showAddForm && isSignedIn && (
             <form onSubmit={handleSubmit} className="mt-4 rounded-xl border-2 border-border bg-card p-4">
+              {submitError && (
+                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700">
+                  {submitError}
+                </div>
+              )}
+              {submitSuccess && (
+                <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm font-medium text-green-700">
+                  {submitSuccess}
+                </div>
+              )}
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -489,6 +545,7 @@ function PromiseDetail({
                     placeholder="e.g., Government announces new policy"
                     className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none"
                     required
+                    disabled={submitting}
                   />
                   {titleError && <p className="mt-1 text-sm text-red-500">{titleError}</p>}
                 </div>
@@ -504,6 +561,7 @@ function PromiseDetail({
                     placeholder="https://example.com/article"
                     className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none"
                     required
+                    disabled={submitting}
                   />
                 </div>
 
@@ -529,16 +587,20 @@ function PromiseDetail({
                       setFormLink("")
                       setFormDescription("")
                       setTitleError("")
+                      setSubmitError("")
+                      setSubmitSuccess("")
                     }}
-                    className="flex-1 rounded-lg border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted active:scale-[0.98]"
+                    className="flex-1 rounded-lg border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted active:scale-[0.98] disabled:opacity-50"
+                    disabled={submitting}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white transition-colors active:scale-[0.98]"
+                    className="flex-1 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white transition-colors active:scale-[0.98] disabled:opacity-50"
+                    disabled={submitting}
                   >
-                    Submit Update
+                    {submitting ? "Submitting..." : "Submit Update"}
                   </button>
                 </div>
               </div>

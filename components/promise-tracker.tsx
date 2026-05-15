@@ -956,6 +956,8 @@ function LatestUpdatesSlider({
 // Main Component
 export default function PromiseTracker() {
   const { isSignedIn, userId } = useAuth()
+  const { user } = useUser()
+  const { openSignIn, openUserProfile } = useClerk()
   const [statuses, setStatuses] = useState<Record<string, PromiseStatus>>({})
   const [timelines, setTimelines] = useState<Record<string, TimelineUpdate[]>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -1117,11 +1119,40 @@ export default function PromiseTracker() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowShareModal(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-orange-600 transition-colors active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
                 title="Share"
               >
                 <Share2 className="h-5 w-5" />
               </button>
+
+              {/* Auth button */}
+              {isSignedIn && user ? (
+                <button
+                  onClick={() => openUserProfile()}
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95"
+                  title={user.firstName || "Account"}
+                >
+                  {user.imageUrl ? (
+                    <img
+                      src={user.imageUrl}
+                      alt={user.firstName || "Account"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-black text-orange-600">
+                      {(user.firstName?.[0] || user.emailAddresses?.[0]?.emailAddress?.[0] || "U").toUpperCase()}
+                    </span>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={() => openSignIn()}
+                  className="flex h-9 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-black text-orange-600 shadow-md transition-all hover:bg-orange-50 active:scale-95"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         </div>

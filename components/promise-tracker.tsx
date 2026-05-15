@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import {
   CATEGORIES,
@@ -835,6 +835,122 @@ Track yourself:`
   )
 }
 
+// Latest Updates Auto-Scroll Slider
+function LatestUpdatesSlider({
+  updates,
+  onSelectPromise,
+}: {
+  updates: Array<{
+    id: string
+    promise_id: string
+    title: string
+    link: string
+    submitted_by: string | null
+    created_at: string
+  }>
+  onSelectPromise: (promise: PromiseType, category: Category) => void
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const isPausedRef = useRef(false)
+  const animFrameRef = useRef<number | null>(null)
+
+  // Resolve each update to its promise + category
+  const resolved = updates.flatMap((update) => {
+    for (const cat of CATEGORIES) {
+      const p = cat.promises.find((p) => p.id === update.promise_id)
+      if (p) return [{ update, promise: p, category: cat }]
+    }
+    return []
+  })
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || resolved.length === 0) return
+
+    let pos = 0
+    const speed = 0.5 // px per frame
+
+    function step() {
+      if (!isPausedRef.current && el) {
+        pos += speed
+        // Loop: when scrolled past half (duplicated items), reset to start
+        if (pos >= el.scrollWidth / 2) pos = 0
+        el.scrollLeft = pos
+      }
+      animFrameRef.current = requestAnimationFrame(step)
+    }
+
+    animFrameRef.current = requestAnimationFrame(step)
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+    }
+  }, [resolved.length])
+
+  const items = [...resolved, ...resolved] // duplicate for seamless loop
+
+  return (
+    <div className="border-b border-border bg-gradient-to-r from-orange-50/60 via-background to-orange-50/60">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500">
+          <Zap className="h-3 w-3 text-white" />
+        </span>
+        <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+          Latest Updates
+        </span>
+        <span className="ml-auto text-[10px] text-muted-foreground/60 font-medium">
+          {resolved.length} new
+        </span>
+      </div>
+
+      {/* Scrolling strip */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-hidden pb-4 px-4"
+        style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+        onMouseEnter={() => { isPausedRef.current = true }}
+        onMouseLeave={() => { isPausedRef.current = false }}
+        onTouchStart={() => { isPausedRef.current = true }}
+        onTouchEnd={() => { isPausedRef.current = false }}
+      >
+        {items.map(({ update, promise, category }, i) => (
+          <button
+            key={`${update.id}-${i}`}
+            onClick={() => onSelectPromise(promise, category)}
+            className="group relative flex w-[65vw] max-w-[280px] flex-shrink-0 flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
+          >
+            {/* Category tag */}
+            <div className="mb-3 flex items-center justify-between">
+              <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+                {category.bengali}
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                {new Date(update.created_at).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                })}
+              </span>
+            </div>
+
+            {/* Update title */}
+            <p className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-orange-600">
+              {update.title}
+            </p>
+
+            {/* Promise name */}
+            <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">
+              Re: {promise.title}
+            </p>
+
+            {/* Bottom accent bar */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl bg-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // Main Component
 export default function PromiseTracker() {
   const { isSignedIn, userId } = useAuth()
@@ -1057,56 +1173,15 @@ export default function PromiseTracker() {
 
       {/* Latest Updates Slider */}
       {latestUpdates.length > 0 && (
-        <div className="border-b border-border bg-card/60 py-3">
-          <div className="mb-2 flex items-center gap-2 px-4">
-            <Zap className="h-3.5 w-3.5 text-orange-500" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Latest Updates
-            </span>
-          </div>
-          <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none" style={{ scrollbarWidth: "none" }}>
-            {latestUpdates.map((update) => {
-              // Find the promise and its category
-              let foundPromise: PromiseType | null = null
-              let foundCategory: Category | null = null
-              for (const cat of CATEGORIES) {
-                const p = cat.promises.find((p) => p.id === update.promise_id)
-                if (p) {
-                  foundPromise = p
-                  foundCategory = cat
-                  break
-                }
-              }
-              if (!foundPromise || !foundCategory) return null
-
-              return (
-                <button
-                  key={update.id}
-                  onClick={() => {
-                    setSelectedPromise({ promise: foundPromise!, category: foundCategory! })
-                    fetchTimelineUpdatesFromDB(foundPromise!.id).then((updates) => {
-                      setTimelines((prev) => ({ ...prev, [foundPromise!.id]: updates }))
-                    })
-                  }}
-                  className="group flex w-48 flex-shrink-0 flex-col gap-1.5 rounded-xl border border-border bg-background p-3 text-left transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
-                >
-                  <span className="inline-block rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
-                    {foundCategory.bengali}
-                  </span>
-                  <p className="line-clamp-2 text-xs font-semibold leading-snug text-foreground group-hover:text-orange-600">
-                    {update.title}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {new Date(update.created_at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </p>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <LatestUpdatesSlider
+          updates={latestUpdates}
+          onSelectPromise={(promise, category) => {
+            setSelectedPromise({ promise, category })
+            fetchTimelineUpdatesFromDB(promise.id).then((updates) => {
+              setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
+            })
+          }}
+        />
       )}
 
       {/* Category Cards */}

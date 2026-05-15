@@ -833,6 +833,7 @@ Track yourself:`
 
 // Main Component
 export default function PromiseTracker() {
+  const { isSignedIn, userId } = useAuth()
   const [statuses, setStatuses] = useState<Record<string, PromiseStatus>>({})
   const [timelines, setTimelines] = useState<Record<string, TimelineUpdate[]>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())

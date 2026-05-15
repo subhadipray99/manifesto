@@ -391,7 +391,6 @@ function PromiseDetail({
     // Get the display name - try multiple fallbacks
     const email = user?.primaryEmailAddress?.emailAddress
     const displayName = user?.fullName || user?.firstName || user?.username || (email ? email.split("@")[0] : null) || "Anonymous"
-    console.log("[v0] User submission debug:", { fullName: user?.fullName, firstName: user?.firstName, username: user?.username, email, displayName })
     setSubmitSuccess("")
     
     if (!isSignedIn) {
@@ -1154,6 +1153,14 @@ export default function PromiseTracker() {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth" })}
+                className="flex h-9 items-center gap-1.5 rounded-full bg-white/20 px-3 text-xs font-bold text-white transition-colors hover:bg-white/30 active:scale-95"
+                title="Top Contributors"
+              >
+                <Trophy className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Contributors</span>
+              </button>
+              <button
                 onClick={() => setShowShareModal(true)}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
                 title="Share"
@@ -1352,7 +1359,7 @@ export default function PromiseTracker() {
 
       {/* Contributor Leaderboard */}
       {contributors.length > 0 && (
-        <section className="border-t-2 border-border bg-gradient-to-b from-orange-50/50 to-background px-4 py-8">
+        <section id="leaderboard" className="border-t-2 border-border bg-gradient-to-b from-orange-50/50 to-background px-4 py-8">
           <div className="mx-auto max-w-2xl">
             <div className="mb-5 flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-500" />

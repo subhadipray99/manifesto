@@ -25,6 +25,7 @@ import {
   Calendar,
   LogIn,
   Zap,
+  Search,
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<
@@ -965,6 +966,8 @@ export default function PromiseTracker() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [hydrated, setHydrated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("all")
   const [latestUpdates, setLatestUpdates] = useState<Array<{
     id: string
     promise_id: string
@@ -1187,27 +1190,66 @@ export default function PromiseTracker() {
 
       {/* Category Cards */}
       <div className="mx-auto max-w-2xl px-4 pt-6">
-        <h2 className="mb-4 font-serif text-xl font-black text-foreground">Categories</h2>
+        {/* Header row: title + search + filter */}
+        <div className="mb-4 flex flex-col gap-3">
+          <h2 className="font-serif text-xl font-black text-foreground">Categories</h2>
+          <div className="flex items-center gap-2">
+            {/* Search input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search promises..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full rounded-xl border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+              />
+            </div>
+            {/* Category dropdown */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-9 flex-shrink-0 rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+            >
+              <option value="all">All</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.bengali}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-4">
-          {CATEGORIES.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              statuses={statuses}
-              isExpanded={expandedCategories.has(category.id)}
-              onToggle={() => toggleCategory(category.id)}
-              onPromiseSelect={(promise, cat) => {
-          setSelectedPromise({ promise, category: cat })
-          // Fetch timeline updates from database
-          fetchTimelineUpdatesFromDB(promise.id).then((updates) => {
-            setTimelines((prev) => ({
-              ...prev,
-              [promise.id]: updates,
-            }))
-          })
-        }}
-            />
-          ))}
+          {CATEGORIES
+            .filter((category) =>
+              categoryFilter === "all" ? true : category.id === categoryFilter
+            )
+            .filter((category) => {
+              if (!searchQuery.trim()) return true
+              const q = searchQuery.toLowerCase()
+              return (
+                category.name.toLowerCase().includes(q) ||
+                category.bengali.toLowerCase().includes(q) ||
+                category.promises.some((p) => p.title.toLowerCase().includes(q))
+              )
+            })
+            .map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                statuses={statuses}
+                isExpanded={expandedCategories.has(category.id) || (searchQuery.trim().length > 0)}
+                onToggle={() => toggleCategory(category.id)}
+                onPromiseSelect={(promise, cat) => {
+                  setSelectedPromise({ promise, category: cat })
+                  fetchTimelineUpdatesFromDB(promise.id).then((updates) => {
+                    setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
+                  })
+                }}
+              />
+            ))}
         </div>
       </div>
 

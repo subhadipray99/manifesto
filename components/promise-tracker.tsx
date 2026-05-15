@@ -355,6 +355,7 @@ function PromiseDetail({
   onShare,
   isSignedIn,
   userId,
+  isAdmin,
 }: {
   promise: PromiseType
   category: Category
@@ -366,6 +367,7 @@ function PromiseDetail({
   onShare: () => void
   isSignedIn: boolean
   userId: string | null
+  isAdmin: boolean
 }) {
   const { user } = useUser()
   const { openSignIn } = useClerk()
@@ -666,15 +668,16 @@ function PromiseDetail({
             <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Update Status
             </p>
-            <p className="mb-4 text-center text-xs text-orange-600 font-medium">
-              Admin access required to change status
-            </p>
+            {!isAdmin && (
+              <p className="mb-4 text-center text-xs text-orange-600 font-medium">
+                Admin access required to change status
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {(["pending", "in-progress", "fulfilled", "broken"] as PromiseStatus[]).map((s) => {
                 const c = STATUS_CONFIG[s]
                 const Icon = c.icon
                 const isActive = status === s
-                const isAdmin = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.includes(userId)
                 return (
                   <button
                     key={s}
@@ -843,6 +846,26 @@ export default function PromiseTracker() {
   } | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  // Check admin status
+  useEffect(() => {
+    async function checkAdminStatus() {
+      if (userId) {
+        try {
+          const response = await fetch(`/api/auth/is-admin?userId=${userId}`)
+          const data = await response.json()
+          setIsAdmin(data.isAdmin)
+        } catch (error) {
+          console.error("[v0] Error checking admin status:", error)
+          setIsAdmin(false)
+        }
+      } else {
+        setIsAdmin(false)
+      }
+    }
+    checkAdminStatus()
+  }, [userId])
 
   // Load statuses and timelines from database
   useEffect(() => {
@@ -1057,8 +1080,9 @@ export default function PromiseTracker() {
           onAddUpdate={(update) => handleAddTimelineUpdate(selectedPromise.promise.id, update)}
           onClose={() => setSelectedPromise(null)}
           onShare={() => setShowShareModal(true)}
-          isSignedIn={isSignedIn}
-          userId={userId}
+          isSignedIn={isSignedIn ?? false}
+          userId={userId ?? null}
+          isAdmin={isAdmin}
         />
       )}
 

@@ -367,7 +367,6 @@ function PromiseDetail({
   isSignedIn: boolean
   userId: string | null
 }) {
-  const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
   const { openSignIn } = useClerk()
   const config = STATUS_CONFIG[status]

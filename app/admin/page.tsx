@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Pending ({updates.filter((u) => u.status === "pending").length})
+                Pending {activeTab === "pending" ? `(${updates.length})` : ""}
               </button>
               <button
                 onClick={() => setActiveTab("approved")}
@@ -200,7 +200,7 @@ export default function AdminDashboard() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Approved ({updates.filter((u) => u.status === "approved").length})
+                Approved {activeTab === "approved" ? `(${updates.length})` : ""}
               </button>
             </div>
 

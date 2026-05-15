@@ -20,16 +20,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
     }
 
-    const updates = await sql`
-      SELECT 
-        tu.id, tu.promise_id, tu.title, tu.link, tu.description,
-        tu.submitted_by, tu.user_email, tu.created_at, tu.status,
-        ps.status as promise_status
-      FROM timeline_updates tu
-      LEFT JOIN promise_statuses ps ON tu.promise_id = ps.id
-      WHERE tu.status = ${status}
-      ORDER BY tu.created_at ${status === "pending" ? "ASC" : "DESC"}
-    `
+    const updates = status === "pending"
+      ? await sql`
+          SELECT 
+            tu.id, tu.promise_id, tu.title, tu.link, tu.description,
+            tu.submitted_by, tu.user_email, tu.created_at, tu.status,
+            ps.status as promise_status
+          FROM timeline_updates tu
+          LEFT JOIN promise_statuses ps ON tu.promise_id = ps.id
+          WHERE tu.status = ${status}
+          ORDER BY tu.created_at ASC
+        `
+      : await sql`
+          SELECT 
+            tu.id, tu.promise_id, tu.title, tu.link, tu.description,
+            tu.submitted_by, tu.user_email, tu.created_at, tu.status,
+            ps.status as promise_status
+          FROM timeline_updates tu
+          LEFT JOIN promise_statuses ps ON tu.promise_id = ps.id
+          WHERE tu.status = ${status}
+          ORDER BY tu.created_at DESC
+        `
 
     return NextResponse.json(updates)
   } catch (error) {

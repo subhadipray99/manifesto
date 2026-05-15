@@ -407,6 +407,8 @@ function PromiseDetail({
           title: formTitle.trim(),
           link: formLink.trim(),
           description: formDescription.trim() || undefined,
+          userName: user?.firstName || "Anonymous",
+          userEmail: user?.primaryEmailAddress?.emailAddress || null,
         }),
       })
 

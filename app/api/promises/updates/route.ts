@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getAuth } from "@clerk/nextjs/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 // POST /api/promises/updates - Submit a new timeline update (goes to pending)
 export async function POST(request: NextRequest) {
   try {
-    const { userId, user } = await auth()
+    const { userId } = getAuth(request)
 
     // Require authentication
     if (!userId) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { promiseId, title, link, description } = await request.json()
+    const { promiseId, title, link, description, userName, userEmail } = await request.json()
 
     if (!promiseId || !title || !link) {
       return NextResponse.json(
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       )
       VALUES (
         ${updateId}, ${promiseId}, ${title}, ${link}, ${description || null}, 'pending',
-        ${userId}, ${user?.firstName || "Anonymous"}, ${user?.emailAddresses[0]?.emailAddress || null}
+        ${userId}, ${userName || "Anonymous"}, ${userEmail || null}
       )
     `
 

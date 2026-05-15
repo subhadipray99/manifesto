@@ -32,20 +32,21 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editState, setEditState] = useState<EditState>({ title: "", link: "", description: "" })
   const [saving, setSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState<"pending" | "approved">("pending")
 
   useEffect(() => {
     if (isLoaded && userId) {
-      fetchPendingUpdates()
+      fetchUpdates(activeTab)
     } else if (isLoaded && !userId) {
       setLoading(false)
     }
-  }, [isLoaded, userId])
+  }, [isLoaded, userId, activeTab])
 
-  const fetchPendingUpdates = async () => {
+  const fetchUpdates = async (status: "pending" | "approved") => {
     try {
       setLoading(true)
       setAccessDenied(false)
-      const response = await fetch(`/api/admin/pending-updates?userId=${userId}`)
+      const response = await fetch(`/api/admin/pending-updates?userId=${userId}&status=${status}`)
 
       if (response.status === 403) {
         setAccessDenied(true)
@@ -177,15 +178,42 @@ export default function AdminDashboard() {
           </div>
         ) : error ? (
           <div className="mt-6 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>
-        ) : updates.length === 0 ? (
+        ) : (
+          <>
+            {/* Tabs */}
+            <div className="mt-6 flex gap-2 border-b border-border">
+              <button
+                onClick={() => setActiveTab("pending")}
+                className={`px-4 py-2 font-semibold transition-colors ${
+                  activeTab === "pending"
+                    ? "border-b-2 border-orange-500 text-orange-600"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Pending ({updates.filter((u) => u.status === "pending").length})
+              </button>
+              <button
+                onClick={() => setActiveTab("approved")}
+                className={`px-4 py-2 font-semibold transition-colors ${
+                  activeTab === "approved"
+                    ? "border-b-2 border-orange-500 text-orange-600"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Approved ({updates.filter((u) => u.status === "approved").length})
+              </button>
+            </div>
+
+            {/* Content */}
+            {updates.length === 0 ? (
           <div className="mt-6 rounded-lg border-2 border-dashed border-border bg-muted/50 p-8 text-center">
             <Clock className="mx-auto h-8 w-8 text-muted-foreground/50" />
-            <p className="mt-2 text-muted-foreground">No pending submissions</p>
+            <p className="mt-2 text-muted-foreground">No {activeTab} submissions</p>
           </div>
-        ) : (
+            ) : (
           <div className="mt-6 space-y-4">
             <p className="text-sm font-medium text-muted-foreground">
-              {updates.length} pending submission{updates.length !== 1 ? "s" : ""}
+              {updates.length} {activeTab} submission{updates.length !== 1 ? "s" : ""}
             </p>
 
             {updates.map((update) => {
@@ -295,7 +323,7 @@ export default function AdminDashboard() {
                       <Save className="h-4 w-4" />
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
-                  ) : (
+                  ) : activeTab === "pending" ? (
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleReject(update.id)}
@@ -314,11 +342,22 @@ export default function AdminDashboard() {
                         Approve
                       </button>
                     </div>
+                  ) : (
+                    <button
+                      onClick={() => setEditingId(update.id)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:border-orange-400 hover:bg-orange-50"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                  )}
                   )}
                 </div>
               )
             })}
           </div>
+            )}
+          </>
         )}
       </div>
     </div>

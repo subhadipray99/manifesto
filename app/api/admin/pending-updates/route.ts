@@ -10,10 +10,11 @@ function isAdmin(userId: string | null): boolean {
   return adminIds.includes(userId)
 }
 
-// GET /api/admin/pending-updates?userId=X - Get all pending submissions for moderation
+// GET /api/admin/pending-updates?userId=X&status=pending - Get submissions by status
 export async function GET(request: NextRequest) {
   try {
     const userId = request.nextUrl.searchParams.get("userId")
+    const status = request.nextUrl.searchParams.get("status") || "pending"
 
     if (!isAdmin(userId)) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
@@ -26,13 +27,13 @@ export async function GET(request: NextRequest) {
         ps.status as promise_status
       FROM timeline_updates tu
       LEFT JOIN promise_statuses ps ON tu.promise_id = ps.id
-      WHERE tu.status = 'pending'
-      ORDER BY tu.created_at ASC
+      WHERE tu.status = ${status}
+      ORDER BY tu.created_at ${status === "pending" ? "ASC" : "DESC"}
     `
 
     return NextResponse.json(updates)
   } catch (error) {
-    console.error("[v0] Error fetching pending updates:", error)
+    console.error("[v0] Error fetching updates:", error)
     return NextResponse.json({ error: "Failed to fetch updates" }, { status: 500 })
   }
 }

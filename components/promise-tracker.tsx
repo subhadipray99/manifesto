@@ -1102,6 +1102,15 @@ export default function PromiseTracker() {
                     {Math.floor((new Date().getTime() - new Date(2026, 4, 9).getTime()) / (1000 * 60 * 60 * 24))} Days in Power
                   </span>
                 </div>
+                {/* Powered by ObserverFiles */}
+                <a
+                  href="https://observerfiles.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex text-[9px] font-semibold uppercase tracking-widest text-white/70 hover:text-white/90 transition-colors"
+                >
+                  Powered by ObserverFiles
+                </a>
               </div>
             </div>
             <div className="flex items-center gap-2">

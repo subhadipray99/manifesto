@@ -110,12 +110,12 @@ async function fetchStatusesFromDB(): Promise<Record<string, PromiseStatus>> {
   }
 }
 
-async function updateStatusInDB(promiseId: string, status: PromiseStatus): Promise<void> {
+async function updateStatusInDB(promiseId: string, status: PromiseStatus, userId: string | null): Promise<void> {
   try {
     const response = await fetch("/api/promises/statuses", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ promiseId, status }),
+      body: JSON.stringify({ promiseId, status, userId }),
     })
     if (!response.ok) throw new Error("Failed to update status")
   } catch (error) {
@@ -353,6 +353,8 @@ function PromiseDetail({
   onAddUpdate,
   onClose,
   onShare,
+  isSignedIn,
+  userId,
 }: {
   promise: PromiseType
   category: Category
@@ -362,6 +364,8 @@ function PromiseDetail({
   onAddUpdate: (update: Omit<TimelineUpdate, "id" | "timestamp">) => void
   onClose: () => void
   onShare: () => void
+  isSignedIn: boolean
+  userId: string | null
 }) {
   const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
@@ -658,36 +662,50 @@ function PromiseDetail({
 
       {/* Status Actions */}
       <div className="flex-shrink-0 border-t-4 border-orange-500 bg-card px-4 pb-6 pt-4">
-        <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Update Status
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {(["pending", "in-progress", "fulfilled", "broken"] as PromiseStatus[]).map((s) => {
-            const c = STATUS_CONFIG[s]
-            const Icon = c.icon
-            const isActive = status === s
-            return (
-              <button
-                key={s}
-                onClick={() => onStatusChange(s)}
-                className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] ${
-                  isActive
-                    ? `${c.bgColor} ${c.borderColor} shadow-lg`
-                    : "border-border bg-card hover:border-muted-foreground/30"
-                }`}
-              >
-                <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
-                <div className="text-left">
-                  <span
-                    className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}
+        {isSignedIn && userId ? (
+          <>
+            <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Update Status
+            </p>
+            <p className="mb-4 text-center text-xs text-orange-600 font-medium">
+              Admin access required to change status
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["pending", "in-progress", "fulfilled", "broken"] as PromiseStatus[]).map((s) => {
+                const c = STATUS_CONFIG[s]
+                const Icon = c.icon
+                const isActive = status === s
+                const isAdmin = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.includes(userId)
+                return (
+                  <button
+                    key={s}
+                    onClick={() => onStatusChange(s)}
+                    disabled={!isAdmin}
+                    className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isActive
+                        ? `${c.bgColor} ${c.borderColor} shadow-lg`
+                        : "border-border bg-card hover:border-muted-foreground/30"
+                    }`}
                   >
-                    {c.label}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+                    <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
+                    <div className="text-left">
+                      <span
+                        className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}
+                      >
+                        {c.label}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="rounded-lg bg-blue-50 p-4 text-center">
+            <p className="text-sm font-bold text-blue-700">Sign in to manage promises</p>
+            <p className="mt-1 text-xs text-blue-600">Only admins can update promise statuses</p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -871,9 +889,9 @@ export default function PromiseTracker() {
 
   const handleStatusChange = useCallback((promiseId: string, status: PromiseStatus) => {
     setStatuses((prev) => ({ ...prev, [promiseId]: status }))
-    // Update in database
-    updateStatusInDB(promiseId, status)
-  }, [])
+    // Update in database with userId
+    updateStatusInDB(promiseId, status, userId)
+  }, [userId])
 
   const handleAddTimelineUpdate = useCallback(
     (promiseId: string, update: Omit<TimelineUpdate, "id" | "timestamp">) => {
@@ -1039,6 +1057,8 @@ export default function PromiseTracker() {
           onAddUpdate={(update) => handleAddTimelineUpdate(selectedPromise.promise.id, update)}
           onClose={() => setSelectedPromise(null)}
           onShare={() => setShowShareModal(true)}
+          isSignedIn={isSignedIn}
+          userId={userId}
         />
       )}
 

@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
+// Helper to check if user is admin
+function isAdmin(userId: string | null): boolean {
+  if (!userId) return false
+  const adminIds = process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || []
+  return adminIds.includes(userId)
+}
+
 // GET /api/promises/statuses - Get all promise statuses
 export async function GET() {
   try {
@@ -18,10 +25,17 @@ export async function GET() {
   }
 }
 
-// PUT /api/promises/statuses - Update a promise status
+// PUT /api/promises/statuses - Update a promise status (admin only)
 export async function PUT(request: NextRequest) {
   try {
-    const { promiseId, status } = await request.json()
+    const { promiseId, status, userId } = await request.json()
+
+    if (!isAdmin(userId)) {
+      return NextResponse.json(
+        { error: "Only admins can change promise statuses" },
+        { status: 403 }
+      )
+    }
 
     if (!promiseId || !status) {
       return NextResponse.json({ error: "Missing promiseId or status" }, { status: 400 })

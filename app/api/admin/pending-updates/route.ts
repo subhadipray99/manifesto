@@ -1,6 +1,5 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
-import { getAuth } from "@clerk/nextjs/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -11,10 +10,10 @@ function isAdmin(userId: string | null): boolean {
   return adminIds.includes(userId)
 }
 
-// GET /api/admin/pending-updates - Get all pending submissions for moderation
+// GET /api/admin/pending-updates?userId=X - Get all pending submissions for moderation
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = getAuth(request)
+    const userId = request.nextUrl.searchParams.get("userId")
 
     if (!isAdmin(userId)) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
@@ -41,13 +40,11 @@ export async function GET(request: NextRequest) {
 // PUT /api/admin/pending-updates - Approve or reject an update
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = getAuth(request)
+    const { updateId, action, userId } = await request.json()
 
     if (!isAdmin(userId)) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 })
     }
-
-    const { updateId, action } = await request.json()
 
     if (!updateId || !["approve", "reject"].includes(action)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })

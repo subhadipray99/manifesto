@@ -363,7 +363,7 @@ function PromiseDetail({
   onClose: () => void
   onShare: () => void
 }) {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
   const { openSignIn } = useClerk()
   const config = STATUS_CONFIG[status]
@@ -409,6 +409,7 @@ function PromiseDetail({
           description: formDescription.trim() || undefined,
           userName: user?.firstName || "Anonymous",
           userEmail: user?.primaryEmailAddress?.emailAddress || null,
+          userId: userId,
         }),
       })
 

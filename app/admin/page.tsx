@@ -17,7 +17,7 @@ interface PendingUpdate {
 }
 
 export default function AdminDashboard() {
-  const { isSignedIn, isLoaded } = useAuth()
+  const { isSignedIn, isLoaded, userId } = useAuth()
   const [updates, setUpdates] = useState<PendingUpdate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -25,16 +25,18 @@ export default function AdminDashboard() {
   const [processing, setProcessing] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && userId) {
       fetchPendingUpdates()
+    } else if (isLoaded && !userId) {
+      setLoading(false)
     }
-  }, [isLoaded])
+  }, [isLoaded, userId])
 
   const fetchPendingUpdates = async () => {
     try {
       setLoading(true)
       setAccessDenied(false)
-      const response = await fetch("/api/admin/pending-updates")
+      const response = await fetch(`/api/admin/pending-updates?userId=${userId}`)
       
       if (response.status === 403) {
         setAccessDenied(true)
@@ -57,7 +59,7 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/pending-updates", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ updateId: id, action: "approve" }),
+        body: JSON.stringify({ updateId: id, action: "approve", userId }),
       })
 
       if (!response.ok) throw new Error("Failed to approve")
@@ -76,7 +78,7 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/pending-updates", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ updateId: id, action: "reject" }),
+        body: JSON.stringify({ updateId: id, action: "reject", userId }),
       })
 
       if (!response.ok) throw new Error("Failed to reject")

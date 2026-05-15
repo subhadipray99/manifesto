@@ -1,5 +1,13 @@
 export type PromiseStatus = "pending" | "in-progress" | "fulfilled" | "broken"
 
+export type TimelineUpdate = {
+  id: string
+  title: string
+  link: string
+  description?: string
+  timestamp: string
+}
+
 export type Promise = {
   id: string
   title: string

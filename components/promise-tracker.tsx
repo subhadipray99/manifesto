@@ -7,6 +7,7 @@ import {
   type PromiseStatus,
   type Promise as PromiseType,
   type Category,
+  type TimelineUpdate,
 } from "@/lib/promises-data"
 import {
   Circle,
@@ -19,6 +20,9 @@ import {
   X,
   ArrowLeft,
   RotateCcw,
+  Plus,
+  ExternalLink,
+  Calendar,
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<
@@ -60,6 +64,7 @@ const STATUS_CONFIG: Record<
 }
 
 const STORAGE_KEY = "bhorosha-tracker-statuses-v3"
+const TIMELINE_STORAGE_KEY = "bhorosha-tracker-timeline-v1"
 
 function loadStatuses(): Record<string, PromiseStatus> {
   if (typeof window === "undefined") return {}
@@ -74,6 +79,21 @@ function loadStatuses(): Record<string, PromiseStatus> {
 function saveStatuses(statuses: Record<string, PromiseStatus>) {
   if (typeof window === "undefined") return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses))
+}
+
+function loadTimelines(): Record<string, TimelineUpdate[]> {
+  if (typeof window === "undefined") return {}
+  try {
+    const stored = localStorage.getItem(TIMELINE_STORAGE_KEY)
+    return stored ? JSON.parse(stored) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveTimelines(timelines: Record<string, TimelineUpdate[]>) {
+  if (typeof window === "undefined") return
+  localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(timelines))
 }
 
 // Progress Ring Component
@@ -265,18 +285,65 @@ function PromiseDetail({
   promise,
   category,
   status,
+  timeline,
   onStatusChange,
+  onAddUpdate,
   onClose,
   onShare,
 }: {
   promise: PromiseType
   category: Category
   status: PromiseStatus
+  timeline: TimelineUpdate[]
   onStatusChange: (status: PromiseStatus) => void
+  onAddUpdate: (update: Omit<TimelineUpdate, "id" | "timestamp">) => void
   onClose: () => void
   onShare: () => void
 }) {
   const config = STATUS_CONFIG[status]
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formTitle, setFormTitle] = useState("")
+  const [formLink, setFormLink] = useState("")
+  const [formDescription, setFormDescription] = useState("")
+  const [titleError, setTitleError] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validate title (max 10 words)
+    const wordCount = formTitle.trim().split(/\s+/).filter(Boolean).length
+    if (wordCount > 10) {
+      setTitleError("Title must be 10 words or less")
+      return
+    }
+    if (!formTitle.trim() || !formLink.trim()) {
+      return
+    }
+
+    onAddUpdate({
+      title: formTitle.trim(),
+      link: formLink.trim(),
+      description: formDescription.trim() || undefined,
+    })
+
+    // Reset form
+    setFormTitle("")
+    setFormLink("")
+    setFormDescription("")
+    setTitleError("")
+    setShowAddForm(false)
+  }
+
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp)
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
@@ -300,40 +367,174 @@ function PromiseDetail({
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <h1 className="font-serif text-3xl font-black leading-tight text-foreground text-balance">
-          {promise.title}
-        </h1>
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          <h1 className="font-serif text-3xl font-black leading-tight text-foreground text-balance">
+            {promise.title}
+          </h1>
 
-        {promise.detail && (
-          <p className="mt-6 text-lg leading-relaxed text-muted-foreground text-pretty">
-            {promise.detail}
-          </p>
-        )}
+          {promise.detail && (
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty">
+              {promise.detail}
+            </p>
+          )}
 
-        {/* Current Status Display */}
-        <div className="mt-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Current Status
-          </p>
-          <div
-            className={`mt-3 inline-flex items-center gap-2 rounded-full border-2 px-5 py-3 ${config.bgColor} ${config.borderColor}`}
-          >
-            {(() => {
-              const Icon = config.icon
-              return <Icon className={`h-6 w-6 ${config.color}`} />
-            })()}
-            <span className={`text-lg font-black ${config.color}`}>{config.label}</span>
+          {/* Current Status Display */}
+          <div className="mt-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Current Status
+            </p>
+            <div
+              className={`mt-2 inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 ${config.bgColor} ${config.borderColor}`}
+            >
+              {(() => {
+                const Icon = config.icon
+                return <Icon className={`h-5 w-5 ${config.color}`} />
+              })()}
+              <span className={`text-base font-black ${config.color}`}>{config.label}</span>
+            </div>
           </div>
+        </div>
+
+        {/* Timeline Section */}
+        <div className="border-t-2 border-border bg-muted/30 px-6 py-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-serif text-lg font-black text-foreground">Updates Timeline</h2>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="flex items-center gap-1.5 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              Add Update
+            </button>
+          </div>
+
+          {/* Add Update Form */}
+          {showAddForm && (
+            <form onSubmit={handleSubmit} className="mt-4 rounded-xl border-2 border-border bg-card p-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Title <span className="text-red-500">*</span>
+                    <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(max 10 words)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formTitle}
+                    onChange={(e) => {
+                      setFormTitle(e.target.value)
+                      setTitleError("")
+                    }}
+                    placeholder="e.g., Government announces new policy"
+                    className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none"
+                    required
+                  />
+                  {titleError && <p className="mt-1 text-sm text-red-500">{titleError}</p>}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Article Link <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formLink}
+                    onChange={(e) => setFormLink(e.target.value)}
+                    placeholder="https://example.com/article"
+                    className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Description <span className="text-muted-foreground/70">(optional)</span>
+                  </label>
+                  <textarea
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="Brief summary of the update..."
+                    rows={3}
+                    className="w-full resize-none rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddForm(false)
+                      setFormTitle("")
+                      setFormLink("")
+                      setFormDescription("")
+                      setTitleError("")
+                    }}
+                    className="flex-1 rounded-lg border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted active:scale-[0.98]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white transition-colors active:scale-[0.98]"
+                  >
+                    Submit Update
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {/* Timeline List */}
+          {timeline.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {timeline.map((update) => (
+                <div
+                  key={update.id}
+                  className="relative rounded-xl border-2 border-border bg-card p-4 pl-5"
+                >
+                  {/* Timeline line indicator */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
+                      {update.description && (
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>
+                      )}
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <a
+                          href={update.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Read Article
+                        </a>
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(update.timestamp)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 text-center">
+              <p className="text-sm text-muted-foreground">No updates yet. Add the first update!</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Status Actions */}
-      <div className="flex-shrink-0 border-t-4 border-orange-500 bg-card px-4 pb-8 pt-5">
-        <p className="mb-4 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+      <div className="flex-shrink-0 border-t-4 border-orange-500 bg-card px-4 pb-6 pt-4">
+        <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Update Status
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {(["pending", "in-progress", "fulfilled", "broken"] as PromiseStatus[]).map((s) => {
             const c = STATUS_CONFIG[s]
             const Icon = c.icon
@@ -342,21 +543,18 @@ function PromiseDetail({
               <button
                 key={s}
                 onClick={() => onStatusChange(s)}
-                className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-all active:scale-[0.98] ${
+                className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] ${
                   isActive
                     ? `${c.bgColor} ${c.borderColor} shadow-lg`
                     : "border-border bg-card hover:border-muted-foreground/30"
                 }`}
               >
-                <Icon className={`h-6 w-6 ${isActive ? c.color : "text-muted-foreground"}`} />
+                <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
                 <div className="text-left">
                   <span
                     className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}
                   >
                     {c.label}
-                  </span>
-                  <span className={`block text-xs ${isActive ? c.color : "text-muted-foreground"}`}>
-                    {c.labelBn}
                   </span>
                 </div>
               </button>
@@ -492,6 +690,7 @@ Track yourself:`
 // Main Component
 export default function PromiseTracker() {
   const [statuses, setStatuses] = useState<Record<string, PromiseStatus>>({})
+  const [timelines, setTimelines] = useState<Record<string, TimelineUpdate[]>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [selectedPromise, setSelectedPromise] = useState<{
     promise: PromiseType
@@ -500,9 +699,10 @@ export default function PromiseTracker() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
-  // Load statuses
+  // Load statuses and timelines
   useEffect(() => {
     setStatuses(loadStatuses())
+    setTimelines(loadTimelines())
     setHydrated(true)
   }, [])
 
@@ -510,6 +710,11 @@ export default function PromiseTracker() {
   useEffect(() => {
     if (hydrated) saveStatuses(statuses)
   }, [statuses, hydrated])
+
+  // Save timelines
+  useEffect(() => {
+    if (hydrated) saveTimelines(timelines)
+  }, [timelines, hydrated])
 
   // Stats
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
@@ -540,6 +745,21 @@ export default function PromiseTracker() {
   const handleStatusChange = useCallback((promiseId: string, status: PromiseStatus) => {
     setStatuses((prev) => ({ ...prev, [promiseId]: status }))
   }, [])
+
+  const handleAddTimelineUpdate = useCallback(
+    (promiseId: string, update: Omit<TimelineUpdate, "id" | "timestamp">) => {
+      const newUpdate: TimelineUpdate = {
+        ...update,
+        id: `${promiseId}-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      }
+      setTimelines((prev) => ({
+        ...prev,
+        [promiseId]: [newUpdate, ...(prev[promiseId] || [])],
+      }))
+    },
+    []
+  )
 
   const resetAllStatuses = () => {
     if (confirm("Reset all promise statuses? This cannot be undone.")) {
@@ -668,7 +888,9 @@ export default function PromiseTracker() {
           promise={selectedPromise.promise}
           category={selectedPromise.category}
           status={statuses[selectedPromise.promise.id] || "pending"}
+          timeline={timelines[selectedPromise.promise.id] || []}
           onStatusChange={(s) => handleStatusChange(selectedPromise.promise.id, s)}
+          onAddUpdate={(update) => handleAddTimelineUpdate(selectedPromise.promise.id, update)}
           onClose={() => setSelectedPromise(null)}
           onShare={() => setShowShareModal(true)}
         />

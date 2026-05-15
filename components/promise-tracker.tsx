@@ -387,6 +387,11 @@ function PromiseDetail({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError("")
+
+    // Get the display name - try multiple fallbacks
+    const email = user?.primaryEmailAddress?.emailAddress
+    const displayName = user?.fullName || user?.firstName || user?.username || (email ? email.split("@")[0] : null) || "Anonymous"
+    console.log("[v0] User submission debug:", { fullName: user?.fullName, firstName: user?.firstName, username: user?.username, email, displayName })
     setSubmitSuccess("")
     
     if (!isSignedIn) {
@@ -415,7 +420,7 @@ function PromiseDetail({
           title: formTitle.trim(),
           link: formLink.trim(),
           description: formDescription.trim() || undefined,
-          userName: user?.fullName || user?.firstName || user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "Anonymous",
+          userName: displayName,
           userEmail: user?.primaryEmailAddress?.emailAddress || null,
           userId: userId,
         }),

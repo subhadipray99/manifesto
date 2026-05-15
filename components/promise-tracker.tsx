@@ -20,7 +20,6 @@ import {
   ChevronUp,
   X,
   ArrowLeft,
-  RotateCcw,
   Plus,
   ExternalLink,
   Calendar,
@@ -934,13 +933,6 @@ export default function PromiseTracker() {
     []
   )
 
-  const resetAllStatuses = () => {
-    if (confirm("Reset all promise statuses? This cannot be undone.")) {
-      setStatuses({})
-      localStorage.removeItem(STORAGE_KEY)
-    }
-  }
-
   return (
     <div className="min-h-dvh bg-background pb-8">
       {/* Header */}
@@ -968,13 +960,6 @@ export default function PromiseTracker() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={resetAllStatuses}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/20 active:scale-95"
-                title="Reset all"
-              >
-                <RotateCcw className="h-5 w-5" />
-              </button>
               <button
                 onClick={() => setShowShareModal(true)}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-orange-600 transition-colors active:scale-95"

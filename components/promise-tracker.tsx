@@ -1308,6 +1308,21 @@ export default function PromiseTracker() {
               <span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total Promises x 100
             </p>
           </div>
+          <div className="mt-6 grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
+              <p className="mt-1 text-sm font-black text-foreground">BJP</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
+              <a
+                href="mailto:toddwake666@gmail.com"
+                className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors"
+              >
+                toddwake666@gmail.com
+              </a>
+            </div>
+          </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
             Bhorosha Tracker - Citizen-powered accountability for West Bengal
           </p>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useAuth, useUser } from "@clerk/nextjs"
+import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import {
   CATEGORIES,
   totalPromises,
@@ -363,8 +363,9 @@ function PromiseDetail({
   onClose: () => void
   onShare: () => void
 }) {
-  const { isSignedIn, openSignUp } = useAuth()
+  const { isSignedIn } = useAuth()
   const { user } = useUser()
+  const { openSignIn } = useClerk()
   const config = STATUS_CONFIG[status]
   const [showAddForm, setShowAddForm] = useState(false)
   const [formTitle, setFormTitle] = useState("")
@@ -382,7 +383,7 @@ function PromiseDetail({
     
     if (!isSignedIn) {
       setSubmitError("Please sign in to submit updates")
-      openSignUp()
+      openSignIn()
       return
     }
 
@@ -507,7 +508,7 @@ function PromiseDetail({
               </button>
             ) : (
               <button
-                onClick={() => openSignUp()}
+                onClick={() => openSignIn()}
                 className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
               >
                 <LogIn className="h-4 w-4" />

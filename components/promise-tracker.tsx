@@ -968,6 +968,7 @@ export default function PromiseTracker() {
   } | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  const [daysInPower, setDaysInPower] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
@@ -1041,6 +1042,10 @@ export default function PromiseTracker() {
     async function initializeData() {
       const dbStatuses = await fetchStatusesFromDB()
       setStatuses(dbStatuses)
+      // Calculate days in power client-side to avoid hydration mismatch
+      const startDate = new Date(2026, 4, 9) // May 9, 2026
+      const days = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+      setDaysInPower(days)
       setHydrated(true)
     }
     initializeData()
@@ -1123,7 +1128,7 @@ export default function PromiseTracker() {
                 <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
                   <span className="h-2 w-2 rounded-full bg-white/80" />
                   <span className="text-xs font-bold text-white">
-                    {Math.floor((new Date().getTime() - new Date(2026, 4, 9).getTime()) / (1000 * 60 * 60 * 24))} Days in Power
+                    {hydrated ? daysInPower : "—"} Days in Power
                   </span>
                 </div>
                 {/* Powered by ObserverFiles */}

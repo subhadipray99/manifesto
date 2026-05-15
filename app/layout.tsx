@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Fraunces } from "next/font/google"
+import { Inter, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
@@ -9,24 +9,25 @@ const inter = Inter({
   display: "swap",
 })
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-serif",
   display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: "Bhorosha Tracker · BJP West Bengal Manifesto",
+  title: "Bhorosha Tracker | BJP West Bengal Promise Tracker",
   description:
-    "A citizen-side promise tracker for BJP's 2026 manifesto for West Bengal. Track every commitment — fulfilled, in progress, or broken.",
+    "Track every BJP manifesto promise for West Bengal. Swipe through commitments and mark them fulfilled, in progress, or broken.",
   generator: "v0.app",
 }
 
 export const viewport: Viewport = {
-  themeColor: "#faf7f2",
+  themeColor: "#FF9933",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
@@ -35,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable} bg-background`}>
-      <body className="font-sans antialiased">
+    <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`}>
+      <body className="font-sans antialiased overflow-hidden">
         {children}
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>

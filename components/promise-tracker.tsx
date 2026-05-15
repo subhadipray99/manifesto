@@ -915,6 +915,13 @@ export default function PromiseTracker() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">
                   BJP West Bengal Tracker
                 </p>
+                {/* Days in Power */}
+                <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
+                  <span className="h-2 w-2 rounded-full bg-white/80" />
+                  <span className="text-xs font-bold text-white">
+                    {Math.floor((new Date().getTime() - new Date(2026, 4, 9).getTime()) / (1000 * 60 * 60 * 24))} Days in Power
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">

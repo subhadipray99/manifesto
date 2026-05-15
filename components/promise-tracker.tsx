@@ -868,13 +868,14 @@ function LatestUpdatesSlider({
     if (!el || resolved.length === 0) return
 
     let pos = 0
-    const speed = 0.5 // px per frame
+    const speed = 0.3 // px per frame
+    const maxScroll = el.scrollWidth - el.clientWidth
 
     function step() {
-      if (!isPausedRef.current && el) {
+      if (!isPausedRef.current && el && maxScroll > 0) {
         pos += speed
-        // Loop: when scrolled past half (duplicated items), reset to start
-        if (pos >= el.scrollWidth / 2) pos = 0
+        // Reset to start when reached the end
+        if (pos >= maxScroll) pos = 0
         el.scrollLeft = pos
       }
       animFrameRef.current = requestAnimationFrame(step)
@@ -886,7 +887,7 @@ function LatestUpdatesSlider({
     }
   }, [resolved.length])
 
-  const items = [...resolved, ...resolved] // duplicate for seamless loop
+  const items = resolved
 
   return (
     <div className="border-b border-border bg-gradient-to-r from-orange-50/60 via-background to-orange-50/60">

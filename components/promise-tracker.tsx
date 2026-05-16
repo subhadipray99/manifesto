@@ -223,64 +223,68 @@ function CategoryCard({
   const progressPercent = total > 0 ? Math.round(((fulfilled * 1 + inProgress * 0.5) / total) * 100) : 0
 
   return (
-    <div className="overflow-hidden rounded-2xl border-2 border-border bg-card transition-all">
+    <div className="overflow-hidden rounded-lg border-2 border-border bg-card transition-all sm:rounded-2xl">
       {/* Card Header - Tap to expand */}
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-4 p-4 text-left transition-colors active:bg-muted/50"
+        className="flex w-full items-center gap-3 p-3 text-left transition-colors active:bg-muted/50 sm:gap-4 sm:p-4"
       >
         {/* Progress Ring */}
         <div className="relative flex-shrink-0">
           <ProgressRing
             percent={progressPercent}
+            size={50}
+            strokeWidth={4}
             color={progressPercent === 100 ? "#16a34a" : "#c2410c"}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-foreground">
+          <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-foreground sm:text-sm">
             {progressPercent}%
           </span>
         </div>
 
         {/* Category Info */}
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-serif text-lg font-black text-foreground">{category.name}</h3>
-          <p className="text-xs font-medium text-muted-foreground">{category.bengali}</p>
+          <h3 className="truncate font-serif text-base font-black text-foreground sm:text-lg">{category.name}</h3>
+          {category.localName && (
+            <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">{category.localName}</p>
+          )}
           
           {/* Status Summary Counts */}
-          <div className="mt-2 flex items-center gap-3 text-xs font-bold">
+          <div className="mt-1 flex items-center gap-2 text-[10px] font-bold sm:gap-3 sm:text-xs">
             {fulfilled > 0 && (
               <span className="flex items-center gap-1 text-green-600">
-                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                {fulfilled}
+                <span className="h-2 w-2 flex-shrink-0 rounded-full bg-green-500 sm:h-2.5 sm:w-2.5" />
+                <span>{fulfilled}</span>
               </span>
             )}
             {inProgress > 0 && (
               <span className="flex items-center gap-1 text-amber-600">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                {inProgress}
+                <span className="h-2 w-2 flex-shrink-0 rounded-full bg-amber-500 sm:h-2.5 sm:w-2.5" />
+                <span>{inProgress}</span>
               </span>
             )}
             {broken > 0 && (
               <span className="flex items-center gap-1 text-red-600">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                {broken}
+                <span className="h-2 w-2 flex-shrink-0 rounded-full bg-red-500 sm:h-2.5 sm:w-2.5" />
+                <span>{broken}</span>
               </span>
             )}
           </div>
         </div>
 
         {/* Expand Icon */}
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted sm:h-10 sm:w-10">
           {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-foreground" />
+            <ChevronUp className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-foreground" />
+            <ChevronDown className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           )}
         </div>
       </button>
 
       {/* Promises Preview - Always visible colored dots grid */}
-      <div className="border-t border-border bg-muted/20 px-4 py-3">
-        <div className="flex flex-wrap gap-1.5">
+      <div className="border-t border-border bg-muted/20 px-3 py-2 sm:px-4 sm:py-3">
+        <div className="flex flex-wrap gap-1">
           {category.promises.map((promise) => {
             const status = statuses[promise.id] || "pending"
             const colorMap: Record<PromiseStatus, string> = {
@@ -296,7 +300,7 @@ function CategoryCard({
                   e.stopPropagation()
                   onPromiseSelect(promise, category)
                 }}
-                className={`h-4 w-4 rounded-sm ${colorMap[status]} transition-transform hover:scale-125 active:scale-110`}
+                className={`h-3.5 w-3.5 rounded-sm transition-transform active:scale-110 sm:h-4 sm:w-4 sm:hover:scale-125 ${colorMap[status]}`}
                 title={promise.title}
               />
             )
@@ -460,15 +464,15 @@ function PromiseDetail({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <header className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-card px-4 py-3">
+      <header className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3">
         <button
           onClick={onClose}
           className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted active:scale-95"
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
-        <span className="rounded-full bg-orange-600 px-4 py-1.5 text-xs font-black uppercase text-white">
-          {category.bengali}
+        <span className="rounded-full bg-orange-600 px-3 py-1 text-[10px] font-black uppercase text-white sm:px-4 sm:py-1.5 sm:text-xs">
+          {category.localName || category.name}
         </span>
         <button
           onClick={onShare}
@@ -480,53 +484,53 @@ function PromiseDetail({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
-          <h1 className="font-serif text-3xl font-black leading-tight text-foreground text-balance">
+        <div className="p-4 sm:p-6">
+          <h1 className="font-serif text-xl font-black leading-tight text-foreground text-balance sm:text-3xl">
             {promise.title}
           </h1>
 
           {promise.detail && (
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty">
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty sm:mt-4 sm:text-base">
               {promise.detail}
             </p>
           )}
 
           {/* Current Status Display */}
-          <div className="mt-6">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <div className="mt-4 sm:mt-6">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground sm:text-xs">
               Current Status
             </p>
             <div
-              className={`mt-2 inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 ${config.bgColor} ${config.borderColor}`}
+              className={`mt-2 inline-flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-sm sm:px-4 sm:py-2 sm:text-base ${config.bgColor} ${config.borderColor}`}
             >
               {(() => {
                 const Icon = config.icon
-                return <Icon className={`h-5 w-5 ${config.color}`} />
+                return <Icon className={`h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5 ${config.color}`} />
               })()}
-              <span className={`text-base font-black ${config.color}`}>{config.label}</span>
+              <span className={`font-black ${config.color}`}>{config.label}</span>
             </div>
           </div>
         </div>
 
         {/* Timeline Section */}
-        <div className="border-t-2 border-border bg-muted/30 px-6 py-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg font-black text-foreground">Updates Timeline</h2>
+        <div className="border-t-2 border-border bg-muted/30 px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="font-serif text-base font-black text-foreground sm:text-lg">Updates Timeline</h2>
             {isSignedIn ? (
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="flex items-center gap-1.5 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
+                className="flex items-center justify-center gap-1.5 rounded-full bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
               >
-                <Plus className="h-4 w-4" />
-                Add Update
+                <Plus className="h-4 w-4 flex-shrink-0" />
+                <span>Add Update</span>
               </button>
             ) : (
               <button
                 onClick={() => openSignIn()}
-                className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors active:scale-95"
+                className="flex items-center justify-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
               >
-                <LogIn className="h-4 w-4" />
-                Sign In
+                <LogIn className="h-4 w-4 flex-shrink-0" />
+                <span>Sign In</span>
               </button>
             )}
           </div>
@@ -1152,7 +1156,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       <header className="sticky top-0 z-40 border-b-4 border-green-600 bg-orange-600 px-4 py-4">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Hamburger Menu for State Selection */}
               <div className="relative">
                 <button
@@ -1168,7 +1172,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                       className="fixed inset-0 z-40" 
                       onClick={() => setShowStateMenu(false)} 
                     />
-                    <div className="absolute left-0 top-12 z-50 min-w-[200px] rounded-xl border border-border bg-card p-2 shadow-xl">
+                    <div className="absolute left-0 top-12 z-50 min-w-[200px] max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-xl">
                       <div className="mb-2 px-2 py-1">
                         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select State</p>
                       </div>
@@ -1180,11 +1184,11 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                             key={state.id}
                             href={`/${state.id}`}
                             onClick={() => setShowStateMenu(false)}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted ${
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted ${
                               state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
                             }`}
                           >
-                            <MapPin className="h-4 w-4" />
+                            <MapPin className="h-4 w-4 flex-shrink-0" />
                             <span>{state.name}</span>
                             {state.id === stateConfig.id && (
                               <span className="ml-auto text-xs text-orange-500">Current</span>
@@ -1196,7 +1200,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                         <Link
                           href="/states"
                           onClick={() => setShowStateMenu(false)}
-                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                           View All States
                         </Link>
@@ -1205,20 +1209,20 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                   </>
                 )}
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-t-xl rounded-br-sm bg-white text-3xl font-black text-orange-600" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-t-xl rounded-br-sm bg-white text-2xl font-black text-orange-600 sm:h-12 sm:w-12 sm:text-3xl" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
                 M
               </div>
-              <div>
-                <h1 className="font-serif text-2xl font-black leading-none tracking-tight text-white">
+              <div className="min-w-0 flex-1">
+                <h1 className="font-serif text-lg font-black leading-none tracking-tight text-white sm:text-2xl">
                   THE MANIFESTO
                 </h1>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/80 sm:text-[10px]">
                   {stateConfig.party} {stateConfig.name} Tracker
                 </p>
                 {/* Days in Power */}
-                <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
+                <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white sm:mt-2.5 sm:px-3 sm:py-1.5 sm:text-xs">
                   <span className="h-2 w-2 rounded-full bg-white/80" />
-                  <span className="text-xs font-bold text-white">
+                  <span>
                     {hydrated ? daysInPower : "—"} Days in Power
                   </span>
                 </div>
@@ -1227,7 +1231,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                   href="https://observerfiles.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex text-[9px] font-semibold uppercase tracking-widest transition-colors"
+                  className="mt-1 inline-flex text-[7px] font-semibold uppercase tracking-wider transition-colors sm:mt-2 sm:text-[9px]"
                 >
                   <span className="text-white">Powered by </span>
                   <span className="text-black hover:text-black/80">ObserverFiles</span>
@@ -1285,52 +1289,52 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       </header>
 
       {/* Overall Progress Hero */}
-      <div className="border-b-2 border-border bg-card px-4 py-6">
+      <div className="border-b-2 border-border bg-card px-4 py-4 sm:py-6">
         <div className="mx-auto max-w-2xl">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
             {/* Large Progress Ring */}
             <div className="relative flex-shrink-0">
               <ProgressRing
                 percent={overallProgress}
-                size={100}
-                strokeWidth={8}
+                size={70}
+                strokeWidth={6}
                 color={overallProgress >= 50 ? "#16a34a" : "#c2410c"}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-foreground">{overallProgress}%</span>
-                <span className="text-[10px] font-medium text-muted-foreground">Progress</span>
+                <span className="text-lg font-black text-foreground sm:text-2xl">{overallProgress}%</span>
+                <span className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">Progress</span>
               </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid flex-1 grid-cols-2 gap-3">
-              <div className="rounded-xl bg-green-50 p-3">
+            <div className="grid w-full flex-1 grid-cols-2 gap-2 sm:gap-3">
+              <div className="rounded-lg bg-green-50 p-2.5 sm:p-3 sm:rounded-xl">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="text-2xl font-black text-green-700">{stats.fulfilled}</span>
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600 sm:h-5 sm:w-5" />
+                  <span className="text-lg font-black text-green-700 sm:text-2xl">{stats.fulfilled}</span>
                 </div>
-                <p className="text-xs font-medium text-green-600">Fulfilled</p>
+                <p className="text-[10px] font-medium text-green-600 sm:text-xs">Fulfilled</p>
               </div>
-              <div className="rounded-xl bg-amber-50 p-3">
+              <div className="rounded-lg bg-amber-50 p-2.5 sm:p-3 sm:rounded-xl">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber-600" />
-                  <span className="text-2xl font-black text-amber-700">{stats.inProgress}</span>
+                  <Clock className="h-4 w-4 flex-shrink-0 text-amber-600 sm:h-5 sm:w-5" />
+                  <span className="text-lg font-black text-amber-700 sm:text-2xl">{stats.inProgress}</span>
                 </div>
-                <p className="text-xs font-medium text-amber-600">In Progress</p>
+                <p className="text-[10px] font-medium text-amber-600 sm:text-xs">In Progress</p>
               </div>
-              <div className="rounded-xl bg-red-50 p-3">
+              <div className="rounded-lg bg-red-50 p-2.5 sm:p-3 sm:rounded-xl">
                 <div className="flex items-center gap-2">
-                  <XCircle className="h-5 w-5 text-red-600" />
-                  <span className="text-2xl font-black text-red-700">{stats.broken}</span>
+                  <XCircle className="h-4 w-4 flex-shrink-0 text-red-600 sm:h-5 sm:w-5" />
+                  <span className="text-lg font-black text-red-700 sm:text-2xl">{stats.broken}</span>
                 </div>
-                <p className="text-xs font-medium text-red-600">Broken</p>
+                <p className="text-[10px] font-medium text-red-600 sm:text-xs">Broken</p>
               </div>
-              <div className="rounded-xl bg-neutral-100 p-3">
+              <div className="rounded-lg bg-neutral-100 p-2.5 sm:p-3 sm:rounded-xl">
                 <div className="flex items-center gap-2">
-                  <Circle className="h-5 w-5 text-neutral-500" />
-                  <span className="text-2xl font-black text-neutral-600">{stats.pending}</span>
+                  <Circle className="h-4 w-4 flex-shrink-0 text-neutral-500 sm:h-5 sm:w-5" />
+                  <span className="text-lg font-black text-neutral-600 sm:text-2xl">{stats.pending}</span>
                 </div>
-                <p className="text-xs font-medium text-neutral-500">Not Rated</p>
+                <p className="text-[10px] font-medium text-neutral-500 sm:text-xs">Not Rated</p>
               </div>
             </div>
           </div>
@@ -1357,27 +1361,27 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       )}
 
       {/* Category Cards */}
-      <div className="mx-auto max-w-2xl px-4 pt-6">
+      <div className="mx-auto max-w-4xl px-4 pt-4 sm:pt-6">
         {/* Header row: title + search + filter */}
         <div className="mb-4 flex flex-col gap-3">
-          <h2 className="font-serif text-xl font-black text-foreground">Categories</h2>
-          <div className="flex items-center gap-2">
+          <h2 className="font-serif text-lg font-black text-foreground sm:text-xl">Categories</h2>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
             {/* Search input */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 flex-shrink-0 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search promises..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-xl border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl"
               />
             </div>
             {/* Category dropdown */}
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-9 flex-shrink-0 rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+              className="h-9 w-full flex-shrink-0 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:w-auto sm:rounded-xl"
             >
               <option value="all">All</option>
               {CATEGORIES.map((cat) => (

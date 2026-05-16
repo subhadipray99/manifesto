@@ -463,58 +463,57 @@ export default function AdminDashboard() {
         {/* Submissions Tab */}
         {activeTab === "submissions" && (
           <div className="mt-6">
-            <div className="flex gap-2 border-b border-border">
-              <button
-                onClick={() => setSubmissionTab("pending")}
-                className={`px-4 py-2 font-semibold transition-colors ${
-                  submissionTab === "pending" ? "border-b-2 border-orange-500 text-orange-600" : "text-muted-foreground"
-                }`}
-              >
-                Pending {submissionTab === "pending" ? `(${updates.length})` : ""}
-              </button>
-              <button
-                onClick={() => setSubmissionTab("approved")}
-                className={`px-4 py-2 font-semibold transition-colors ${
-                  submissionTab === "approved" ? "border-b-2 border-orange-500 text-orange-600" : "text-muted-foreground"
-                }`}
-              >
-                Approved {submissionTab === "approved" ? `(${updates.length})` : ""}
-              </button>
-            </div>
+        <div className="flex gap-1 overflow-x-auto border-b border-border">
+          {adminTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-1 whitespace-nowrap px-2 py-3 text-sm font-semibold transition-colors sm:gap-2 sm:px-4 sm:text-base ${
+                activeTab === tab.id
+                  ? "border-b-2 border-orange-500 text-orange-600"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
+            </button>
+          ))}
+        </div>
 
             {loading ? (
-              <div className="mt-6 text-center text-muted-foreground">Loading...</div>
+              <div className="mt-6 text-center text-sm text-muted-foreground">Loading...</div>
             ) : updates.length === 0 ? (
-              <div className="mt-6 rounded-lg border-2 border-dashed border-border bg-muted/50 p-8 text-center">
-                <Clock className="mx-auto h-8 w-8 text-muted-foreground/50" />
-                <p className="mt-2 text-muted-foreground">No {submissionTab} submissions</p>
+              <div className="mt-6 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 text-center sm:p-8">
+                <Clock className="mx-auto h-6 w-6 text-muted-foreground/50 sm:h-8 sm:w-8" />
+                <p className="mt-2 text-xs text-muted-foreground sm:text-sm">No {submissionTab} submissions</p>
               </div>
             ) : (
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-3 sm:space-y-4">
                 {updates.map((update) => {
                   const isEditing = editingId === update.id
                   return (
-                    <div key={update.id} className="rounded-xl border-2 border-border bg-card p-6">
-                      <div className="mb-4 flex items-start justify-between gap-4">
+                    <div key={update.id} className="rounded-lg border-2 border-border bg-card p-4 sm:rounded-xl sm:p-6">
+                      <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div className="flex-1 min-w-0">
                           {isEditing ? (
                             <input
                               type="text"
                               value={editState.title}
                               onChange={(e) => setEditState((s) => ({ ...s, title: e.target.value }))}
-                              className="w-full rounded-lg border border-border bg-background px-3 py-2 font-black"
+                              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-black sm:text-base"
                             />
                           ) : (
-                            <h3 className="text-lg font-black text-foreground">{update.title}</h3>
+                            <h3 className="text-base font-black text-foreground sm:text-lg">{update.title}</h3>
                           )}
-                          <p className="mt-1 text-xs text-muted-foreground font-mono">{update.promise_id}</p>
+                          <p className="mt-1 truncate text-[10px] text-muted-foreground font-mono sm:text-xs">{update.promise_id}</p>
                         </div>
                         <button
                           onClick={() => (isEditing ? setEditingId(null) : startEditingSubmission(update))}
-                          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground hover:border-orange-400"
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground hover:border-orange-400 active:scale-95 sm:justify-start"
                         >
                           {isEditing ? <XCircle className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-                          {isEditing ? "Cancel" : "Edit"}
+                          <span className="hidden sm:inline">{isEditing ? "Cancel" : "Edit"}</span>
                         </button>
                       </div>
 
@@ -591,10 +590,10 @@ export default function AdminDashboard() {
 
         {/* States Tab */}
         {activeTab === "states" && (
-          <div className="mt-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-black">Manage States</h2>
-              <div className="flex items-center gap-3">
+          <div className="mt-4 sm:mt-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <h2 className="text-base font-black sm:text-lg">Manage States</h2>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
                 <button
                   onClick={async () => {
                     if (confirm("This will migrate West Bengal data from the config file to the database. Continue?")) {
@@ -615,7 +614,7 @@ export default function AdminDashboard() {
                       }
                     }
                   }}
-                  className="flex items-center gap-2 rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 hover:bg-orange-100"
+                  className="flex items-center justify-center gap-2 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 hover:bg-orange-100 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Migrate WB Data
                 </button>
@@ -625,36 +624,36 @@ export default function AdminDashboard() {
                     setEditingStateId(null)
                     setStateForm({ id: "", name: "", party: "", startDate: "" })
                   }}
-                  className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white hover:bg-orange-600 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <Plus className="h-4 w-4" />
-                  Add State
+                  <Plus className="h-4 w-4 flex-shrink-0" />
+                  <span>Add State</span>
                 </button>
               </div>
             </div>
 
             {showStateForm && (
-              <div className="mt-4 rounded-xl border-2 border-orange-200 bg-orange-50 p-6">
-                <h3 className="mb-4 font-bold">{editingStateId ? "Edit State" : "Add New State"}</h3>
-                <div className="grid gap-4 sm:grid-cols-2">
+              <div className="mt-4 rounded-lg border-2 border-orange-200 bg-orange-50 p-4 sm:rounded-xl sm:p-6">
+                <h3 className="mb-4 text-sm font-bold sm:text-base">{editingStateId ? "Edit State" : "Add New State"}</h3>
+                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-muted-foreground">ID (slug)</label>
+                    <label className="mb-1 block text-[10px] font-bold text-muted-foreground sm:text-xs">ID (slug)</label>
                     <input
                       type="text"
                       value={stateForm.id}
                       onChange={(e) => setStateForm((s) => ({ ...s, id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") }))}
                       disabled={!!editingStateId}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+                      className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm disabled:opacity-50 sm:h-10"
                       placeholder="west-bengal"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-muted-foreground">Name</label>
+                    <label className="mb-1 block text-[10px] font-bold text-muted-foreground sm:text-xs">Name</label>
                     <input
                       type="text"
                       value={stateForm.name}
                       onChange={(e) => setStateForm((s) => ({ ...s, name: e.target.value }))}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm sm:h-10"
                       placeholder="West Bengal"
                     />
                   </div>

@@ -20,7 +20,10 @@ import {
   Zap,
   Search,
   Trophy,
+  Menu,
+  MapPin,
 } from "lucide-react"
+import Link from "next/link"
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -992,6 +995,28 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     contribution_count: number
     last_contribution: string
   }>>([])
+  const [showStateMenu, setShowStateMenu] = useState(false)
+  const [availableStates, setAvailableStates] = useState<Array<{
+    id: string
+    name: string
+    party: string
+  }>>([])
+
+  // Fetch available states for the menu
+  useEffect(() => {
+    async function fetchStates() {
+      try {
+        const res = await fetch("/api/states")
+        if (res.ok) {
+          const data = await res.json()
+          setAvailableStates(data)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching states:", error)
+      }
+    }
+    fetchStates()
+  }, [])
 
   // Fetch latest approved updates for the slider
   useEffect(() => {
@@ -1128,6 +1153,58 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {/* Hamburger Menu for State Selection */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowStateMenu(!showStateMenu)}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
+                  title="Select State"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                {showStateMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowStateMenu(false)} 
+                    />
+                    <div className="absolute left-0 top-12 z-50 min-w-[200px] rounded-xl border border-border bg-card p-2 shadow-xl">
+                      <div className="mb-2 px-2 py-1">
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select State</p>
+                      </div>
+                      {availableStates.length === 0 ? (
+                        <p className="px-2 py-3 text-sm text-muted-foreground">No states available</p>
+                      ) : (
+                        availableStates.map((state) => (
+                          <Link
+                            key={state.id}
+                            href={`/${state.id}`}
+                            onClick={() => setShowStateMenu(false)}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted ${
+                              state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
+                            }`}
+                          >
+                            <MapPin className="h-4 w-4" />
+                            <span>{state.name}</span>
+                            {state.id === stateConfig.id && (
+                              <span className="ml-auto text-xs text-orange-500">Current</span>
+                            )}
+                          </Link>
+                        ))
+                      )}
+                      <div className="mt-2 border-t border-border pt-2">
+                        <Link
+                          href="/states"
+                          onClick={() => setShowStateMenu(false)}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          View All States
+                        </Link>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-t-xl rounded-br-sm bg-white text-3xl font-black text-orange-600" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
                 M
               </div>

@@ -1071,7 +1071,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
   // Stats
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
-  const total = totalPromises()
+  const total = totalPromises
   const stats = {
     total,
     fulfilled: allPromises.filter((p) => statuses[p.id] === "fulfilled").length,

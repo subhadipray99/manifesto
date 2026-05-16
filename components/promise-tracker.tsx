@@ -931,12 +931,12 @@ function LatestUpdatesSlider({
           <button
             key={`${update.id}-${i}`}
             onClick={() => onSelectPromise(promise, category)}
-            className="group relative flex w-[65vw] max-w-[280px] flex-shrink-0 flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
+            className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
           >
             {/* Category tag */}
             <div className="mb-3 flex items-center justify-between">
               <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
-                {category.bengali}
+                {category.localName || category.name}
               </span>
               <span className="text-[10px] text-muted-foreground">
                 {new Date(update.created_at).toLocaleDateString("en-IN", {

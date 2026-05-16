@@ -108,6 +108,20 @@ export default function AdminDashboard() {
     }
   }, [isLoaded, userId, activeTab, submissionTab])
 
+  // Refetch categories when category state filter changes
+  useEffect(() => {
+    if (activeTab === "categories" || activeTab === "promises") {
+      fetchCategories(selectedCategoryStateFilter)
+    }
+  }, [selectedCategoryStateFilter, activeTab])
+
+  // Refetch promises when state/category filters change
+  useEffect(() => {
+    if (activeTab === "promises") {
+      fetchPromises(selectedStateFilter, selectedCategoryFilter)
+    }
+  }, [selectedStateFilter, selectedCategoryFilter, activeTab])
+
   const loadData = async () => {
     setLoading(true)
     setError("")
@@ -155,12 +169,18 @@ export default function AdminDashboard() {
 
   const fetchCategories = async (stateId?: string) => {
     const filterState = stateId || selectedCategoryStateFilter
-    const url = filterState
-      ? `/api/admin/categories?stateId=${filterState}`
-      : "/api/admin/categories"
-    const response = await fetch(url)
-    if (!response.ok) throw new Error("Failed to fetch categories")
-    setCategories(await response.json())
+    let url = "/api/admin/categories"
+    if (filterState) url += `?stateId=${filterState}`
+    
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error("Failed to fetch categories")
+      const data = await response.json()
+      setCategories(data)
+    } catch (error) {
+      console.error("[v0] Error fetching categories:", error)
+      setCategories([])
+    }
   }
 
   const fetchPromises = async (stateId?: string, categoryId?: string) => {
@@ -172,9 +192,15 @@ export default function AdminDashboard() {
     else if (filterState) params.append("stateId", filterState)
     if (params.toString()) url += `?${params.toString()}`
     
-    const response = await fetch(url)
-    if (!response.ok) throw new Error("Failed to fetch promises")
-    setPromises(await response.json())
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error("Failed to fetch promises")
+      const data = await response.json()
+      setPromises(data)
+    } catch (error) {
+      console.error("[v0] Error fetching promises:", error)
+      setPromises([])
+    }
   }
 
   // Submission handlers

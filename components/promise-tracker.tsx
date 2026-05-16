@@ -530,7 +530,7 @@ function PromiseDetail({
                 className="flex items-center justify-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <LogIn className="h-4 w-4 flex-shrink-0" />
-                <span>Sign In</span>
+                <span>Sign In to Add Updates</span>
               </button>
             )}
           </div>

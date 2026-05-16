@@ -17,17 +17,17 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Bhorosha Tracker | BJP West Bengal Promise Tracker",
+  title: "The Manifesto | BJP West Bengal Promise Tracker",
   description:
     "Track every BJP manifesto promise for West Bengal. Citizen-powered accountability tracking fulfillment of election commitments.",
   generator: "v0.app",
-  keywords: ["BJP", "West Bengal", "Promise Tracker", "Election", "Manifesto", "Accountability", "Bhorosha"],
+  keywords: ["BJP", "West Bengal", "Promise Tracker", "Election", "Manifesto", "Accountability", "The Manifesto"],
   authors: [{ name: "ObserverFiles", url: "https://observerfiles.com" }],
   openGraph: {
-    title: "Bhorosha Tracker | BJP West Bengal Promise Tracker",
+    title: "The Manifesto | BJP West Bengal Promise Tracker",
     description: "Track every BJP manifesto promise for West Bengal. Are they keeping their word? Find out now.",
-    url: "https://bhorosha.vercel.app",
-    siteName: "Bhorosha Tracker",
+    url: "https://themanifesto.vercel.app",
+    siteName: "The Manifesto",
     locale: "en_IN",
     type: "website",
     images: [
@@ -35,13 +35,13 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Bhorosha Tracker - BJP West Bengal Promise Tracker",
+        alt: "The Manifesto - BJP West Bengal Promise Tracker",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bhorosha Tracker | BJP West Bengal Promise Tracker",
+    title: "The Manifesto | BJP West Bengal Promise Tracker",
     description: "Track every BJP manifesto promise for West Bengal. Citizen-powered accountability.",
     images: ["/og-image.jpg"],
     creator: "@observerfiles",

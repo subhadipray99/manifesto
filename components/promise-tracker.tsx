@@ -729,7 +729,7 @@ function ShareModal({
   onClose: () => void
 }) {
   const generateShareText = () => {
-    return `BHOROSHA TRACKER | BJP West Bengal
+    return `THE MANIFESTO | BJP West Bengal
 
 ${stats.fulfilled} Fulfilled
 ${stats.inProgress} In Progress
@@ -781,7 +781,7 @@ Track yourself:`
 
         {/* Preview Card */}
         <div className="mt-4 rounded-2xl bg-foreground p-4 text-white">
-          <p className="font-black">BHOROSHA TRACKER</p>
+          <p className="font-black">THE MANIFESTO</p>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-green" />
@@ -1127,7 +1127,7 @@ export default function PromiseTracker() {
               </div>
               <div>
                 <h1 className="font-serif text-2xl font-black leading-none tracking-tight text-white">
-                  BHOROSHA
+                  THE MANIFESTO
                 </h1>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">
                   BJP West Bengal Tracker
@@ -1456,7 +1456,7 @@ export default function PromiseTracker() {
             </div>
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Bhorosha Tracker - Citizen-powered accountability for West Bengal
+            The Manifesto - Citizen-powered accountability for West Bengal
           </p>
         </div>
       </footer>

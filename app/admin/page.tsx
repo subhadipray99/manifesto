@@ -115,12 +115,13 @@ export default function AdminDashboard() {
     }
   }, [selectedCategoryStateFilter, activeTab])
 
-  // Refetch promises when state/category filters change
+  // Refetch categories when promises tab is opened (to populate dropdown)
   useEffect(() => {
     if (activeTab === "promises") {
-      fetchPromises(selectedStateFilter, selectedCategoryFilter)
+      // Fetch all categories (no state filter initially)
+      fetchCategories("")
     }
-  }, [selectedStateFilter, selectedCategoryFilter, activeTab])
+  }, [activeTab])
 
   const loadData = async () => {
     setLoading(true)
@@ -176,6 +177,7 @@ export default function AdminDashboard() {
       const response = await fetch(url)
       if (!response.ok) throw new Error("Failed to fetch categories")
       const data = await response.json()
+      console.log("[v0] Fetched categories:", data)
       setCategories(data)
     } catch (error) {
       console.error("[v0] Error fetching categories:", error)

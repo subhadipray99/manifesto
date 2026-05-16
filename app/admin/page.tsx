@@ -117,11 +117,9 @@ export default function AdminDashboard() {
     const url = stateId
       ? `/api/admin/categories?stateId=${stateId}`
       : "/api/admin/categories"
-    console.log("[v0] Fetching categories from:", url)
     const response = await fetch(url)
     if (!response.ok) throw new Error("Failed to fetch categories")
     const data = await response.json()
-    console.log("[v0] Fetched categories:", data)
     setCategories(data)
   }, [])
 
@@ -137,17 +135,16 @@ export default function AdminDashboard() {
 
   // Main tab loader
   useEffect(() => {
-    if (!isLoaded || !userId) {
-      if (isLoaded) setLoading(false)
-      return
-    }
+    if (!isLoaded) return
+
     const load = async () => {
       setLoading(true)
       setError("")
       try {
         switch (activeTab) {
           case "submissions":
-            await fetchUpdates(submissionTab)
+            // submissions requires auth
+            if (userId) await fetchUpdates(submissionTab)
             break
           case "states":
             await fetchStates()
@@ -158,7 +155,7 @@ export default function AdminDashboard() {
             break
           case "promises":
             await fetchStates()
-            await fetchCategories("")   // load all categories for dropdown
+            await fetchCategories("")
             await fetchPromises(selectedStateFilter, selectedCategoryFilter)
             break
         }

@@ -926,14 +926,19 @@ export default function AdminDashboard() {
                     setSelectedCategoryFilter(e.target.value)
                     fetchPromises(selectedStateFilter, e.target.value)
                   }}
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
                 >
                   <option value="">All Categories</option>
-                  {categories
-                    .filter((c) => !selectedStateFilter || c.state_id === selectedStateFilter)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                  {categories.length === 0 ? (
+                    <option disabled>No categories available</option>
+                  ) : (
+                    categories
+                      .filter((c) => !selectedStateFilter || c.state_id === selectedStateFilter)
+                      .map((c) => {
+                        console.log("[v0] Rendering category option:", c.id, c.name)
+                        return <option key={c.id} value={c.id}>{c.name}</option>
+                      })
+                  )}
                 </select>
                 <button
                   onClick={() => {

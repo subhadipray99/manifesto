@@ -319,7 +319,6 @@ function CategoryCard({
               const status = statuses[promise.id] || "pending"
               const config = STATUS_CONFIG[status]
               const Icon = config.icon
-              const updateCount = timelines[promise.id]?.length || 0
 
               return (
                 <li key={promise.id}>
@@ -334,15 +333,7 @@ function CategoryCard({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold leading-snug text-foreground text-pretty">{promise.title}</p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <p className={`text-xs font-medium ${config.color}`}>{config.label}</p>
-                        {updateCount > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
-                            <span className="h-1.5 w-1.5 rounded-full bg-orange-600" />
-                            {updateCount} {updateCount === 1 ? "update" : "updates"}
-                          </span>
-                        )}
-                      </div>
+                      <p className={`mt-1 text-xs font-medium ${config.color}`}>{config.label}</p>
                     </div>
                   </button>
                 </li>

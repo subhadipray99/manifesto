@@ -98,12 +98,48 @@ export async function generateMetadata({
     return { title: "State Not Found | The Manifesto" }
   }
 
+  const title = `${stateConfig.party} ${stateConfig.name} Promise Tracker | The Manifesto`
+  const description = `Track every ${stateConfig.party} manifesto promise for ${stateConfig.name}. Monitor fulfillment of election commitments with citizen-powered accountability.`
+  const url = `https://themanifesto.vercel.app/${state}`
+
   return {
-    title: `${stateConfig.party} ${stateConfig.name} Promise Tracker | The Manifesto`,
-    description: `Track every ${stateConfig.party} manifesto promise for ${stateConfig.name}. Citizen-powered accountability tracking fulfillment of election commitments.`,
+    title,
+    description,
+    keywords: [
+      stateConfig.party,
+      stateConfig.name,
+      "Promise Tracker",
+      "Election Manifesto",
+      "Accountability",
+      "Political Promises",
+      "Governance",
+    ],
     openGraph: {
-      title: `${stateConfig.party} ${stateConfig.name} Promise Tracker | The Manifesto`,
-      description: `Track every ${stateConfig.party} manifesto promise for ${stateConfig.name}. Are they keeping their word?`,
+      title,
+      description,
+      url,
+      type: "website",
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/og-image.jpg"],
+    },
+    alternates: {
+      canonical: url,
+    },
+    robots: {
+      index: true,
+      follow: true,
     },
   }
 }

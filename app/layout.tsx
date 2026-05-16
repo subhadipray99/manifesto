@@ -19,10 +19,31 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "The Manifesto | BJP West Bengal Promise Tracker",
   description:
-    "Track every BJP manifesto promise for West Bengal. Citizen-powered accountability tracking fulfillment of election commitments.",
+    "Track every BJP manifesto promise for West Bengal. Monitor fulfillment of election commitments with real-time updates. Citizen-powered accountability platform.",
   generator: "v0.app",
-  keywords: ["BJP", "West Bengal", "Promise Tracker", "Election", "Manifesto", "Accountability", "The Manifesto"],
+  keywords: [
+    "BJP",
+    "West Bengal",
+    "Promise Tracker",
+    "Election Manifesto",
+    "Accountability",
+    "Political Promises",
+    "Governance",
+    "The Manifesto",
+    "Bengal Elections",
+    "Promise Fulfillment",
+  ],
   authors: [{ name: "ObserverFiles", url: "https://observerfiles.com" }],
+  referrer: "strict-origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    telephone: false,
+    address: false,
+  },
+  icons: {
+    icon: "/favicon.jpg",
+    apple: "/favicon.jpg",
+  },
   openGraph: {
     title: "The Manifesto | BJP West Bengal Promise Tracker",
     description: "Track every BJP manifesto promise for West Bengal. Are they keeping their word? Find out now.",
@@ -49,6 +70,17 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    nocache: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://themanifesto.vercel.app",
   },
 }
 

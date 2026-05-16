@@ -16,7 +16,6 @@ import {
   MapPin,
   FolderOpen,
   FileText,
-  ChevronDown,
 } from "lucide-react"
 
 // Types
@@ -90,6 +89,7 @@ export default function AdminDashboard() {
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [categoryForm, setCategoryForm] = useState({ id: "", stateId: "", name: "", icon: "FileText", color: "#FF9933" })
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [selectedCategoryStateFilter, setSelectedCategoryStateFilter] = useState<string>("")
 
   // Promises management
   const [promises, setPromises] = useState<Promise[]>([])
@@ -97,6 +97,7 @@ export default function AdminDashboard() {
   const [promiseForm, setPromiseForm] = useState({ id: "", categoryId: "", stateId: "", title: "", description: "", source: "" })
   const [editingPromiseId, setEditingPromiseId] = useState<string | null>(null)
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>("")
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("")
 
   // Load data based on active tab
   useEffect(() => {
@@ -152,16 +153,25 @@ export default function AdminDashboard() {
     setStates(await response.json())
   }
 
-  const fetchCategories = async () => {
-    const response = await fetch("/api/admin/categories")
+  const fetchCategories = async (stateId?: string) => {
+    const filterState = stateId || selectedCategoryStateFilter
+    const url = filterState
+      ? `/api/admin/categories?stateId=${filterState}`
+      : "/api/admin/categories"
+    const response = await fetch(url)
     if (!response.ok) throw new Error("Failed to fetch categories")
     setCategories(await response.json())
   }
 
-  const fetchPromises = async () => {
-    const url = selectedStateFilter
-      ? `/api/admin/promises?stateId=${selectedStateFilter}`
-      : "/api/admin/promises"
+  const fetchPromises = async (stateId?: string, categoryId?: string) => {
+    const filterState = stateId || selectedStateFilter
+    const filterCategory = categoryId || selectedCategoryFilter
+    let url = "/api/admin/promises"
+    const params = new URLSearchParams()
+    if (filterCategory) params.append("categoryId", filterCategory)
+    else if (filterState) params.append("stateId", filterState)
+    if (params.toString()) url += `?${params.toString()}`
+    
     const response = await fetch(url)
     if (!response.ok) throw new Error("Failed to fetch promises")
     setPromises(await response.json())
@@ -581,19 +591,45 @@ export default function AdminDashboard() {
         {/* States Tab */}
         {activeTab === "states" && (
           <div className="mt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-lg font-black">Manage States</h2>
-              <button
-                onClick={() => {
-                  setShowStateForm(true)
-                  setEditingStateId(null)
-                  setStateForm({ id: "", name: "", party: "", startDate: "" })
-                }}
-                className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
-              >
-                <Plus className="h-4 w-4" />
-                Add State
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    if (confirm("This will migrate West Bengal data from the config file to the database. Continue?")) {
+                      setLoading(true)
+                      try {
+                        const res = await fetch("/api/admin/migrate?key=migrate-data-2026")
+                        const data = await res.json()
+                        if (res.ok) {
+                          alert(`Migration complete! ${data.categories} categories and ${data.promises} promises migrated.`)
+                          fetchStates()
+                        } else {
+                          alert(`Migration failed: ${data.error}`)
+                        }
+                      } catch (err) {
+                        alert("Migration failed")
+                      } finally {
+                        setLoading(false)
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-2 rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 hover:bg-orange-100"
+                >
+                  Migrate WB Data
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStateForm(true)
+                    setEditingStateId(null)
+                    setStateForm({ id: "", name: "", party: "", startDate: "" })
+                  }}
+                  className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add State
+                </button>
+              </div>
             </div>
 
             {showStateForm && (
@@ -702,19 +738,34 @@ export default function AdminDashboard() {
         {/* Categories Tab */}
         {activeTab === "categories" && (
           <div className="mt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-lg font-black">Manage Categories</h2>
-              <button
-                onClick={() => {
-                  setShowCategoryForm(true)
-                  setEditingCategoryId(null)
-                  setCategoryForm({ id: "", stateId: "", name: "", icon: "FileText", color: "#FF9933" })
-                }}
-                className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
-              >
-                <Plus className="h-4 w-4" />
-                Add Category
-              </button>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedCategoryStateFilter}
+                  onChange={(e) => {
+                    setSelectedCategoryStateFilter(e.target.value)
+                    fetchCategories(e.target.value)
+                  }}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All States</option>
+                  {states.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => {
+                    setShowCategoryForm(true)
+                    setEditingCategoryId(null)
+                    setCategoryForm({ id: "", stateId: selectedCategoryStateFilter, name: "", icon: "FileText", color: "#FF9933" })
+                  }}
+                  className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Category
+                </button>
+              </div>
             </div>
 
             {showCategoryForm && (
@@ -826,23 +877,36 @@ export default function AdminDashboard() {
           <div className="mt-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-lg font-black">Manage Promises</h2>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <select
-                    value={selectedStateFilter}
-                    onChange={(e) => {
-                      setSelectedStateFilter(e.target.value)
-                      setTimeout(fetchPromises, 0)
-                    }}
-                    className="rounded-lg border border-border bg-background px-3 py-2 pr-8 text-sm"
-                  >
-                    <option value="">All States</option>
-                    {states.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  value={selectedStateFilter}
+                  onChange={(e) => {
+                    setSelectedStateFilter(e.target.value)
+                    setSelectedCategoryFilter("")
+                    fetchPromises(e.target.value, "")
+                  }}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All States</option>
+                  {states.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={selectedCategoryFilter}
+                  onChange={(e) => {
+                    setSelectedCategoryFilter(e.target.value)
+                    fetchPromises(selectedStateFilter, e.target.value)
+                  }}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All Categories</option>
+                  {categories
+                    .filter((c) => !selectedStateFilter || c.state_id === selectedStateFilter)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                </div>
+                </select>
                 <button
                   onClick={() => {
                     setShowPromiseForm(true)

@@ -117,9 +117,12 @@ export default function AdminDashboard() {
     const url = stateId
       ? `/api/admin/categories?stateId=${stateId}`
       : "/api/admin/categories"
+    console.log("[v0] Fetching categories from:", url)
     const response = await fetch(url)
     if (!response.ok) throw new Error("Failed to fetch categories")
-    setCategories(await response.json())
+    const data = await response.json()
+    console.log("[v0] Fetched categories:", data)
+    setCategories(data)
   }, [])
 
   const fetchPromises = useCallback(async (stateId: string = "", categoryId: string = "") => {
@@ -166,7 +169,7 @@ export default function AdminDashboard() {
       }
     }
     load()
-  }, [isLoaded, userId, activeTab, submissionTab])
+  }, [isLoaded, userId, activeTab, submissionTab, fetchStates, fetchUpdates, fetchCategories, fetchPromises])
 
   // Re-fetch categories when category-tab state filter changes
   useEffect(() => {

@@ -1382,7 +1382,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               <option value="all">All</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.bengali}
+                  {cat.localName || cat.name}
                 </option>
               ))}
             </select>

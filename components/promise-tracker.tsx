@@ -1122,8 +1122,8 @@ export default function PromiseTracker() {
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-t-xl rounded-br-sm bg-white text-3xl font-black text-orange-600" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)' }}>
-                ভ
+              <div className="flex h-12 w-12 items-center justify-center rounded-t-xl rounded-br-sm bg-white text-3xl font-black text-orange-600" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
+                M
               </div>
               <div>
                 <h1 className="font-serif text-2xl font-black leading-none tracking-tight text-white">

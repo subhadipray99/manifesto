@@ -120,6 +120,14 @@ const promises = [
 ]
 
 export async function POST(request: Request) {
+  return runMigration(request)
+}
+
+export async function GET(request: Request) {
+  return runMigration(request)
+}
+
+async function runMigration(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const adminKey = searchParams.get("key")
@@ -153,6 +161,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true, 
+      categories: categories.length,
+      promises: promises.length,
       message: `Migrated ${categories.length} categories and ${promises.length} promises` 
     })
   } catch (error) {

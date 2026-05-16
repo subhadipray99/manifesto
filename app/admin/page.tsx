@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@clerk/nextjs"
 import {
   Check,
@@ -99,111 +99,84 @@ export default function AdminDashboard() {
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>("")
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("")
 
-  // Load data based on active tab
-  useEffect(() => {
-    if (isLoaded && userId) {
-      loadData()
-    } else if (isLoaded && !userId) {
-      setLoading(false)
-    }
-  }, [isLoaded, userId, activeTab, submissionTab])
-
-  // Refetch categories when category state filter changes
-  useEffect(() => {
-    if (activeTab === "categories" || activeTab === "promises") {
-      fetchCategories(selectedCategoryStateFilter)
-    }
-  }, [selectedCategoryStateFilter, activeTab])
-
-  // Refetch categories when promises tab is opened (to populate dropdown)
-  useEffect(() => {
-    if (activeTab === "promises") {
-      // Fetch all categories (no state filter initially)
-      fetchCategories("")
-    }
-  }, [activeTab])
-
-  const loadData = async () => {
-    setLoading(true)
-    setError("")
-    try {
-      switch (activeTab) {
-        case "submissions":
-          await fetchUpdates(submissionTab)
-          break
-        case "states":
-          await fetchStates()
-          break
-        case "categories":
-          await fetchStates()
-          await fetchCategories()
-          break
-        case "promises":
-          await fetchStates()
-          await fetchCategories()
-          await fetchPromises()
-          break
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load data")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Fetch functions
-  const fetchUpdates = async (status: "pending" | "approved") => {
+  // Fetch functions — defined with useCallback so they can be stable deps
+  const fetchUpdates = useCallback(async (status: "pending" | "approved") => {
     const response = await fetch(`/api/admin/pending-updates?userId=${userId}&status=${status}`)
-    if (response.status === 403) {
-      setAccessDenied(true)
-      return
-    }
+    if (response.status === 403) { setAccessDenied(true); return }
     if (!response.ok) throw new Error("Failed to fetch updates")
     setUpdates(await response.json())
-  }
+  }, [userId])
 
-  const fetchStates = async () => {
+  const fetchStates = useCallback(async () => {
     const response = await fetch("/api/admin/states")
     if (!response.ok) throw new Error("Failed to fetch states")
     setStates(await response.json())
-  }
+  }, [])
 
-  const fetchCategories = async (stateId?: string) => {
-    const filterState = stateId || selectedCategoryStateFilter
-    let url = "/api/admin/categories"
-    if (filterState) url += `?stateId=${filterState}`
-    
-    try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error("Failed to fetch categories")
-      const data = await response.json()
-      console.log("[v0] Fetched categories:", data)
-      setCategories(data)
-    } catch (error) {
-      console.error("[v0] Error fetching categories:", error)
-      setCategories([])
-    }
-  }
+  const fetchCategories = useCallback(async (stateId: string = "") => {
+    const url = stateId
+      ? `/api/admin/categories?stateId=${stateId}`
+      : "/api/admin/categories"
+    const response = await fetch(url)
+    if (!response.ok) throw new Error("Failed to fetch categories")
+    setCategories(await response.json())
+  }, [])
 
-  const fetchPromises = async (stateId?: string, categoryId?: string) => {
-    const filterState = stateId || selectedStateFilter
-    const filterCategory = categoryId || selectedCategoryFilter
-    let url = "/api/admin/promises"
+  const fetchPromises = useCallback(async (stateId: string = "", categoryId: string = "") => {
     const params = new URLSearchParams()
-    if (filterCategory) params.append("categoryId", filterCategory)
-    else if (filterState) params.append("stateId", filterState)
-    if (params.toString()) url += `?${params.toString()}`
-    
-    try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error("Failed to fetch promises")
-      const data = await response.json()
-      setPromises(data)
-    } catch (error) {
-      console.error("[v0] Error fetching promises:", error)
-      setPromises([])
+    if (categoryId) params.append("categoryId", categoryId)
+    else if (stateId) params.append("stateId", stateId)
+    const url = params.toString() ? `/api/admin/promises?${params}` : "/api/admin/promises"
+    const response = await fetch(url)
+    if (!response.ok) throw new Error("Failed to fetch promises")
+    setPromises(await response.json())
+  }, [])
+
+  // Main tab loader
+  useEffect(() => {
+    if (!isLoaded || !userId) {
+      if (isLoaded) setLoading(false)
+      return
     }
-  }
+    const load = async () => {
+      setLoading(true)
+      setError("")
+      try {
+        switch (activeTab) {
+          case "submissions":
+            await fetchUpdates(submissionTab)
+            break
+          case "states":
+            await fetchStates()
+            break
+          case "categories":
+            await fetchStates()
+            await fetchCategories(selectedCategoryStateFilter)
+            break
+          case "promises":
+            await fetchStates()
+            await fetchCategories("")   // load all categories for dropdown
+            await fetchPromises(selectedStateFilter, selectedCategoryFilter)
+            break
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load data")
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [isLoaded, userId, activeTab, submissionTab])
+
+  // Re-fetch categories when category-tab state filter changes
+  useEffect(() => {
+    if (activeTab === "categories") fetchCategories(selectedCategoryStateFilter)
+  }, [selectedCategoryStateFilter, activeTab, fetchCategories])
+
+  // Re-fetch promises when filters change
+  useEffect(() => {
+    if (activeTab === "promises") fetchPromises(selectedStateFilter, selectedCategoryFilter)
+  }, [selectedStateFilter, selectedCategoryFilter, activeTab, fetchPromises])
 
   // Submission handlers
   const handleApprove = async (id: string) => {
@@ -772,8 +745,9 @@ export default function AdminDashboard() {
                 <select
                   value={selectedCategoryStateFilter}
                   onChange={(e) => {
-                    setSelectedCategoryStateFilter(e.target.value)
-                    fetchCategories(e.target.value)
+                    const s = e.target.value
+                    setSelectedCategoryStateFilter(s)
+                    fetchCategories(s)
                   }}
                   className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 >
@@ -909,11 +883,12 @@ export default function AdminDashboard() {
                 <select
                   value={selectedStateFilter}
                   onChange={(e) => {
-                    setSelectedStateFilter(e.target.value)
+                    const s = e.target.value
+                    setSelectedStateFilter(s)
                     setSelectedCategoryFilter("")
-                    fetchPromises(e.target.value, "")
+                    fetchPromises(s, "")
                   }}
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
                 >
                   <option value="">All States</option>
                   {states.map((s) => (
@@ -923,22 +898,19 @@ export default function AdminDashboard() {
                 <select
                   value={selectedCategoryFilter}
                   onChange={(e) => {
-                    setSelectedCategoryFilter(e.target.value)
-                    fetchPromises(selectedStateFilter, e.target.value)
+                    const c = e.target.value
+                    setSelectedCategoryFilter(c)
+                    fetchPromises(selectedStateFilter, c)
                   }}
                   className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
                 >
                   <option value="">All Categories</option>
-                  {categories.length === 0 ? (
-                    <option disabled>No categories available</option>
-                  ) : (
-                    categories
-                      .filter((c) => !selectedStateFilter || c.state_id === selectedStateFilter)
-                      .map((c) => {
-                        console.log("[v0] Rendering category option:", c.id, c.name)
-                        return <option key={c.id} value={c.id}>{c.name}</option>
-                      })
-                  )}
+                  {categories
+                    .filter((c) => !selectedStateFilter || c.state_id === selectedStateFilter)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))
+                  }
                 </select>
                 <button
                   onClick={() => {

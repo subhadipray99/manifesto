@@ -1399,7 +1399,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               const q = searchQuery.toLowerCase()
               return (
                 category.name.toLowerCase().includes(q) ||
-                category.bengali.toLowerCase().includes(q) ||
+                (category.localName && category.localName.toLowerCase().includes(q)) ||
                 category.promises.some((p) => p.title.toLowerCase().includes(q))
               )
             })

@@ -10,10 +10,16 @@ function isAdmin(userId: string | null): boolean {
   return adminIds.includes(userId)
 }
 
-// GET /api/promises/statuses - Get all promise statuses
-export async function GET() {
+// GET /api/promises/statuses?stateId=X - Get all promise statuses for a state
+export async function GET(request: NextRequest) {
   try {
-    const statuses = await sql`SELECT id, status, updated_at FROM promise_statuses`
+    const stateId = request.nextUrl.searchParams.get("stateId") || "west-bengal"
+    
+    const statuses = await sql`
+      SELECT id, status, updated_at 
+      FROM promise_statuses 
+      WHERE state_id = ${stateId}
+    `
     const result: Record<string, string> = {}
     statuses.forEach((row: any) => {
       result[row.id] = row.status
@@ -28,7 +34,7 @@ export async function GET() {
 // PUT /api/promises/statuses - Update a promise status (admin only)
 export async function PUT(request: NextRequest) {
   try {
-    const { promiseId, status, userId } = await request.json()
+    const { promiseId, status, userId, stateId = "west-bengal" } = await request.json()
 
     if (!isAdmin(userId)) {
       return NextResponse.json(
@@ -42,14 +48,15 @@ export async function PUT(request: NextRequest) {
     }
 
     await sql`
-      INSERT INTO promise_statuses (id, status, updated_at)
-      VALUES (${promiseId}, ${status}, CURRENT_TIMESTAMP)
+      INSERT INTO promise_statuses (id, status, state_id, updated_at)
+      VALUES (${promiseId}, ${status}, ${stateId}, CURRENT_TIMESTAMP)
       ON CONFLICT (id) DO UPDATE SET
         status = EXCLUDED.status,
+        state_id = EXCLUDED.state_id,
         updated_at = CURRENT_TIMESTAMP
     `
 
-    return NextResponse.json({ success: true, promiseId, status })
+    return NextResponse.json({ success: true, promiseId, status, stateId })
   } catch (error) {
     console.error("[v0] Error updating status:", error)
     return NextResponse.json({ error: "Failed to update status" }, { status: 500 })

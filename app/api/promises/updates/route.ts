@@ -25,10 +25,11 @@ function checkRateLimit(userId: string): { allowed: boolean; remaining: number }
   return { allowed: true, remaining: RATE_LIMIT_MAX - current.count }
 }
 
-// GET /api/promises/updates?promiseId=X - Get approved timeline updates for a promise
+// GET /api/promises/updates?promiseId=X&stateId=Y - Get approved timeline updates for a promise
 export async function GET(request: NextRequest) {
   try {
     const promiseId = request.nextUrl.searchParams.get("promiseId")
+    const stateId = request.nextUrl.searchParams.get("stateId") || "west-bengal"
 
     if (!promiseId) {
       return NextResponse.json({ error: "Missing promiseId" }, { status: 400 })
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     const updates = await sql`
       SELECT id, title, link, description, created_at, submitted_by, user_email
       FROM timeline_updates
-      WHERE promise_id = ${promiseId} AND status = 'approved'
+      WHERE promise_id = ${promiseId} AND state_id = ${stateId} AND status = 'approved'
       ORDER BY created_at DESC
     `
 
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
 // POST /api/promises/updates - Submit a new timeline update (goes to pending)
 export async function POST(request: NextRequest) {
   try {
-    const { promiseId, title, link, description, userName, userEmail, userId } = await request.json()
+    const { promiseId, title, link, description, userName, userEmail, userId, stateId = "west-bengal" } = await request.json()
 
     // Require authentication (userId passed from client)
     if (!userId) {
@@ -81,11 +82,11 @@ export async function POST(request: NextRequest) {
     await sql`
       INSERT INTO timeline_updates (
         id, promise_id, title, link, description, status, 
-        user_id, submitted_by, user_email
+        user_id, submitted_by, user_email, state_id
       )
       VALUES (
         ${updateId}, ${promiseId}, ${title}, ${link}, ${description || null}, 'pending',
-        ${userId}, ${userName || "Anonymous"}, ${userEmail || null}
+        ${userId}, ${userName || "Anonymous"}, ${userEmail || null}, ${stateId}
       )
     `
 

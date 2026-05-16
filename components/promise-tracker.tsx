@@ -2,14 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
-import {
-  CATEGORIES,
-  totalPromises,
-  type PromiseStatus,
-  type Promise as PromiseType,
-  type Category,
-  type TimelineUpdate,
-} from "@/lib/promises-data"
+import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
 import {
   Circle,
   Clock,
@@ -101,9 +94,9 @@ function saveTimelines(timelines: Record<string, TimelineUpdate[]>) {
 }
 
 // API functions for database operations
-async function fetchStatusesFromDB(): Promise<Record<string, PromiseStatus>> {
+async function fetchStatusesFromDB(stateId: string): Promise<Record<string, PromiseStatus>> {
   try {
-    const response = await fetch("/api/promises/statuses")
+    const response = await fetch(`/api/promises/statuses?stateId=${stateId}`)
     if (!response.ok) throw new Error("Failed to fetch statuses")
     return response.json()
   } catch (error) {
@@ -112,12 +105,12 @@ async function fetchStatusesFromDB(): Promise<Record<string, PromiseStatus>> {
   }
 }
 
-async function updateStatusInDB(promiseId: string, status: PromiseStatus, userId: string | null): Promise<void> {
+async function updateStatusInDB(promiseId: string, status: PromiseStatus, userId: string | null, stateId: string): Promise<void> {
   try {
     const response = await fetch("/api/promises/statuses", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ promiseId, status, userId }),
+      body: JSON.stringify({ promiseId, status, userId, stateId }),
     })
     if (!response.ok) throw new Error("Failed to update status")
   } catch (error) {
@@ -125,9 +118,9 @@ async function updateStatusInDB(promiseId: string, status: PromiseStatus, userId
   }
 }
 
-async function fetchTimelineUpdatesFromDB(promiseId: string): Promise<TimelineUpdate[]> {
+async function fetchTimelineUpdatesFromDB(promiseId: string, stateId: string): Promise<TimelineUpdate[]> {
   try {
-    const response = await fetch(`/api/promises/updates?promiseId=${promiseId}`)
+    const response = await fetch(`/api/promises/updates?promiseId=${promiseId}&stateId=${stateId}`)
     if (!response.ok) throw new Error("Failed to fetch updates")
     const data = await response.json()
     // Convert to TimelineUpdate format
@@ -352,6 +345,7 @@ function PromiseDetail({
   category,
   status,
   timeline,
+  stateId,
   onStatusChange,
   onAddUpdate,
   onClose,
@@ -364,6 +358,7 @@ function PromiseDetail({
   category: Category
   status: PromiseStatus
   timeline: TimelineUpdate[]
+  stateId: string
   onStatusChange: (status: PromiseStatus) => void
   onAddUpdate: (update: Omit<TimelineUpdate, "id" | "timestamp">) => void
   onClose: () => void
@@ -422,6 +417,7 @@ function PromiseDetail({
           userName: displayName,
           userEmail: user?.primaryEmailAddress?.emailAddress || null,
           userId: userId,
+          stateId: stateId,
         }),
       })
 
@@ -723,13 +719,15 @@ function PromiseDetail({
 // Share Modal
 function ShareModal({
   stats,
+  stateConfig,
   onClose,
 }: {
   stats: { total: number; fulfilled: number; inProgress: number; broken: number; pending: number }
+  stateConfig: StateConfig
   onClose: () => void
 }) {
   const generateShareText = () => {
-    return `THE MANIFESTO | BJP West Bengal
+    return `THE MANIFESTO | ${stateConfig.party} ${stateConfig.name}
 
 ${stats.fulfilled} Fulfilled
 ${stats.inProgress} In Progress
@@ -844,6 +842,7 @@ Track yourself:`
 // Latest Updates Auto-Scroll Slider
 function LatestUpdatesSlider({
   updates,
+  categories,
   onSelectPromise,
 }: {
   updates: Array<{
@@ -854,6 +853,7 @@ function LatestUpdatesSlider({
     submitted_by: string | null
     created_at: string
   }>
+  categories: Category[]
   onSelectPromise: (promise: PromiseType, category: Category) => void
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -862,7 +862,7 @@ function LatestUpdatesSlider({
 
   // Resolve each update to its promise + category
   const resolved = updates.flatMap((update) => {
-    for (const cat of CATEGORIES) {
+    for (const cat of categories) {
       const p = cat.promises.find((p) => p.id === update.promise_id)
       if (p) return [{ update, promise: p, category: cat }]
     }
@@ -959,7 +959,10 @@ function LatestUpdatesSlider({
 }
 
 // Main Component
-export default function PromiseTracker() {
+export default function PromiseTracker({ stateConfig }: { stateConfig: StateConfig }) {
+  const CATEGORIES = stateConfig.categories
+  const totalPromises = CATEGORIES.reduce((acc, cat) => acc + cat.promises.length, 0)
+  
   const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
   const { openSignIn, openUserProfile } = useClerk()
@@ -994,7 +997,7 @@ export default function PromiseTracker() {
   useEffect(() => {
     async function fetchLatestUpdates() {
       try {
-        const res = await fetch("/api/promises/latest-updates")
+        const res = await fetch(`/api/promises/latest-updates?stateId=${stateConfig.id}`)
         if (res.ok) {
           const data = await res.json()
           setLatestUpdates(data)
@@ -1004,13 +1007,13 @@ export default function PromiseTracker() {
       }
     }
     fetchLatestUpdates()
-  }, [])
+  }, [stateConfig.id])
 
   // Fetch top contributors
   useEffect(() => {
     async function fetchContributors() {
       try {
-        const res = await fetch("/api/contributors")
+        const res = await fetch(`/api/contributors?stateId=${stateConfig.id}`)
         if (res.ok) {
           const data = await res.json()
           setContributors(data)
@@ -1020,7 +1023,7 @@ export default function PromiseTracker() {
       }
     }
     fetchContributors()
-  }, [])
+  }, [stateConfig.id])
 
   // Check admin status
   useEffect(() => {
@@ -1044,20 +1047,20 @@ export default function PromiseTracker() {
   // Load statuses and timelines from database
   useEffect(() => {
     async function initializeData() {
-      const dbStatuses = await fetchStatusesFromDB()
+      const dbStatuses = await fetchStatusesFromDB(stateConfig.id)
       setStatuses(dbStatuses)
       // Calculate days in power client-side to avoid hydration mismatch
-      // Start date: May 9, 2026
-      const startDate = new Date(2026, 4, 9)
+      const startDate = stateConfig.startDate
       const today = new Date()
-      // If current real date is before May 9, 2026, simulate as if it's May 16, 2026
-      const effectiveToday = today < startDate ? new Date(2026, 4, 16) : today
+      // If current real date is before start date, simulate as if it's 7 days after
+      const simDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+      const effectiveToday = today < startDate ? simDate : today
       const days = Math.floor((effectiveToday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
       setDaysInPower(Math.max(0, days))
       setHydrated(true)
     }
     initializeData()
-  }, [])
+  }, [stateConfig.id, stateConfig.startDate])
 
   // Save statuses to database
   useEffect(() => {
@@ -1096,15 +1099,15 @@ export default function PromiseTracker() {
   const handleStatusChange = useCallback((promiseId: string, status: PromiseStatus) => {
     setStatuses((prev) => ({ ...prev, [promiseId]: status }))
     // Update in database with userId
-    updateStatusInDB(promiseId, status, userId)
-  }, [userId])
+    updateStatusInDB(promiseId, status, userId, stateConfig.id)
+  }, [userId, stateConfig.id])
 
   const handleAddTimelineUpdate = useCallback(
     (promiseId: string, update: Omit<TimelineUpdate, "id" | "timestamp">) => {
       // Submit to database (goes to pending/moderation)
       submitTimelineUpdateToDB(promiseId, update).then(() => {
         // Refresh timeline from database
-        fetchTimelineUpdatesFromDB(promiseId).then((updates) => {
+        fetchTimelineUpdatesFromDB(promiseId, stateConfig.id).then((updates) => {
           setTimelines((prev) => ({
             ...prev,
             [promiseId]: updates,
@@ -1112,7 +1115,7 @@ export default function PromiseTracker() {
         })
       })
     },
-    []
+    [stateConfig.id]
   )
 
   return (
@@ -1130,7 +1133,7 @@ export default function PromiseTracker() {
                   THE MANIFESTO
                 </h1>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">
-                  BJP West Bengal Tracker
+                  {stateConfig.party} {stateConfig.name} Tracker
                 </p>
                 {/* Days in Power */}
                 <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
@@ -1263,9 +1266,10 @@ export default function PromiseTracker() {
       {latestUpdates.length > 0 && (
         <LatestUpdatesSlider
           updates={latestUpdates}
+          categories={CATEGORIES}
           onSelectPromise={(promise, category) => {
             setSelectedPromise({ promise, category })
-            fetchTimelineUpdatesFromDB(promise.id).then((updates) => {
+            fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
               setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
             })
           }}
@@ -1328,7 +1332,7 @@ export default function PromiseTracker() {
                 onToggle={() => toggleCategory(category.id)}
                 onPromiseSelect={(promise, cat) => {
                   setSelectedPromise({ promise, category: cat })
-                  fetchTimelineUpdatesFromDB(promise.id).then((updates) => {
+                  fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
                     setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
                   })
                 }}
@@ -1344,6 +1348,7 @@ export default function PromiseTracker() {
           category={selectedPromise.category}
           status={statuses[selectedPromise.promise.id] || "pending"}
           timeline={timelines[selectedPromise.promise.id] || []}
+          stateId={stateConfig.id}
           onStatusChange={(s) => handleStatusChange(selectedPromise.promise.id, s)}
           onAddUpdate={(update) => handleAddTimelineUpdate(selectedPromise.promise.id, update)}
           onClose={() => setSelectedPromise(null)}
@@ -1355,7 +1360,7 @@ export default function PromiseTracker() {
       )}
 
       {/* Share Modal */}
-      {showShareModal && <ShareModal stats={stats} onClose={() => setShowShareModal(false)} />}
+      {showShareModal && <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />}
 
       {/* Contributor Leaderboard */}
       {contributors.length > 0 && (
@@ -1443,7 +1448,7 @@ export default function PromiseTracker() {
           <div className="mt-6 grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
-              <p className="mt-1 text-sm font-black text-foreground">BJP</p>
+              <p className="mt-1 text-sm font-black text-foreground">{stateConfig.party}</p>
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
@@ -1456,7 +1461,7 @@ export default function PromiseTracker() {
             </div>
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            The Manifesto - Citizen-powered accountability for West Bengal
+            The Manifesto - Citizen-powered accountability for {stateConfig.name}
           </p>
         </div>
       </footer>

@@ -1153,113 +1153,100 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   return (
     <div className="min-h-dvh bg-background pb-8">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-4 border-green-600 bg-orange-600 px-4 py-4">
-        <div className="mx-auto max-w-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Hamburger Menu for State Selection */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowStateMenu(!showStateMenu)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
-                  title="Select State"
-                >
-                  <Menu className="h-5 w-5" />
-                </button>
-                {showStateMenu && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setShowStateMenu(false)} 
-                    />
-                    <div className="absolute left-0 top-12 z-50 min-w-[200px] max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-xl">
-                      <div className="mb-2 px-2 py-1">
-                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select State</p>
-                      </div>
-                      {availableStates.length === 0 ? (
-                        <p className="px-2 py-3 text-sm text-muted-foreground">No states available</p>
-                      ) : (
-                        availableStates.map((state) => (
-                          <Link
-                            key={state.id}
-                            href={`/${state.id}`}
-                            onClick={() => setShowStateMenu(false)}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted ${
-                              state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
-                            }`}
-                          >
-                            <MapPin className="h-4 w-4 flex-shrink-0" />
-                            <span>{state.name}</span>
-                            {state.id === stateConfig.id && (
-                              <span className="ml-auto text-xs text-orange-500">Current</span>
-                            )}
-                          </Link>
-                        ))
-                      )}
-                      <div className="mt-2 border-t border-border pt-2">
-                        <Link
-                          href="/states"
-                          onClick={() => setShowStateMenu(false)}
-                          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        >
-                          View All States
-                        </Link>
-                      </div>
+      <header className="sticky top-0 z-40 border-b-4 border-green-600 bg-orange-600 px-3 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto max-w-4xl">
+          {/* Top row: menu, logo, actions */}
+          <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+            {/* Left: Hamburger Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowStateMenu(!showStateMenu)}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
+                title="Select State"
+              >
+                <Menu className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+              </button>
+              {showStateMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowStateMenu(false)} 
+                  />
+                  <div className="absolute left-0 top-11 z-50 min-w-[200px] max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-xl sm:top-12">
+                    <div className="mb-2 px-2 py-1">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select State</p>
                     </div>
-                  </>
-                )}
-              </div>
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-t-xl rounded-br-sm bg-white text-2xl font-black text-orange-600 sm:h-12 sm:w-12 sm:text-3xl" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
+                    {availableStates.length === 0 ? (
+                      <p className="px-2 py-3 text-sm text-muted-foreground">No states available</p>
+                    ) : (
+                      availableStates.map((state) => (
+                        <Link
+                          key={state.id}
+                          href={`/${state.id}`}
+                          onClick={() => setShowStateMenu(false)}
+                          className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted ${
+                            state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
+                          }`}
+                        >
+                          <MapPin className="h-4 w-4 flex-shrink-0" />
+                          <span>{state.name}</span>
+                          {state.id === stateConfig.id && (
+                            <span className="ml-auto text-xs text-orange-500">Current</span>
+                          )}
+                        </Link>
+                      ))
+                    )}
+                    <div className="mt-2 border-t border-border pt-2">
+                      <Link
+                        href="/states"
+                        onClick={() => setShowStateMenu(false)}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        View All States
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Center: Logo & Title */}
+            <div className="flex flex-1 items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-t-lg rounded-br-sm bg-white text-xl font-black text-orange-600 sm:h-10 sm:w-10 sm:text-2xl sm:rounded-t-xl sm:rounded-br-sm" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
                 M
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="font-serif text-lg font-black leading-none tracking-tight text-white sm:text-2xl">
-                  THE MANIFESTO
+                <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-lg">
+                  MANIFESTO
                 </h1>
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/80 sm:text-[10px]">
-                  {stateConfig.party} {stateConfig.name} Tracker
+                <p className="text-[8px] font-bold uppercase tracking-tight text-white/80 sm:text-[9px]">
+                  {stateConfig.name}
                 </p>
-                {/* Days in Power */}
-                <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white sm:mt-2.5 sm:px-3 sm:py-1.5 sm:text-xs">
-                  <span className="h-2 w-2 rounded-full bg-white/80" />
-                  <span>
-                    {hydrated ? daysInPower : "—"} Days in Power
-                  </span>
-                </div>
-                {/* Powered by ObserverFiles */}
-                <a
-                  href="https://observerfiles.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex text-[7px] font-semibold uppercase tracking-wider transition-colors sm:mt-2 sm:text-[9px]"
-                >
-                  <span className="text-white">Powered by </span>
-                  <span className="text-black hover:text-black/80">ObserverFiles</span>
-                </a>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth" })}
-                className="flex h-9 items-center gap-1.5 rounded-full bg-white/20 px-3 text-xs font-bold text-white transition-colors hover:bg-white/30 active:scale-95"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10 sm:px-0"
                 title="Top Contributors"
               >
-                <Trophy className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Contributors</span>
+                <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={() => setShowShareModal(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
                 title="Share"
               >
-                <Share2 className="h-5 w-5" />
+                <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
 
               {/* Auth button */}
               {isSignedIn && user ? (
                 <button
                   onClick={() => openUserProfile()}
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10"
                   title={user.firstName || "Account"}
                 >
                   {user.imageUrl ? (
@@ -1269,7 +1256,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span className="text-sm font-black text-orange-600">
+                    <span className="text-xs font-black text-orange-600 sm:text-sm">
                       {(user.firstName?.[0] || user.emailAddresses?.[0]?.emailAddress?.[0] || "U").toUpperCase()}
                     </span>
                   )}
@@ -1277,13 +1264,31 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               ) : (
                 <button
                   onClick={() => openSignIn()}
-                  className="flex h-9 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-black text-orange-600 shadow-md transition-all hover:bg-orange-50 active:scale-95"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md text-orange-600 font-black transition-all hover:bg-orange-50 active:scale-95 sm:h-10 sm:w-10 sm:px-0"
+                  title="Sign In"
                 >
-                  <LogIn className="h-3.5 w-3.5" />
-                  Sign In
+                  <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Bottom row: Days in power + info */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[8px] font-bold text-white sm:px-3 sm:py-1.5 sm:text-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-white/80 sm:h-2 sm:w-2" />
+              <span>
+                {hydrated ? daysInPower : "—"} Days in Power
+              </span>
+            </div>
+            <a
+              href="https://observerfiles.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[7px] font-semibold uppercase tracking-wider text-white hover:text-white/80 transition-colors sm:text-[8px]"
+            >
+              Powered by ObserverFiles
+            </a>
           </div>
         </div>
       </header>

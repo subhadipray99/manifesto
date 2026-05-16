@@ -1050,7 +1050,10 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       const dbStatuses = await fetchStatusesFromDB(stateConfig.id)
       setStatuses(dbStatuses)
       // Calculate days in power client-side to avoid hydration mismatch
-      const startDate = stateConfig.startDate
+      // Handle startDate as either Date object or ISO string
+      const startDate = typeof stateConfig.startDate === 'string' 
+        ? new Date(stateConfig.startDate) 
+        : stateConfig.startDate
       const today = new Date()
       // If current real date is before start date, simulate as if it's 7 days after
       const simDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)

@@ -1244,12 +1244,12 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             <span>{hydrated ? daysInPower : "—"} Days in Power</span>
           </div>
           <a
-            href="https://observerfiles.com"
+            href="https://observerfile.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[7px] font-semibold uppercase tracking-wider text-white hover:text-white/80 transition-colors sm:text-[8px]"
           >
-            Powered by ObserverFiles
+            Powered by ObserverFile
           </a>
         </div>
       </header>

@@ -85,6 +85,9 @@ export async function generateStaticParams() {
   return stateIds.map((state) => ({ state }))
 }
 
+// Revalidate every 1 hour to pick up new data from admin panel
+export const revalidate = 3600
+
 // Generate dynamic metadata based on state
 export async function generateMetadata({
   params,

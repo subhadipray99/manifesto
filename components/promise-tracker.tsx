@@ -1154,7 +1154,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     <div className="min-h-dvh bg-background pb-8">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b-4 border-green-600 bg-orange-600 px-3 py-3 sm:px-4 sm:py-4">
-        <div className="mx-auto max-w-4xl">
+        <div className="w-full lg:px-6">
           {/* Top row: menu, logo, actions */}
           <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
             {/* Left: Hamburger Menu */}
@@ -1365,8 +1365,10 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         />
       )}
 
-      {/* Category Cards */}
-      <div className="mx-auto max-w-4xl px-4 pt-4 sm:pt-6">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-4 pt-4 sm:pt-6 lg:mx-auto lg:max-w-7xl">
+        {/* Category Cards - Left side */}
+        <div className="lg:col-span-3">
         {/* Header row: title + search + filter */}
         <div className="mb-4 flex flex-col gap-3">
           <h2 className="font-serif text-lg font-black text-foreground sm:text-xl">Categories</h2>
@@ -1428,7 +1430,68 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               />
             ))}
         </div>
+        </div>
       </div>
+
+      {/* Mobile Footer - For screens smaller than lg */}
+      <footer className="lg:hidden border-t-2 border-border bg-card px-4 py-6">
+        <div className="mx-auto max-w-2xl">
+          <h3 className="font-serif text-lg font-black text-foreground mb-3">How to Read This Tracker</h3>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">✓</span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-green-600">Fulfilled</p>
+                <p className="text-xs text-muted-foreground">Promise completed (1 point)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">◐</span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-amber-600">In Progress</p>
+                <p className="text-xs text-muted-foreground">Work started (0.5 points)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">✗</span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-red-600">Broken</p>
+                <p className="text-xs text-muted-foreground">Promise not kept (0 points)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-xs font-bold text-white">○</span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-neutral-600">Not Rated</p>
+                <p className="text-xs text-muted-foreground">No action taken (0 points)</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-lg bg-muted/50 p-3 mb-6">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total Promises x 100
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
+              <p className="mt-1 text-sm font-black text-foreground">{stateConfig.party}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
+              <a
+                href="mailto:toddwake666@gmail.com"
+                className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors"
+              >
+                Email
+              </a>
+            </div>
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            The Manifesto - Citizen-powered accountability for {stateConfig.name}
+          </p>
+        </div>
+      </footer>
 
       {/* Promise Detail View */}
       {selectedPromise && (
@@ -1451,109 +1514,102 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       {/* Share Modal */}
       {showShareModal && <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />}
 
-      {/* Contributor Leaderboard */}
-      {contributors.length > 0 && (
-        <section id="leaderboard" className="border-t-2 border-border bg-gradient-to-b from-orange-50/50 to-background px-4 py-8">
-          <div className="mx-auto max-w-2xl">
-            <div className="mb-5 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
-              <h3 className="font-serif text-lg font-black text-foreground">Top Contributors</h3>
-            </div>
-            <div className="grid gap-3">
-              {contributors.slice(0, 5).map((contributor, index) => (
-                <div
-                  key={contributor.name}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-all hover:border-orange-300 hover:shadow-sm"
-                >
-                  <div
-                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-black text-white ${
-                      index === 0
-                        ? "bg-amber-500"
-                        : index === 1
-                          ? "bg-neutral-400"
-                          : index === 2
-                            ? "bg-amber-700"
-                            : "bg-neutral-300"
-                    }`}
-                  >
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-bold text-foreground">{contributor.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {contributor.contribution_count} verified update{contributor.contribution_count !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
-                      +{contributor.contribution_count}
-                    </span>
+        {/* Right Sidebar - Leaderboard & How to Read */}
+        <aside className="hidden lg:col-span-1 lg:block">
+          <div className="sticky top-24 space-y-6">
+            {/* Top Contributors */}
+            {contributors.length > 0 && (
+              <section id="leaderboard" className="rounded-xl border border-border bg-card p-4">
+                <div className="mb-4 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <h3 className="font-serif font-black text-foreground">Top Contributors</h3>
+                </div>
+                <div className="space-y-2">
+                  {contributors.slice(0, 5).map((contributor, index) => (
+                    <div key={contributor.name} className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/50 transition-colors">
+                      <div
+                        className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
+                          index === 0
+                            ? "bg-amber-500"
+                            : index === 1
+                              ? "bg-neutral-400"
+                              : index === 2
+                                ? "bg-amber-700"
+                                : "bg-neutral-300"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">{contributor.name}</p>
+                        <p className="text-xs text-muted-foreground">{contributor.contribution_count} update{contributor.contribution_count !== 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Submit verified updates to appear
+                </p>
+              </section>
+            )}
+
+            {/* How to Read Guide */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="font-serif font-black text-foreground mb-3">How to Read</h3>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">✓</span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-green-600">Fulfilled</p>
+                    <p className="text-[11px] text-muted-foreground">Completed (1 point)</p>
                   </div>
                 </div>
-              ))}
-            </div>
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              Submit verified updates to appear on the leaderboard
-            </p>
-          </div>
-        </section>
-      )}
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">◐</span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-amber-600">In Progress</p>
+                    <p className="text-[11px] text-muted-foreground">Started (0.5 points)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">✗</span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-red-600">Broken</p>
+                    <p className="text-[11px] text-muted-foreground">Not kept (0 points)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-[10px] font-bold text-white">○</span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-neutral-600">Not Rated</p>
+                    <p className="text-[11px] text-muted-foreground">No action (0 points)</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg bg-muted/50 p-2.5 border border-border/50">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-bold">Score:</span> (Fulfilled + In Progress×0.5) / Total ×100
+                </p>
+              </div>
+            </section>
 
-      {/* Footer - How to Read */}
-      <footer className="border-t-2 border-border bg-card px-4 py-6">
-        <div className="mx-auto max-w-2xl">
-          <h3 className="font-serif text-lg font-black text-foreground">How to Read This Tracker</h3>
-          <div className="mt-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">1</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-green-600">Fulfilled</span> = Promise completed (1 point)
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">0.5</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-amber-600">In Progress</span> = Work started but not complete (0.5 points)
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">0</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-red-600">Broken</span> = Promise not kept or reversed (0 points)
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-xs font-bold text-white">0</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-neutral-500">Not Rated</span> = No action taken yet (0 points)
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 rounded-lg bg-muted/50 p-3">
-            <p className="text-xs text-muted-foreground">
-              <span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total Promises x 100
-            </p>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
-              <p className="mt-1 text-sm font-black text-foreground">{stateConfig.party}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
+            {/* Footer Info on Sidebar */}
+            <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Ruling Party</p>
+              <p className="text-sm font-black text-foreground mb-3">{stateConfig.party}</p>
               <a
                 href="mailto:toddwake666@gmail.com"
-                className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors"
+                className="text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors inline-block"
               >
-                toddwake666@gmail.com
+                Contact Admin
               </a>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Citizen-powered accountability for {stateConfig.name}
+              </p>
             </div>
           </div>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            The Manifesto - Citizen-powered accountability for {stateConfig.name}
-          </p>
-        </div>
-      </footer>
+        </aside>
+      </div>
     </div>
   )
 }

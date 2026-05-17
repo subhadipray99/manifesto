@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "Bengal Elections",
     "Promise Fulfillment",
   ],
-  authors: [{ name: "ObserverFiles", url: "https://observerfiles.com" }],
+  authors: [{ name: "ObserverFiles", url: "https://observerfile.com" }],
   referrer: "strict-origin-when-cross-origin",
   formatDetection: {
     email: false,

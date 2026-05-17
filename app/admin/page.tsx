@@ -464,12 +464,15 @@ export default function AdminDashboard() {
         {activeTab === "submissions" && (
           <div className="mt-6">
         <div className="flex gap-1 overflow-x-auto border-b border-border">
-          {adminTabs.map((tab) => (
+          {[
+            { id: "pending", label: "Pending Review", icon: Clock },
+            { id: "approved", label: "Approved", icon: Check },
+          ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setSubmissionTab(tab.id as any)}
               className={`flex items-center gap-1 whitespace-nowrap px-2 py-3 text-sm font-semibold transition-colors sm:gap-2 sm:px-4 sm:text-base ${
-                activeTab === tab.id
+                submissionTab === tab.id
                   ? "border-b-2 border-orange-500 text-orange-600"
                   : "text-muted-foreground hover:text-foreground"
               }`}

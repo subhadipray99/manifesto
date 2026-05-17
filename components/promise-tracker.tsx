@@ -104,7 +104,7 @@ async function fetchStatusesFromDB(stateId: string): Promise<Record<string, Prom
     return response.json()
   } catch (error) {
     console.error("[v0] Error fetching statuses from DB:", error)
-    return loadStatuses() // Fallback to localStorage
+    return loadStatuses()
   }
 }
 
@@ -126,7 +126,6 @@ async function fetchTimelineUpdatesFromDB(promiseId: string, stateId: string): P
     const response = await fetch(`/api/promises/updates?promiseId=${promiseId}&stateId=${stateId}`)
     if (!response.ok) throw new Error("Failed to fetch updates")
     const data = await response.json()
-    // Convert to TimelineUpdate format
     return data.map((item: any) => ({
       id: item.id,
       title: item.title,
@@ -174,7 +173,7 @@ function ProgressRing({
   const offset = circumference - (percent / 100) * circumference
 
   return (
-    <svg width={size} height={size} className="rotate-[-90deg]">
+    <svg width={size} height={size} className="-rotate-90">
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -218,16 +217,14 @@ function CategoryCard({
   const fulfilled = category.promises.filter((p) => statuses[p.id] === "fulfilled").length
   const inProgress = category.promises.filter((p) => statuses[p.id] === "in-progress").length
   const broken = category.promises.filter((p) => statuses[p.id] === "broken").length
-
-  // Weighted progress: Fulfilled = 1 point, In Progress = 0.5 points, Broken/Pending = 0
   const progressPercent = total > 0 ? Math.round(((fulfilled * 1 + inProgress * 0.5) / total) * 100) : 0
 
   return (
-    <div className="overflow-hidden rounded-lg border-2 border-border bg-card transition-all sm:rounded-2xl">
-      {/* Card Header - Tap to expand */}
+    <div className="overflow-hidden rounded-2xl border-2 border-border bg-card shadow-sm">
+      {/* Card Header */}
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-3 p-3 text-left transition-colors active:bg-muted/50 sm:gap-4 sm:p-4"
+        className="flex w-full items-center gap-3 p-4 text-left transition-colors active:bg-muted/50 sm:p-5"
       >
         {/* Progress Ring */}
         <div className="relative flex-shrink-0">
@@ -237,9 +234,9 @@ function CategoryCard({
             strokeWidth={4}
             color={progressPercent === 100 ? "#16a34a" : "#c2410c"}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-foreground sm:text-sm">
-            {progressPercent}%
-          </span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[10px] font-black text-foreground">{progressPercent}%</span>
+          </div>
         </div>
 
         {/* Category Info */}
@@ -248,8 +245,6 @@ function CategoryCard({
           {category.localName && (
             <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">{category.localName}</p>
           )}
-          
-          {/* Status Summary Counts */}
           <div className="mt-1 flex items-center gap-2 text-[10px] font-bold sm:gap-3 sm:text-xs">
             {fulfilled > 0 && (
               <span className="flex items-center gap-1 text-green-600">
@@ -282,7 +277,7 @@ function CategoryCard({
         </div>
       </button>
 
-      {/* Promises Preview - Always visible colored dots grid */}
+      {/* Promises Preview - colored dots grid */}
       <div className="border-t border-border bg-muted/20 px-3 py-2 sm:px-4 sm:py-3">
         <div className="flex flex-wrap gap-1">
           {category.promises.map((promise) => {
@@ -390,18 +385,17 @@ function PromiseDetail({
     e.preventDefault()
     setSubmitError("")
 
-    // Get the display name - try multiple fallbacks
     const email = user?.primaryEmailAddress?.emailAddress
-    const displayName = user?.fullName || user?.firstName || user?.username || (email ? email.split("@")[0] : null) || "Anonymous"
+    const displayName =
+      user?.fullName || user?.firstName || user?.username || (email ? email.split("@")[0] : null) || "Anonymous"
     setSubmitSuccess("")
-    
+
     if (!isSignedIn) {
       setSubmitError("Please sign in to submit updates")
       openSignIn()
       return
     }
 
-    // Validate title (max 10 words)
     const wordCount = formTitle.trim().split(/\s+/).filter(Boolean).length
     if (wordCount > 10) {
       setTitleError("Title must be 10 words or less")
@@ -438,7 +432,7 @@ function PromiseDetail({
       setFormLink("")
       setFormDescription("")
       setTitleError("")
-      
+
       setTimeout(() => {
         setShowAddForm(false)
         setSubmitSuccess("")
@@ -464,23 +458,27 @@ function PromiseDetail({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <header className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3">
-        <button
-          onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted active:scale-95"
-        >
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <span className="rounded-full bg-orange-600 px-3 py-1 text-[10px] font-black uppercase text-white sm:px-4 sm:py-1.5 sm:text-xs">
-          {category.localName || category.name}
-        </span>
-        <button
-          onClick={onShare}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 text-white transition-colors active:scale-95"
-        >
-          <Share2 className="h-5 w-5" />
-        </button>
-      </header>
+      <div className="flex-shrink-0 border-b-2 border-border bg-card px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted transition-colors active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              {category.localName || category.name}
+            </p>
+          </div>
+          <button
+            onClick={onShare}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted transition-colors active:scale-95"
+          >
+            <Share2 className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
@@ -539,9 +537,7 @@ function PromiseDetail({
           {showAddForm && isSignedIn && (
             <form onSubmit={handleSubmit} className="mt-4 rounded-xl border-2 border-border bg-card p-4">
               {submitError && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700">
-                  {submitError}
-                </div>
+                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700">{submitError}</div>
               )}
               {submitSuccess && (
                 <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm font-medium text-green-700">
@@ -630,13 +626,8 @@ function PromiseDetail({
           {timeline.length > 0 ? (
             <div className="mt-4 space-y-3">
               {timeline.map((update) => (
-                <div
-                  key={update.id}
-                  className="relative rounded-xl border-2 border-border bg-card p-4 pl-5"
-                >
-                  {/* Timeline line indicator */}
+                <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
                   <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
-                  
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
@@ -693,17 +684,14 @@ function PromiseDetail({
                     key={s}
                     onClick={() => onStatusChange(s)}
                     disabled={!isAdmin}
-                    className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
-                      isActive
+                    className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${isActive
                         ? `${c.bgColor} ${c.borderColor} shadow-lg`
                         : "border-border bg-card hover:border-muted-foreground/30"
-                    }`}
+                      }`}
                   >
                     <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
                     <div className="text-left">
-                      <span
-                        className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}
-                      >
+                      <span className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}>
                         {c.label}
                       </span>
                     </div>
@@ -763,24 +751,21 @@ Track yourself:`
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-t-3xl bg-card p-6 sm:rounded-3xl"
+        className="w-full max-w-md rounded-t-3xl bg-card p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-2 flex justify-center sm:hidden">
-          <div className="h-1.5 w-14 rounded-full bg-muted" />
-        </div>
-        <div className="flex items-start justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="font-serif text-2xl font-black text-foreground">Share Progress</h3>
-            <p className="text-sm text-muted-foreground">Show how BJP is tracking</p>
+            <h2 className="font-serif text-xl font-black text-foreground">Share Progress</h2>
+            <p className="text-sm text-muted-foreground">Show how {stateConfig.party} is tracking</p>
           </div>
-          <button onClick={onClose} className="rounded-full p-2 text-muted-foreground hover:bg-muted">
-            <X className="h-5 w-5" />
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"
+          >
+            <X className="h-5 w-5 text-foreground" />
           </button>
         </div>
 
@@ -789,15 +774,15 @@ Track yourself:`
           <p className="font-black">THE MANIFESTO</p>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-green" />
+              <span className="h-3 w-3 rounded-full bg-green-500" />
               <span>{stats.fulfilled} Fulfilled</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-amber" />
+              <span className="h-3 w-3 rounded-full bg-amber-500" />
               <span>{stats.inProgress} In Progress</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-red" />
+              <span className="h-3 w-3 rounded-full bg-red-500" />
               <span>{stats.broken} Broken</span>
             </div>
             <div className="flex items-center gap-2">
@@ -867,7 +852,6 @@ function LatestUpdatesSlider({
   const isPausedRef = useRef(false)
   const animFrameRef = useRef<number | null>(null)
 
-  // Resolve each update to its promise + category
   const resolved = updates.flatMap((update) => {
     for (const cat of categories) {
       const p = cat.promises.find((p) => p.id === update.promise_id)
@@ -881,13 +865,12 @@ function LatestUpdatesSlider({
     if (!el || resolved.length === 0) return
 
     let pos = 0
-    const speed = 0.3 // px per frame
+    const speed = 0.3
     const maxScroll = el.scrollWidth - el.clientWidth
 
     function step() {
       if (!isPausedRef.current && el && maxScroll > 0) {
         pos += speed
-        // Reset to start when reached the end
         if (pos >= maxScroll) pos = 0
         el.scrollLeft = pos
       }
@@ -903,16 +886,12 @@ function LatestUpdatesSlider({
   const items = resolved
 
   return (
-    <div className="border-b border-border bg-gradient-to-r from-orange-50/60 via-background to-orange-50/60">
+    <div className="border-b-2 border-border bg-card py-4">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500">
-          <Zap className="h-3 w-3 text-white" />
-        </span>
-        <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-          Latest Updates
-        </span>
-        <span className="ml-auto text-[10px] text-muted-foreground/60 font-medium">
+      <div className="mb-3 flex items-center gap-2 px-4">
+        <Zap className="h-4 w-4 text-orange-500" />
+        <span className="text-sm font-black text-foreground">Latest Updates</span>
+        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600">
           {resolved.length} new
         </span>
       </div>
@@ -933,7 +912,6 @@ function LatestUpdatesSlider({
             onClick={() => onSelectPromise(promise, category)}
             className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
           >
-            {/* Category tag */}
             <div className="mb-3 flex items-center justify-between">
               <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
                 {category.localName || category.name}
@@ -945,18 +923,10 @@ function LatestUpdatesSlider({
                 })}
               </span>
             </div>
-
-            {/* Update title */}
             <p className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-orange-600">
               {update.title}
             </p>
-
-            {/* Promise name */}
-            <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">
-              Re: {promise.title}
-            </p>
-
-            {/* Bottom accent bar */}
+            <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">Re: {promise.title}</p>
             <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl bg-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
         ))}
@@ -969,7 +939,7 @@ function LatestUpdatesSlider({
 export default function PromiseTracker({ stateConfig }: { stateConfig: StateConfig }) {
   const CATEGORIES = stateConfig.categories
   const totalPromises = CATEGORIES.reduce((acc, cat) => acc + cat.promises.length, 0)
-  
+
   const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
   const { openSignIn, openUserProfile } = useClerk()
@@ -986,27 +956,32 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [isAdmin, setIsAdmin] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [latestUpdates, setLatestUpdates] = useState<Array<{
-    id: string
-    promise_id: string
-    title: string
-    link: string
-    submitted_by: string | null
-    created_at: string
-  }>>([])
-  const [contributors, setContributors] = useState<Array<{
-    name: string
-    contribution_count: number
-    last_contribution: string
-  }>>([])
+  const [latestUpdates, setLatestUpdates] = useState<
+    Array<{
+      id: string
+      promise_id: string
+      title: string
+      link: string
+      submitted_by: string | null
+      created_at: string
+    }>
+  >([])
+  const [contributors, setContributors] = useState<
+    Array<{
+      name: string
+      contribution_count: number
+      last_contribution: string
+    }>
+  >([])
   const [showStateMenu, setShowStateMenu] = useState(false)
-  const [availableStates, setAvailableStates] = useState<Array<{
-    id: string
-    name: string
-    party: string
-  }>>([])
+  const [availableStates, setAvailableStates] = useState<
+    Array<{
+      id: string
+      name: string
+      party: string
+    }>
+  >([])
 
-  // Fetch available states for the menu
   useEffect(() => {
     async function fetchStates() {
       try {
@@ -1022,7 +997,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     fetchStates()
   }, [])
 
-  // Fetch latest approved updates for the slider
   useEffect(() => {
     async function fetchLatestUpdates() {
       try {
@@ -1038,7 +1012,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     fetchLatestUpdates()
   }, [stateConfig.id])
 
-  // Fetch top contributors
   useEffect(() => {
     async function fetchContributors() {
       try {
@@ -1054,7 +1027,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     fetchContributors()
   }, [stateConfig.id])
 
-  // Check admin status
   useEffect(() => {
     async function checkAdminStatus() {
       if (userId) {
@@ -1073,18 +1045,13 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     checkAdminStatus()
   }, [userId])
 
-  // Load statuses and timelines from database
   useEffect(() => {
     async function initializeData() {
       const dbStatuses = await fetchStatusesFromDB(stateConfig.id)
       setStatuses(dbStatuses)
-      // Calculate days in power client-side to avoid hydration mismatch
-      // Handle startDate as either Date object or ISO string
-      const startDate = typeof stateConfig.startDate === 'string' 
-        ? new Date(stateConfig.startDate) 
-        : stateConfig.startDate
+      const startDate =
+        typeof stateConfig.startDate === "string" ? new Date(stateConfig.startDate) : stateConfig.startDate
       const today = new Date()
-      // If current real date is before start date, simulate as if it's 7 days after
       const simDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)
       const effectiveToday = today < startDate ? simDate : today
       const days = Math.floor((effectiveToday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -1094,14 +1061,12 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     initializeData()
   }, [stateConfig.id, stateConfig.startDate])
 
-  // Save statuses to database
   useEffect(() => {
     if (hydrated && Object.keys(statuses).length > 0) {
       saveStatuses(statuses)
     }
   }, [statuses, hydrated])
 
-  // Stats
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
   const total = totalPromises
   const stats = {
@@ -1112,7 +1077,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     pending: allPromises.filter((p) => (statuses[p.id] || "pending") === "pending").length,
   }
 
-  // Weighted progress: Fulfilled = 1 point, In Progress = 0.5 points, Broken/Pending = 0
   const overallProgress =
     total > 0 ? Math.round(((stats.fulfilled * 1 + stats.inProgress * 0.5) / total) * 100) : 0
 
@@ -1128,17 +1092,17 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     })
   }, [])
 
-  const handleStatusChange = useCallback((promiseId: string, status: PromiseStatus) => {
-    setStatuses((prev) => ({ ...prev, [promiseId]: status }))
-    // Update in database with userId
-    updateStatusInDB(promiseId, status, userId, stateConfig.id)
-  }, [userId, stateConfig.id])
+  const handleStatusChange = useCallback(
+    (promiseId: string, status: PromiseStatus) => {
+      setStatuses((prev) => ({ ...prev, [promiseId]: status }))
+      updateStatusInDB(promiseId, status, userId ?? null, stateConfig.id)
+    },
+    [userId, stateConfig.id]
+  )
 
   const handleAddTimelineUpdate = useCallback(
     (promiseId: string, update: Omit<TimelineUpdate, "id" | "timestamp">) => {
-      // Submit to database (goes to pending/moderation)
       submitTimelineUpdateToDB(promiseId, update).then(() => {
-        // Refresh timeline from database
         fetchTimelineUpdatesFromDB(promiseId, stateConfig.id).then((updates) => {
           setTimelines((prev) => ({
             ...prev,
@@ -1151,145 +1115,142 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   )
 
   return (
-    <div className="min-h-dvh bg-background pb-8">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-4 border-green-600 bg-orange-600 px-3 py-3 sm:px-4 sm:py-4">
-        <div className="mx-auto max-w-4xl">
-          {/* Top row: menu, logo, actions */}
-          <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-            {/* Left: Hamburger Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowStateMenu(!showStateMenu)}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
-                title="Select State"
-              >
-                <Menu className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-              </button>
-              {showStateMenu && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setShowStateMenu(false)} 
-                  />
-                  <div className="absolute left-0 top-11 z-50 min-w-[200px] max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-xl sm:top-12">
-                    <div className="mb-2 px-2 py-1">
-                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select State</p>
-                    </div>
-                    {availableStates.length === 0 ? (
-                      <p className="px-2 py-3 text-sm text-muted-foreground">No states available</p>
-                    ) : (
-                      availableStates.map((state) => (
-                        <Link
-                          key={state.id}
-                          href={`/${state.id}`}
-                          onClick={() => setShowStateMenu(false)}
-                          className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted ${
-                            state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
-                          }`}
-                        >
-                          <MapPin className="h-4 w-4 flex-shrink-0" />
-                          <span>{state.name}</span>
-                          {state.id === stateConfig.id && (
-                            <span className="ml-auto text-xs text-orange-500">Current</span>
-                          )}
-                        </Link>
-                      ))
-                    )}
-                    <div className="mt-2 border-t border-border pt-2">
-                      <Link
-                        href="/states"
-                        onClick={() => setShowStateMenu(false)}
-                        className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      >
-                        View All States
-                      </Link>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Center: Logo & Title */}
-            <div className="flex flex-1 items-center gap-2 min-w-0">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-t-lg rounded-br-sm bg-white text-xl font-black text-orange-600 sm:h-10 sm:w-10 sm:text-2xl sm:rounded-t-xl sm:rounded-br-sm" style={{ fontFamily: '"Oswald", sans-serif', boxShadow: 'inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)', fontStyle: 'italic' }}>
-                M
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-lg">
-                  MANIFESTO
-                </h1>
-                <p className="text-[8px] font-bold uppercase tracking-tight text-white/80 sm:text-[9px]">
-                  {stateConfig.name}
-                </p>
-              </div>
-            </div>
-
-            {/* Right: Actions */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth" })}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10 sm:px-0"
-                title="Top Contributors"
-              >
-                <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-              <button
-                onClick={() => setShowShareModal(true)}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
-                title="Share"
-              >
-                <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-
-              {/* Auth button */}
-              {isSignedIn && user ? (
-                <button
-                  onClick={() => openUserProfile()}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10"
-                  title={user.firstName || "Account"}
-                >
-                  {user.imageUrl ? (
-                    <img
-                      src={user.imageUrl}
-                      alt={user.firstName || "Account"}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xs font-black text-orange-600 sm:text-sm">
-                      {(user.firstName?.[0] || user.emailAddresses?.[0]?.emailAddress?.[0] || "U").toUpperCase()}
-                    </span>
-                  )}
-                </button>
-              ) : (
-                <button
-                  onClick={() => openSignIn()}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md text-orange-600 font-black transition-all hover:bg-orange-50 active:scale-95 sm:h-10 sm:w-10 sm:px-0"
-                  title="Sign In"
-                >
-                  <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom row: Days in power + info */}
-          <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[8px] font-bold text-white sm:px-3 sm:py-1.5 sm:text-xs">
-              <span className="h-1.5 w-1.5 rounded-full bg-white/80 sm:h-2 sm:w-2" />
-              <span>
-                {hydrated ? daysInPower : "—"} Days in Power
-              </span>
-            </div>
-            <a
-              href="https://observerfiles.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[7px] font-semibold uppercase tracking-wider text-white hover:text-white/80 transition-colors sm:text-[8px]"
+      <header className="sticky top-0 z-30 bg-orange-600 px-4 py-3 shadow-lg">
+        {/* Top row: menu, logo, actions */}
+        <div className="flex items-center gap-2">
+          {/* Left: Hamburger Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowStateMenu(!showStateMenu)}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
+              title="Select State"
             >
-              Powered by ObserverFiles
-            </a>
+              <Menu className="h-5 w-5" />
+            </button>
+
+            {showStateMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowStateMenu(false)} />
+                <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-xl border border-border bg-card p-2 shadow-xl">
+                  <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Select State
+                  </p>
+                  {availableStates.length === 0 ? (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">No states available</p>
+                  ) : (
+                    availableStates.map((state) => (
+                      <Link
+                        key={state.id}
+                        href={`/${state.id}`}
+                        onClick={() => setShowStateMenu(false)}
+                        className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted ${state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
+                          }`}
+                      >
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                        {state.name}
+                        {state.id === stateConfig.id && (
+                          <span className="ml-auto rounded-full bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                            Current
+                          </span>
+                        )}
+                      </Link>
+                    ))
+                  )}
+                  <Link
+                    href="/states"
+                    onClick={() => setShowStateMenu(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    View All States
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
+
+          {/* Center: Logo & Title */}
+          <div className="flex flex-1 items-center gap-2 min-w-0">
+            <div
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-t-lg rounded-br-sm bg-white text-xl font-black text-orange-600 sm:h-10 sm:w-10 sm:text-2xl sm:rounded-t-xl sm:rounded-br-sm"
+              style={{
+                fontFamily: '"Oswald", sans-serif',
+                boxShadow: "inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)",
+                fontStyle: "italic",
+              }}
+            >
+              M
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-lg">MANIFESTO</h1>
+              <p className="text-[8px] font-bold uppercase tracking-tight text-white/80 sm:text-[9px]">
+                {stateConfig.name}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth" })}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
+              title="Top Contributors"
+            >
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
+              title="Share"
+            >
+              <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+
+            {isSignedIn && user ? (
+              <button
+                onClick={() => openUserProfile()}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10"
+                title={user.firstName || "Account"}
+              >
+                {user.imageUrl ? (
+                  <img src={user.imageUrl} alt={user.firstName || "Account"} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs font-black text-orange-600 sm:text-sm">
+                    {(
+                      user.firstName?.[0] ||
+                      user.emailAddresses?.[0]?.emailAddress?.[0] ||
+                      "U"
+                    ).toUpperCase()}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => openSignIn()}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md text-orange-600 font-black transition-all hover:bg-orange-50 active:scale-95 sm:h-10 sm:w-10"
+                title="Sign In"
+              >
+                <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom row: Days in power + info */}
+        <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[8px] font-bold text-white sm:px-3 sm:py-1.5 sm:text-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-white/80 sm:h-2 sm:w-2" />
+            <span>{hydrated ? daysInPower : "—"} Days in Power</span>
+          </div>
+          <a
+            href="https://observerfiles.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[7px] font-semibold uppercase tracking-wider text-white hover:text-white/80 transition-colors sm:text-[8px]"
+          >
+            Powered by ObserverFiles
+          </a>
         </div>
       </header>
 
@@ -1344,7 +1305,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             </div>
           </div>
 
-          {/* Total Promises */}
           <p className="mt-4 text-center text-sm font-medium text-muted-foreground">
             Tracking <span className="font-black text-foreground">{total}</span> manifesto promises
           </p>
@@ -1365,72 +1325,253 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         />
       )}
 
-      {/* Category Cards */}
-      <div className="mx-auto max-w-4xl px-4 pt-4 sm:pt-6">
-        {/* Header row: title + search + filter */}
-        <div className="mb-4 flex flex-col gap-3">
-          <h2 className="font-serif text-lg font-black text-foreground sm:text-xl">Categories</h2>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-            {/* Search input */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 flex-shrink-0 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search promises..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl"
-              />
+      {/* ============================================================
+          Main Content Grid
+          - lg:col-span-3  → Category Cards (left)
+          - lg:col-span-1  → Sidebar (right)
+          Both live INSIDE this one grid div.
+      ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-4 pt-4 sm:pt-6 lg:mx-auto lg:max-w-7xl">
+        {/* Left: Category Cards */}
+        <div className="lg:col-span-3">
+          <div className="mb-4 flex flex-col gap-3">
+            <h2 className="font-serif text-lg font-black text-foreground sm:text-xl">Categories</h2>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 flex-shrink-0 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search promises..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl"
+                />
+              </div>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="h-9 w-full flex-shrink-0 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:w-auto sm:rounded-xl"
+              >
+                <option value="all">All</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.localName || cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
-            {/* Category dropdown */}
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-9 w-full flex-shrink-0 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:w-auto sm:rounded-xl"
-            >
-              <option value="all">All</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.localName || cat.name}
-                </option>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {CATEGORIES.filter((category) => (categoryFilter === "all" ? true : category.id === categoryFilter))
+              .filter((category) => {
+                if (!searchQuery.trim()) return true
+                const q = searchQuery.toLowerCase()
+                return (
+                  category.name.toLowerCase().includes(q) ||
+                  (category.localName && category.localName.toLowerCase().includes(q)) ||
+                  category.promises.some((p) => p.title.toLowerCase().includes(q))
+                )
+              })
+              .map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  statuses={statuses}
+                  isExpanded={expandedCategories.has(category.id) || searchQuery.trim().length > 0}
+                  onToggle={() => toggleCategory(category.id)}
+                  onPromiseSelect={(promise, cat) => {
+                    setSelectedPromise({ promise, category: cat })
+                    fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
+                      setTimelines((prev) => ({
+                        ...prev,
+                        [promise.id]: updates,
+                      }))
+                    })
+                  }}
+                />
               ))}
-            </select>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {CATEGORIES
-            .filter((category) =>
-              categoryFilter === "all" ? true : category.id === categoryFilter
-            )
-            .filter((category) => {
-              if (!searchQuery.trim()) return true
-              const q = searchQuery.toLowerCase()
-              return (
-                category.name.toLowerCase().includes(q) ||
-                (category.localName && category.localName.toLowerCase().includes(q)) ||
-                category.promises.some((p) => p.title.toLowerCase().includes(q))
-              )
-            })
-            .map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                statuses={statuses}
-                isExpanded={expandedCategories.has(category.id) || (searchQuery.trim().length > 0)}
-                onToggle={() => toggleCategory(category.id)}
-                onPromiseSelect={(promise, cat) => {
-                  setSelectedPromise({ promise, category: cat })
-                  fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
-                    setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
-                  })
-                }}
-              />
-            ))}
-        </div>
-      </div>
+        {/* Right: Sidebar — lives inside the same grid */}
+        <aside className="hidden lg:col-span-1 lg:block">
+          <div className="sticky top-24 space-y-6">
+            {/* Top Contributors */}
+            {contributors.length > 0 && (
+              <section id="leaderboard" className="rounded-xl border border-border bg-card p-4">
+                <div className="mb-4 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <h3 className="font-serif font-black text-foreground">Top Contributors</h3>
+                </div>
+                <div className="space-y-2">
+                  {contributors.slice(0, 5).map((contributor, index) => (
+                    <div
+                      key={contributor.name}
+                      className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/50 transition-colors"
+                    >
+                      <div
+                        className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${index === 0
+                            ? "bg-amber-500"
+                            : index === 1
+                              ? "bg-neutral-400"
+                              : index === 2
+                                ? "bg-amber-700"
+                                : "bg-neutral-300"
+                          }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">{contributor.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {contributor.contribution_count} update{contributor.contribution_count !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-center text-xs text-muted-foreground">Submit verified updates to appear</p>
+              </section>
+            )}
 
-      {/* Promise Detail View */}
+            {/* How to Read Guide */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 font-serif font-black text-foreground">How to Read</h3>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
+                    ✓
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-green-600">Fulfilled</p>
+                    <p className="text-[11px] text-muted-foreground">Completed (1 point)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                    ◐
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-amber-600">In Progress</p>
+                    <p className="text-[11px] text-muted-foreground">Started (0.5 points)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    ✗
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-red-600">Broken</p>
+                    <p className="text-[11px] text-muted-foreground">Not kept (0 points)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-[10px] font-bold text-white">
+                    ○
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-neutral-600">Not Rated</p>
+                    <p className="text-[11px] text-muted-foreground">No action (0 points)</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-border/50 bg-muted/50 p-2.5">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-bold">Score:</span> (Fulfilled + In Progress×0.5) / Total ×100
+                </p>
+              </div>
+            </section>
+
+            {/* Footer Info */}
+            <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
+              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
+              <p className="mb-3 text-sm font-black text-foreground">{stateConfig.party}</p>
+              <a
+                href="mailto:toddwake666@gmail.com"
+                className="inline-block text-xs font-semibold text-orange-600 transition-colors hover:text-orange-700"
+              >
+                Contact Admin
+              </a>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Citizen-powered accountability for {stateConfig.name}
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
+      {/* End Main Content Grid */}
+
+      {/* Mobile Footer */}
+      <footer className="lg:hidden border-t-2 border-border bg-card px-4 py-6">
+        <div className="mx-auto max-w-2xl">
+          <h3 className="font-serif text-lg font-black text-foreground mb-3">How to Read This Tracker</h3>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+                ✓
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-green-600">Fulfilled</p>
+                <p className="text-xs text-muted-foreground">Promise completed (1 point)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+                ◐
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-amber-600">In Progress</p>
+                <p className="text-xs text-muted-foreground">Work started (0.5 points)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                ✗
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-red-600">Broken</p>
+                <p className="text-xs text-muted-foreground">Promise not kept (0 points)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-xs font-bold text-white">
+                ○
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-neutral-600">Not Rated</p>
+                <p className="text-xs text-muted-foreground">No action taken (0 points)</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-lg bg-muted/50 p-3 mb-6">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total
+              Promises x 100
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
+              <p className="mt-1 text-sm font-black text-foreground">{stateConfig.party}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
+              <a
+                href="mailto:toddwake666@gmail.com"
+                className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors"
+              >
+                Email
+              </a>
+            </div>
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            The Manifesto - Citizen-powered accountability for {stateConfig.name}
+          </p>
+        </div>
+      </footer>
+
+      {/* Promise Detail Modal */}
       {selectedPromise && (
         <PromiseDetail
           promise={selectedPromise.promise}
@@ -1449,111 +1590,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       )}
 
       {/* Share Modal */}
-      {showShareModal && <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />}
-
-      {/* Contributor Leaderboard */}
-      {contributors.length > 0 && (
-        <section id="leaderboard" className="border-t-2 border-border bg-gradient-to-b from-orange-50/50 to-background px-4 py-8">
-          <div className="mx-auto max-w-2xl">
-            <div className="mb-5 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
-              <h3 className="font-serif text-lg font-black text-foreground">Top Contributors</h3>
-            </div>
-            <div className="grid gap-3">
-              {contributors.slice(0, 5).map((contributor, index) => (
-                <div
-                  key={contributor.name}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-all hover:border-orange-300 hover:shadow-sm"
-                >
-                  <div
-                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-black text-white ${
-                      index === 0
-                        ? "bg-amber-500"
-                        : index === 1
-                          ? "bg-neutral-400"
-                          : index === 2
-                            ? "bg-amber-700"
-                            : "bg-neutral-300"
-                    }`}
-                  >
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-bold text-foreground">{contributor.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {contributor.contribution_count} verified update{contributor.contribution_count !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
-                      +{contributor.contribution_count}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              Submit verified updates to appear on the leaderboard
-            </p>
-          </div>
-        </section>
+      {showShareModal && (
+        <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />
       )}
-
-      {/* Footer - How to Read */}
-      <footer className="border-t-2 border-border bg-card px-4 py-6">
-        <div className="mx-auto max-w-2xl">
-          <h3 className="font-serif text-lg font-black text-foreground">How to Read This Tracker</h3>
-          <div className="mt-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">1</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-green-600">Fulfilled</span> = Promise completed (1 point)
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">0.5</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-amber-600">In Progress</span> = Work started but not complete (0.5 points)
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">0</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-red-600">Broken</span> = Promise not kept or reversed (0 points)
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-xs font-bold text-white">0</span>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-bold text-neutral-500">Not Rated</span> = No action taken yet (0 points)
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 rounded-lg bg-muted/50 p-3">
-            <p className="text-xs text-muted-foreground">
-              <span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total Promises x 100
-            </p>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
-              <p className="mt-1 text-sm font-black text-foreground">{stateConfig.party}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
-              <a
-                href="mailto:toddwake666@gmail.com"
-                className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors"
-              >
-                toddwake666@gmail.com
-              </a>
-            </div>
-          </div>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            The Manifesto - Citizen-powered accountability for {stateConfig.name}
-          </p>
-        </div>
-      </footer>
     </div>
   )
 }

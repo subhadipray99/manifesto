@@ -1254,147 +1254,155 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       </header>
 
-      {/* Overall Progress Hero */}
-      <div className="border-b-2 border-border bg-card px-4 py-4 sm:py-6">
-        <div className="mx-auto max-w-2xl">
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
-            {/* Large Progress Ring */}
-            <div className="relative flex-shrink-0">
-              <ProgressRing
-                percent={overallProgress}
-                size={70}
-                strokeWidth={6}
-                color={overallProgress >= 50 ? "#16a34a" : "#c2410c"}
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-lg font-black text-foreground sm:text-2xl">{overallProgress}%</span>
-                <span className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">Progress</span>
-              </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid w-full flex-1 grid-cols-2 gap-2 sm:gap-3">
-              <div className="rounded-lg bg-green-50 p-2.5 sm:p-3 sm:rounded-xl">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600 sm:h-5 sm:w-5" />
-                  <span className="text-lg font-black text-green-700 sm:text-2xl">{stats.fulfilled}</span>
-                </div>
-                <p className="text-[10px] font-medium text-green-600 sm:text-xs">Fulfilled</p>
-              </div>
-              <div className="rounded-lg bg-amber-50 p-2.5 sm:p-3 sm:rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 flex-shrink-0 text-amber-600 sm:h-5 sm:w-5" />
-                  <span className="text-lg font-black text-amber-700 sm:text-2xl">{stats.inProgress}</span>
-                </div>
-                <p className="text-[10px] font-medium text-amber-600 sm:text-xs">In Progress</p>
-              </div>
-              <div className="rounded-lg bg-red-50 p-2.5 sm:p-3 sm:rounded-xl">
-                <div className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4 flex-shrink-0 text-red-600 sm:h-5 sm:w-5" />
-                  <span className="text-lg font-black text-red-700 sm:text-2xl">{stats.broken}</span>
-                </div>
-                <p className="text-[10px] font-medium text-red-600 sm:text-xs">Broken</p>
-              </div>
-              <div className="rounded-lg bg-neutral-100 p-2.5 sm:p-3 sm:rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Circle className="h-4 w-4 flex-shrink-0 text-neutral-500 sm:h-5 sm:w-5" />
-                  <span className="text-lg font-black text-neutral-600 sm:text-2xl">{stats.pending}</span>
-                </div>
-                <p className="text-[10px] font-medium text-neutral-500 sm:text-xs">Not Rated</p>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-4 text-center text-sm font-medium text-muted-foreground">
-            Tracking <span className="font-black text-foreground">{total}</span> manifesto promises
-          </p>
-        </div>
-      </div>
-
-      {/* Latest Updates Slider */}
-      {latestUpdates.length > 0 && (
-        <LatestUpdatesSlider
-          updates={latestUpdates}
-          categories={CATEGORIES}
-          onSelectPromise={(promise, category) => {
-            setSelectedPromise({ promise, category })
-            fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
-              setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
-            })
-          }}
-        />
-      )}
-
       {/* ============================================================
-          Main Content Grid
-          - lg:col-span-3  → Category Cards (left)
-          - lg:col-span-1  → Sidebar (right)
-          Both live INSIDE this one grid div.
+          Full-page layout grid (lg): left column = all main content,
+          right column = sidebar that starts from the very top.
+          On mobile everything is a single column, full-width.
       ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-4 pt-4 sm:pt-6 lg:mx-auto lg:max-w-7xl">
-        {/* Left: Category Cards */}
+      <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
+
+        {/* ── LEFT COLUMN: hero + slider + categories ── */}
         <div className="lg:col-span-3">
-          <div className="mb-4 flex flex-col gap-3">
-            <h2 className="font-serif text-lg font-black text-foreground sm:text-xl">Categories</h2>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 flex-shrink-0 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search promises..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl"
-                />
+
+          {/* Overall Progress Hero */}
+          <div className="border-b-2 border-border bg-card px-4 py-4 lg:rounded-2xl lg:border-2 lg:mb-6 sm:py-6">
+            <div className="mx-auto max-w-2xl lg:max-w-none">
+              <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
+                {/* Large Progress Ring */}
+                <div className="relative flex-shrink-0">
+                  <ProgressRing
+                    percent={overallProgress}
+                    size={70}
+                    strokeWidth={6}
+                    color={overallProgress >= 50 ? "#16a34a" : "#c2410c"}
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg font-black text-foreground sm:text-2xl">{overallProgress}%</span>
+                    <span className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">Progress</span>
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid w-full flex-1 grid-cols-2 gap-2 sm:gap-3">
+                  <div className="rounded-lg bg-green-50 p-2.5 sm:p-3 sm:rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600 sm:h-5 sm:w-5" />
+                      <span className="text-lg font-black text-green-700 sm:text-2xl">{stats.fulfilled}</span>
+                    </div>
+                    <p className="text-[10px] font-medium text-green-600 sm:text-xs">Fulfilled</p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 p-2.5 sm:p-3 sm:rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 flex-shrink-0 text-amber-600 sm:h-5 sm:w-5" />
+                      <span className="text-lg font-black text-amber-700 sm:text-2xl">{stats.inProgress}</span>
+                    </div>
+                    <p className="text-[10px] font-medium text-amber-600 sm:text-xs">In Progress</p>
+                  </div>
+                  <div className="rounded-lg bg-red-50 p-2.5 sm:p-3 sm:rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 flex-shrink-0 text-red-600 sm:h-5 sm:w-5" />
+                      <span className="text-lg font-black text-red-700 sm:text-2xl">{stats.broken}</span>
+                    </div>
+                    <p className="text-[10px] font-medium text-red-600 sm:text-xs">Broken</p>
+                  </div>
+                  <div className="rounded-lg bg-neutral-100 p-2.5 sm:p-3 sm:rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <Circle className="h-4 w-4 flex-shrink-0 text-neutral-500 sm:h-5 sm:w-5" />
+                      <span className="text-lg font-black text-neutral-600 sm:text-2xl">{stats.pending}</span>
+                    </div>
+                    <p className="text-[10px] font-medium text-neutral-500 sm:text-xs">Not Rated</p>
+                  </div>
+                </div>
               </div>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="h-9 w-full flex-shrink-0 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:w-auto sm:rounded-xl"
-              >
-                <option value="all">All</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.localName || cat.name}
-                  </option>
-                ))}
-              </select>
+
+              <p className="mt-4 text-center text-sm font-medium text-muted-foreground">
+                Tracking <span className="font-black text-foreground">{total}</span> manifesto promises
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            {CATEGORIES.filter((category) => (categoryFilter === "all" ? true : category.id === categoryFilter))
-              .filter((category) => {
-                if (!searchQuery.trim()) return true
-                const q = searchQuery.toLowerCase()
-                return (
-                  category.name.toLowerCase().includes(q) ||
-                  (category.localName && category.localName.toLowerCase().includes(q)) ||
-                  category.promises.some((p) => p.title.toLowerCase().includes(q))
-                )
-              })
-              .map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  statuses={statuses}
-                  isExpanded={expandedCategories.has(category.id) || searchQuery.trim().length > 0}
-                  onToggle={() => toggleCategory(category.id)}
-                  onPromiseSelect={(promise, cat) => {
-                    setSelectedPromise({ promise, category: cat })
-                    fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
-                      setTimelines((prev) => ({
-                        ...prev,
-                        [promise.id]: updates,
-                      }))
-                    })
-                  }}
-                />
-              ))}
-          </div>
-        </div>
+          {/* Latest Updates Slider */}
+          {latestUpdates.length > 0 && (
+            <div className="lg:rounded-2xl lg:border-2 lg:border-border lg:overflow-hidden lg:mb-6">
+              <LatestUpdatesSlider
+                updates={latestUpdates}
+                categories={CATEGORIES}
+                onSelectPromise={(promise, category) => {
+                  setSelectedPromise({ promise, category })
+                  fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
+                    setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
+                  })
+                }}
+              />
+            </div>
+          )}
 
-        {/* Right: Sidebar — lives inside the same grid */}
+          {/* Category Cards */}
+          <div className="px-4 pt-4 pb-4 lg:px-0 lg:pt-0">
+            <div className="mb-4 flex flex-col gap-3">
+              <h2 className="font-serif text-lg font-black text-foreground sm:text-xl">Categories</h2>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 flex-shrink-0 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search promises..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl"
+                  />
+                </div>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="h-9 w-full flex-shrink-0 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:w-auto sm:rounded-xl"
+                >
+                  <option value="all">All</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.localName || cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {CATEGORIES.filter((category) => (categoryFilter === "all" ? true : category.id === categoryFilter))
+                .filter((category) => {
+                  if (!searchQuery.trim()) return true
+                  const q = searchQuery.toLowerCase()
+                  return (
+                    category.name.toLowerCase().includes(q) ||
+                    (category.localName && category.localName.toLowerCase().includes(q)) ||
+                    category.promises.some((p) => p.title.toLowerCase().includes(q))
+                  )
+                })
+                .map((category) => (
+                  <CategoryCard
+                    key={category.id}
+                    category={category}
+                    statuses={statuses}
+                    isExpanded={expandedCategories.has(category.id) || searchQuery.trim().length > 0}
+                    onToggle={() => toggleCategory(category.id)}
+                    onPromiseSelect={(promise, cat) => {
+                      setSelectedPromise({ promise, category: cat })
+                      fetchTimelineUpdatesFromDB(promise.id, stateConfig.id).then((updates) => {
+                        setTimelines((prev) => ({
+                          ...prev,
+                          [promise.id]: updates,
+                        }))
+                      })
+                    }}
+                  />
+                ))}
+            </div>
+          </div>
+
+        </div>
+        {/* ── END LEFT COLUMN ── */}
+
+        {/* ── RIGHT COLUMN: Sidebar — sticky from the very top of the grid ── */}
         <aside className="hidden lg:col-span-1 lg:block">
           <div className="sticky top-24 space-y-6">
             {/* Top Contributors */}
@@ -1499,8 +1507,10 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             </div>
           </div>
         </aside>
+        {/* ── END RIGHT COLUMN ── */}
+
       </div>
-      {/* End Main Content Grid */}
+      {/* End Full-page layout grid */}
 
       {/* Mobile Footer */}
       <footer className="lg:hidden border-t-2 border-border bg-card px-4 py-6">

@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next"
 import { neon } from "@neondatabase/serverless"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 async function getAllStates(): Promise<string[]> {
   try {
-    const states = await sql`SELECT id FROM states`
+    const states = await getDb()`SELECT id FROM states`
     return states.map((s: any) => s.id)
   } catch (error) {
     console.error("Error fetching states for sitemap:", error)

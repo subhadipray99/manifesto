@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 // Simple rate limiting (in-memory, resets on deploy)
 const submissionCounts: Record<string, { count: number; resetTime: number }> = {}
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing promiseId" }, { status: 400 })
     }
 
-    const updates = await sql`
+    const updates = await getDb()`
       SELECT id, title, link, description, created_at, submitted_by, user_email
       FROM timeline_updates
       WHERE promise_id = ${promiseId} AND state_id = ${stateId} AND status = 'approved'
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     const updateId = `${promiseId}-${Date.now()}`
-    await sql`
+    await getDb()`
       INSERT INTO timeline_updates (
         id, promise_id, title, link, description, status, 
         user_id, submitted_by, user_email, state_id

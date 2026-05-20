@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 // GET categories (optionally filtered by state)
 export async function GET(request: Request) {
@@ -10,13 +10,13 @@ export async function GET(request: Request) {
     const stateId = searchParams.get("stateId")
 
     const categories = stateId
-      ? await sql`
+      ? await getDb()`
           SELECT id, state_id, name, icon, color, sort_order, created_at, updated_at
           FROM categories
           WHERE state_id = ${stateId}
           ORDER BY sort_order ASC, name ASC
         `
-      : await sql`
+      : await getDb()`
           SELECT c.id, c.state_id, c.name, c.icon, c.color, c.sort_order, c.created_at, c.updated_at, s.name as state_name
           FROM categories c
           JOIN states s ON c.state_id = s.id
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields (id, stateId, name)" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       INSERT INTO categories (id, state_id, name, icon, color, sort_order)
       VALUES (${id}, ${stateId}, ${name}, ${icon || 'FileText'}, ${color || '#FF9933'}, ${sortOrder || 0})
       RETURNING *
@@ -67,7 +67,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Category ID is required" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       UPDATE categories
       SET 
         name = COALESCE(${name}, name),
@@ -100,7 +100,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Category ID is required" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       DELETE FROM categories WHERE id = ${id}
       RETURNING id
     `

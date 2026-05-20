@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 // Helper to check if user is admin
 function isAdmin(userId: string | null): boolean {
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     const updates = status === "pending"
-      ? await sql`
+      ? await getDb()`
           SELECT 
             tu.id, tu.promise_id, tu.title, tu.link, tu.description,
             tu.submitted_by, tu.user_email, tu.created_at, tu.status,
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
           WHERE tu.status = ${status}
           ORDER BY tu.created_at ASC
         `
-      : await sql`
+      : await getDb()`
           SELECT 
             tu.id, tu.promise_id, tu.title, tu.link, tu.description,
             tu.submitted_by, tu.user_email, tu.created_at, tu.status,
@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest) {
 
     const newStatus = action === "approve" ? "approved" : "rejected"
 
-    await sql`
+    await getDb()`
       UPDATE timeline_updates
       SET status = ${newStatus}
       WHERE id = ${updateId}
@@ -90,7 +90,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    await sql`
+    await getDb()`
       UPDATE timeline_updates
       SET title = ${title}, link = ${link}, description = ${description || null}
       WHERE id = ${updateId}

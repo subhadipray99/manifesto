@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { CATEGORIES } from "@/lib/promises-data"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 async function initializePromises() {
   try {
@@ -14,7 +14,7 @@ async function initializePromises() {
     )
 
     for (const promise of allPromises) {
-      await sql`
+      await getDb()`
         INSERT INTO promise_statuses (id, status)
         VALUES (${promise.id}, ${promise.status})
         ON CONFLICT (id) DO NOTHING

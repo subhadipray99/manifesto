@@ -1,12 +1,12 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const getDb = () => neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!)
 
 // GET all states (public endpoint for listing available states)
 export async function GET() {
   try {
-    const states = await getDb()`
+    const states = await sql`
       SELECT id, name, party, start_date
       FROM states
       ORDER BY name ASC

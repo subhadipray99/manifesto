@@ -1,14 +1,14 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 
-const getDb = () => neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!)
 
 // GET /api/contributors?stateId=X - Get top contributors based on approved submissions
 export async function GET(request: NextRequest) {
   try {
     const stateId = request.nextUrl.searchParams.get("stateId") || "west-bengal"
     
-    const contributors = await getDb()`
+    const contributors = await sql`
       SELECT 
         submitted_by as name,
         COUNT(*) as contribution_count,

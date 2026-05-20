@@ -4,13 +4,13 @@ import PromiseTracker from "@/components/promise-tracker"
 import type { Metadata } from "next"
 import type { StateConfig } from "@/lib/states/types"
 
-const getDb = () => neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!)
 
 // Fetch state config from database
 async function getStateConfigFromDB(stateId: string): Promise<StateConfig | null> {
   try {
     // Fetch state
-    const stateResult = await getDb()`
+    const stateResult = await sql`
       SELECT id, name, party, start_date, flag_colors
       FROM states
       WHERE id = ${stateId}
@@ -23,7 +23,7 @@ async function getStateConfigFromDB(stateId: string): Promise<StateConfig | null
     const state = stateResult[0]
 
     // Fetch categories
-    const categories = await getDb()`
+    const categories = await sql`
       SELECT id, name, icon, color, sort_order
       FROM categories
       WHERE state_id = ${stateId}
@@ -31,7 +31,7 @@ async function getStateConfigFromDB(stateId: string): Promise<StateConfig | null
     `
 
     // Fetch promises
-    const promises = await getDb()`
+    const promises = await sql`
       SELECT id, category_id, title, description, source, sort_order
       FROM promises
       WHERE state_id = ${stateId}
@@ -71,7 +71,7 @@ async function getStateConfigFromDB(stateId: string): Promise<StateConfig | null
 // Fetch all state IDs for static generation
 async function getAllStateIdsFromDB(): Promise<string[]> {
   try {
-    const states = await getDb()`SELECT id FROM states`
+    const states = await sql`SELECT id FROM states`
     return states.map((s: any) => s.id)
   } catch (error) {
     console.error("Error fetching state IDs:", error)

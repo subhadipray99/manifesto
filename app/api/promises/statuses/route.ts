@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 
-const getDb = () => neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!)
 
 // Helper to check if user is admin
 function isAdmin(userId: string | null): boolean {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const stateId = request.nextUrl.searchParams.get("stateId") || "west-bengal"
     
-    const statuses = await getDb()`
+    const statuses = await sql`
       SELECT id, status, updated_at 
       FROM promise_statuses 
       WHERE state_id = ${stateId}
@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Missing promiseId or status" }, { status: 400 })
     }
 
-    await getDb()`
+    await sql`
       INSERT INTO promise_statuses (id, status, state_id, updated_at)
       VALUES (${promiseId}, ${status}, ${stateId}, CURRENT_TIMESTAMP)
       ON CONFLICT (id) DO UPDATE SET

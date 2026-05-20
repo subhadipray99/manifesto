@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const getDb = () => neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!)
 
 // GET full state config (state + categories + promises)
 export async function GET(request: Request) {
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     }
 
     // Fetch state
-    const stateResult = await getDb()`
+    const stateResult = await sql`
       SELECT id, name, party, start_date, flag_colors
       FROM states
       WHERE id = ${stateId}
@@ -27,14 +27,14 @@ export async function GET(request: Request) {
     const state = stateResult[0]
 
     // Fetch categories with their promises
-    const categories = await getDb()`
+    const categories = await sql`
       SELECT id, name, icon, color, sort_order
       FROM categories
       WHERE state_id = ${stateId}
       ORDER BY sort_order ASC, name ASC
     `
 
-    const promises = await getDb()`
+    const promises = await sql`
       SELECT id, category_id, title, description, source, sort_order
       FROM promises
       WHERE state_id = ${stateId}

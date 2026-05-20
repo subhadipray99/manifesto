@@ -173,7 +173,7 @@ function ProgressRing({
   const offset = circumference - (percent / 100) * circumference
 
   return (
-    <svg width={size} height={size} className="-rotate-90 transition-all duration-300">
+    <svg width={size} height={size} className="-rotate-90">
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -220,7 +220,7 @@ function CategoryCard({
   const progressPercent = total > 0 ? Math.round(((fulfilled * 1 + inProgress * 0.5) / total) * 100) : 0
 
   return (
-    <div className="overflow-hidden rounded-2xl border hover:border-foreground/10 transition-all duration-200 hover:shadow-md border-border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-2xl border-2 border-border bg-card shadow-sm">
       {/* Card Header */}
       <button
         onClick={onToggle}
@@ -268,7 +268,7 @@ function CategoryCard({
         </div>
 
         {/* Expand Icon */}
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-muted/60 sm:h-10 sm:w-10">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted sm:h-10 sm:w-10">
           {isExpanded ? (
             <ChevronUp className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           ) : (
@@ -278,7 +278,7 @@ function CategoryCard({
       </button>
 
       {/* Promises Preview - colored dots grid */}
-      <div className="border-t border-border bg-muted/10 px-3 py-2 sm:px-4 sm:py-3">
+      <div className="border-t border-border bg-muted/20 px-3 py-2 sm:px-4 sm:py-3">
         <div className="flex flex-wrap gap-1">
           {category.promises.map((promise) => {
             const status = statuses[promise.id] || "pending"
@@ -295,7 +295,7 @@ function CategoryCard({
                   e.stopPropagation()
                   onPromiseSelect(promise, category)
                 }}
-                className={`h-3.5 w-3.5 rounded-sm transition-transform active:scale-110 hover:shadow-sm transition-shadow sm:h-4 sm:w-4 sm:hover:scale-125 ${colorMap[status]}`}
+                className={`h-3.5 w-3.5 rounded-sm transition-transform active:scale-110 sm:h-4 sm:w-4 sm:hover:scale-125 ${colorMap[status]}`}
                 title={promise.title}
               />
             )
@@ -458,7 +458,7 @@ function PromiseDetail({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-border bg-card px-4 py-3">
+      <div className="flex-shrink-0 border-b-2 border-border bg-card px-4 py-3">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
@@ -517,7 +517,7 @@ function PromiseDetail({
             {isSignedIn ? (
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-orange-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
+                className="flex items-center justify-center gap-1.5 rounded-full bg-orange-600 px-3 py-1.5 text-xs font-bold text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <Plus className="h-4 w-4 flex-shrink-0" />
                 <span>Add Update</span>
@@ -686,7 +686,7 @@ function PromiseDetail({
                     disabled={!isAdmin}
                     className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${isActive
                         ? `${c.bgColor} ${c.borderColor} shadow-lg`
-                        : "border-border bg-card hover:border-muted-foreground/30 hover:shadow-lg transition-shadow"
+                        : "border-border bg-card hover:border-muted-foreground/30"
                       }`}
                   >
                     <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
@@ -910,7 +910,7 @@ function LatestUpdatesSlider({
           <button
             key={`${update.id}-${i}`}
             onClick={() => onSelectPromise(promise, category)}
-            className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border hover:border-orange-300 bg-card p-4 text-left shadow-sm transition-all hover:shadow-lg active:scale-[0.98]"
+            className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-orange-400 hover:shadow-md active:scale-[0.98]"
           >
             <div className="mb-3 flex items-center justify-between">
               <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
@@ -1117,14 +1117,14 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-4 py-3 shadow-lg sm:py-4">
+      <header className="sticky top-0 z-30 bg-orange-600 px-4 py-3 shadow-lg">
         {/* Top row: menu, logo, actions */}
         <div className="flex items-center gap-2">
           {/* Left: Hamburger Menu */}
           <div className="relative">
             <button
               onClick={() => setShowStateMenu(!showStateMenu)}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
               title="Select State"
             >
               <Menu className="h-5 w-5" />
@@ -1132,8 +1132,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
             {showStateMenu && (
               <>
-                <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" onClick={() => setShowStateMenu(false)} />
-                <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-border bg-card p-2 shadow-2xl">
+                <div className="fixed inset-0 z-40" onClick={() => setShowStateMenu(false)} />
+                <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-xl border border-border bg-card p-2 shadow-xl">
                   <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Select State
                   </p>
@@ -1145,7 +1145,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                         key={state.id}
                         href={`/${state.id}`}
                         onClick={() => setShowStateMenu(false)}
-                        className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted hover:translate-x-0.5 ${state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
+                        className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-muted ${state.id === stateConfig.id ? "bg-orange-100 text-orange-700" : "text-foreground"
                           }`}
                       >
                         <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
@@ -1158,15 +1158,13 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                       </Link>
                     ))
                   )}
-                  <div className="mt-1 border-t border-border pt-1">
-                    <Link
-                      href="/states"
-                      onClick={() => setShowStateMenu(false)}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      View All States
-                    </Link>
-                  </div>
+                  <Link
+                    href="/states"
+                    onClick={() => setShowStateMenu(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    View All States
+                  </Link>
                 </div>
               </>
             )}
@@ -1175,18 +1173,19 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           {/* Center: Logo & Title */}
           <div className="flex flex-1 items-center gap-2 min-w-0">
             <div
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-t-xl rounded-br-sm shadow-md bg-white text-xl font-black text-orange-600 sm:h-10 sm:w-10 sm:text-2xl sm:rounded-t-xl sm:rounded-br-sm"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-t-lg rounded-br-sm bg-white text-xl font-black text-orange-600 sm:h-10 sm:w-10 sm:text-2xl sm:rounded-t-xl sm:rounded-br-sm"
               style={{
                 fontFamily: '"Oswald", sans-serif',
+                boxShadow: "inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)",
                 fontStyle: "italic",
               }}
             >
               M
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-base">THE MANIFESTO</h1>
+              <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-lg">MANIFESTO</h1>
               <p className="text-[8px] font-bold uppercase tracking-tight text-white/80 sm:text-[9px]">
-                {stateConfig.party} {stateConfig.name}
+                {stateConfig.name}
               </p>
             </div>
           </div>
@@ -1195,14 +1194,14 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth" })}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
               title="Top Contributors"
             >
               <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95 sm:h-10 sm:w-10"
               title="Share"
             >
               <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1241,7 +1240,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* Bottom row: Days in power + info */}
         <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[8px] font-bold text-white sm:px-3 sm:py-1.5 sm:text-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400 shadow-sm sm:h-2 sm:w-2" />
+            <span className="h-1.5 w-1.5 rounded-full bg-white/80 sm:h-2 sm:w-2" />
             <span>{hydrated ? daysInPower : "—"} Days in Power</span>
           </div>
           <a
@@ -1266,7 +1265,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         <div className="lg:col-span-3">
 
           {/* Overall Progress Hero */}
-          <div className="border-b border-border bg-gradient-to-b from-card to-muted/20 px-4 py-4 lg:rounded-2xl lg:border-2 lg:mb-6 sm:py-6">
+          <div className="border-b-2 border-border bg-card px-4 py-4 lg:rounded-2xl lg:border-2 lg:mb-6 sm:py-6">
             <div className="mx-auto max-w-2xl lg:max-w-none">
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
                 {/* Large Progress Ring */}
@@ -1285,28 +1284,28 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
                 {/* Stats Grid */}
                 <div className="grid w-full flex-1 grid-cols-2 gap-2 sm:gap-3">
-                  <div className="rounded-xl bg-green-50 p-2.5 sm:p-3 hover:shadow-md transition-shadow">
+                  <div className="rounded-lg bg-green-50 p-2.5 sm:p-3 sm:rounded-xl">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600 sm:h-5 sm:w-5" />
                       <span className="text-lg font-black text-green-700 sm:text-2xl">{stats.fulfilled}</span>
                     </div>
                     <p className="text-[10px] font-medium text-green-600 sm:text-xs">Fulfilled</p>
                   </div>
-                  <div className="rounded-xl bg-amber-50 p-2.5 sm:p-3 hover:shadow-md transition-shadow">
+                  <div className="rounded-lg bg-amber-50 p-2.5 sm:p-3 sm:rounded-xl">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 flex-shrink-0 text-amber-600 sm:h-5 sm:w-5" />
                       <span className="text-lg font-black text-amber-700 sm:text-2xl">{stats.inProgress}</span>
                     </div>
                     <p className="text-[10px] font-medium text-amber-600 sm:text-xs">In Progress</p>
                   </div>
-                  <div className="rounded-xl bg-red-50 p-2.5 sm:p-3 hover:shadow-md transition-shadow">
+                  <div className="rounded-lg bg-red-50 p-2.5 sm:p-3 sm:rounded-xl">
                     <div className="flex items-center gap-2">
                       <XCircle className="h-4 w-4 flex-shrink-0 text-red-600 sm:h-5 sm:w-5" />
                       <span className="text-lg font-black text-red-700 sm:text-2xl">{stats.broken}</span>
                     </div>
                     <p className="text-[10px] font-medium text-red-600 sm:text-xs">Broken</p>
                   </div>
-                  <div className="rounded-xl bg-neutral-100 p-2.5 sm:p-3 hover:shadow-md transition-shadow">
+                  <div className="rounded-lg bg-neutral-100 p-2.5 sm:p-3 sm:rounded-xl">
                     <div className="flex items-center gap-2">
                       <Circle className="h-4 w-4 flex-shrink-0 text-neutral-500 sm:h-5 sm:w-5" />
                       <span className="text-lg font-black text-neutral-600 sm:text-2xl">{stats.pending}</span>
@@ -1514,7 +1513,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       {/* End Full-page layout grid */}
 
       {/* Mobile Footer */}
-      <footer className="lg:hidden border-t border-border bg-card px-4 py-6">
+      <footer className="lg:hidden border-t-2 border-border bg-card px-4 py-6">
         <div className="mx-auto max-w-2xl">
           <h3 className="font-serif text-lg font-black text-foreground mb-3">How to Read This Tracker</h3>
           <div className="space-y-3 mb-6">

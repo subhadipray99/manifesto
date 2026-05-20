@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import { WEST_BENGAL } from "@/lib/states/west-bengal"
 
-const getDb = () => neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!)
 
 export async function POST(request: Request) {
   return runMigration(request)
@@ -27,7 +27,7 @@ async function runMigration(request: Request) {
     let promiseCount = 0
 
     // First ensure the state exists
-    await getDb()`
+    await sql`
       INSERT INTO states (id, name, party, start_date)
       VALUES (${stateId}, ${WEST_BENGAL.name}, ${WEST_BENGAL.party}, ${WEST_BENGAL.startDate instanceof Date ? WEST_BENGAL.startDate.toISOString() : WEST_BENGAL.startDate})
       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, party = EXCLUDED.party, start_date = EXCLUDED.start_date
@@ -37,7 +37,7 @@ async function runMigration(request: Request) {
     for (let catIndex = 0; catIndex < WEST_BENGAL.categories.length; catIndex++) {
       const cat = WEST_BENGAL.categories[catIndex]
       
-      await getDb()`
+      await sql`
         INSERT INTO categories (id, state_id, name, icon, color, sort_order)
         VALUES (${cat.id}, ${stateId}, ${cat.name}, 'FileText', ${cat.color || '#FF9933'}, ${catIndex})
         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, color = EXCLUDED.color, sort_order = EXCLUDED.sort_order
@@ -47,7 +47,7 @@ async function runMigration(request: Request) {
       // Insert all promises for this category
       for (let promIndex = 0; promIndex < cat.promises.length; promIndex++) {
         const p = cat.promises[promIndex]
-        await getDb()`
+        await sql`
           INSERT INTO promises (id, category_id, state_id, title, description, sort_order)
           VALUES (${p.id}, ${cat.id}, ${stateId}, ${p.title}, ${p.detail || p.description || ''}, ${promIndex})
           ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, sort_order = EXCLUDED.sort_order

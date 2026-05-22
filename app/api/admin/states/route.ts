@@ -1,12 +1,12 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 // GET all states
 export async function GET() {
   try {
-    const states = await sql`
+    const states = await getDb()`
       SELECT id, name, party, start_date, flag_colors, created_at, updated_at
       FROM states
       ORDER BY name ASC
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "ID must be lowercase letters, numbers, and hyphens only" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       INSERT INTO states (id, name, party, start_date, flag_colors)
       VALUES (${id}, ${name}, ${party}, ${startDate}, ${JSON.stringify(flagColors || ["#FF9933", "#FFFFFF", "#138808"])})
       RETURNING *
@@ -58,7 +58,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "State ID is required" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       UPDATE states
       SET 
         name = COALESCE(${name}, name),
@@ -91,7 +91,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "State ID is required" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       DELETE FROM states WHERE id = ${id}
       RETURNING id
     `

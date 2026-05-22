@@ -1,14 +1,14 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 // GET /api/promises/latest-updates?stateId=X - Get 7 most recently approved timeline updates
 export async function GET(request: NextRequest) {
   try {
     const stateId = request.nextUrl.searchParams.get("stateId") || "west-bengal"
     
-    const updates = await sql`
+    const updates = await getDb()`
       SELECT id, promise_id, title, link, description, submitted_by, created_at
       FROM timeline_updates
       WHERE status = 'approved' AND state_id = ${stateId}

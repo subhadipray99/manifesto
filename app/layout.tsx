@@ -40,9 +40,10 @@ export const metadata: Metadata = {
     telephone: false,
     address: false,
   },
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.jpg",
-    apple: "/favicon.jpg",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     title: "The Manifesto | BJP West Bengal Promise Tracker",

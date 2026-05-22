@@ -1,0 +1,57 @@
+{
+  "name": "The Manifesto - BJP West Bengal Promise Tracker",
+  "short_name": "The Manifesto",
+  "description": "Track every BJP manifesto promise for West Bengal. Monitor fulfillment of election commitments with real-time updates. Citizen-powered accountability platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#FF6600",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["government", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/favicon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/manifesto-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "The Manifesto home screen"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Track Promises",
+      "short_name": "Track",
+      "description": "View and track political promises",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/manifesto-logo.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

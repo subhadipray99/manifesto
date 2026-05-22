@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const getDb = () => neon(process.env.DATABASE_URL!)
 
 // GET promises (optionally filtered by state or category)
 export async function GET(request: Request) {
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
     let promises
     if (categoryId) {
-      promises = await sql`
+      promises = await getDb()`
         SELECT p.id, p.category_id, p.state_id, p.title, p.description, p.source, p.sort_order, p.created_at, p.updated_at,
                c.name as category_name
         FROM promises p
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         ORDER BY p.sort_order ASC, p.title ASC
       `
     } else if (stateId) {
-      promises = await sql`
+      promises = await getDb()`
         SELECT p.id, p.category_id, p.state_id, p.title, p.description, p.source, p.sort_order, p.created_at, p.updated_at,
                c.name as category_name
         FROM promises p
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         ORDER BY c.sort_order ASC, p.sort_order ASC, p.title ASC
       `
     } else {
-      promises = await sql`
+      promises = await getDb()`
         SELECT p.id, p.category_id, p.state_id, p.title, p.description, p.source, p.sort_order, p.created_at, p.updated_at,
                c.name as category_name, s.name as state_name
         FROM promises p
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields (id, categoryId, stateId, title)" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       INSERT INTO promises (id, category_id, state_id, title, description, source, sort_order)
       VALUES (${id}, ${categoryId}, ${stateId}, ${title}, ${description || null}, ${source || null}, ${sortOrder || 0})
       RETURNING *
@@ -84,7 +84,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Promise ID is required" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       UPDATE promises
       SET 
         title = COALESCE(${title}, title),
@@ -118,7 +118,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Promise ID is required" }, { status: 400 })
     }
 
-    const result = await sql`
+    const result = await getDb()`
       DELETE FROM promises WHERE id = ${id}
       RETURNING id
     `

@@ -974,6 +974,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     }>
   >([])
   const [showStateMenu, setShowStateMenu] = useState(false)
+  const [showSignInBanner, setShowSignInBanner] = useState(true)
   const [availableStates, setAvailableStates] = useState<
     Array<{
       id: string
@@ -1254,9 +1255,31 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       </header>
 
+      {/* Sign In Banner for Non-Authenticated Users */}
+      {!isSignedIn && showSignInBanner && (
+        <div className="sticky top-0 z-30 bg-black px-4 py-3 sm:py-4">
+          <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
+            <button
+              onClick={() => openSignIn()}
+              className="flex-1 font-bold text-white text-sm sm:text-base hover:text-white/80 transition-colors text-center"
+            >
+              Sign In to Submit Updates
+            </button>
+            <button
+              onClick={() => setShowSignInBanner(false)}
+              className="flex-shrink-0 p-1 text-white hover:text-white/70 transition-colors"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ============================================================
-          Full-page layout grid (lg): left column = all main content,
-          right column = sidebar that starts from the very top.
+          LAYOUT NOTES FOR FUTURE MAINTAINERS:
+          Left column (col-span-3): hero + slider + categories
+          Right column (col-span-1): Sticky leaderboard + "how to read"
           On mobile everything is a single column, full-width.
       ============================================================ */}
       <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">

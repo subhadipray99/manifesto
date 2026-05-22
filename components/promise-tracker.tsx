@@ -1173,16 +1173,11 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
           {/* Center: Logo & Title */}
           <div className="flex flex-1 items-center gap-2 min-w-0">
-            <div
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-t-lg rounded-br-sm bg-white text-xl font-black text-orange-600 sm:h-10 sm:w-10 sm:text-2xl sm:rounded-t-xl sm:rounded-br-sm"
-              style={{
-                fontFamily: '"Oswald", sans-serif',
-                boxShadow: "inset 0px 4px 6px 0px rgba(154, 172, 203, 0.98)",
-                fontStyle: "italic",
-              }}
-            >
-              M
-            </div>
+            <img
+              src="/manifesto-logo.png"
+              alt="Manifesto Logo"
+              className="h-8 w-8 flex-shrink-0 sm:h-10 sm:w-10"
+            />
             <div className="min-w-0 flex-1">
               <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-lg">MANIFESTO</h1>
               <p className="text-[8px] font-bold uppercase tracking-tight text-white/80 sm:text-[9px]">

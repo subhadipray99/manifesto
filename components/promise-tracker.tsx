@@ -643,51 +643,42 @@ function PromiseDetail({
         </div>
       </div>
 
-      {/* Status Actions */}
-      <div className="flex-shrink-0 border-t-4 border-orange-500 bg-card px-4 pb-6 pt-4">
-        {isSignedIn && userId ? (
-          <>
-            <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Update Status
-            </p>
-            {!isAdmin && (
-              <p className="mb-4 text-center text-xs text-orange-600 font-medium">
-                Admin access required to change status
+      {/* Status Actions - Only visible to admins */}
+      {isAdmin && (
+        <div className="flex-shrink-0 border-t-4 border-orange-500 bg-card px-4 pb-6 pt-4">
+          {isSignedIn && userId ? (
+            <>
+              <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Update Status
               </p>
-            )}
-            <div className="grid grid-cols-2 gap-2">
-              {(["pending", "in-progress", "fulfilled", "broken"] as PromiseStatus[]).map((s) => {
-                const c = STATUS_CONFIG[s]
-                const Icon = c.icon
-                const isActive = status === s
-                return (
-                  <button
-                    key={s}
-                    onClick={() => onStatusChange(s)}
-                    disabled={!isAdmin}
-                    className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${isActive
-                        ? `${c.bgColor} ${c.borderColor} shadow-lg`
-                        : "border-border bg-card hover:border-muted-foreground/30 hover:shadow-lg transition-shadow"
-                      }`}
-                  >
-                    <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
-                    <div className="text-left">
-                      <span className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}>
-                        {c.label}
-                      </span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </>
-        ) : (
-          <div className="rounded-lg bg-blue-50 p-4 text-center">
-            <p className="text-sm font-bold text-blue-700">Sign in to manage promises</p>
-            <p className="mt-1 text-xs text-blue-600">Only admins can update promise statuses</p>
-          </div>
-        )}
-      </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(["pending", "in-progress", "fulfilled", "broken"] as PromiseStatus[]).map((s) => {
+                  const c = STATUS_CONFIG[s]
+                  const Icon = c.icon
+                  const isActive = status === s
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => onStatusChange(s)}
+                      className={`flex items-center gap-2 rounded-xl border-2 p-3 transition-all active:scale-[0.98] ${isActive
+                          ? `${c.bgColor} ${c.borderColor} shadow-lg`
+                          : "border-border bg-card hover:border-muted-foreground/30 hover:shadow-lg transition-shadow"
+                        }`}
+                    >
+                      <Icon className={`h-5 w-5 ${isActive ? c.color : "text-muted-foreground"}`} />
+                      <div className="text-left">
+                        <span className={`block text-sm font-black ${isActive ? c.color : "text-foreground"}`}>
+                          {c.label}
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }

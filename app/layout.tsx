@@ -99,13 +99,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`}>
-        <body className="font-sans antialiased">
+    <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`}>
+      <body className="font-sans antialiased">
+        <ClerkProvider>
           {children}
           {process.env.NODE_ENV === "production" && <Analytics />}
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   )
 }

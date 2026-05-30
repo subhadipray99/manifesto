@@ -201,7 +201,10 @@ function CategoryCard({
   const progressPercent = total > 0 ? Math.round(((fulfilled * 1 + inProgress * 0.5) / total) * 100) : 0
 
   return (
-    <div className="overflow-hidden rounded-2xl border hover:border-foreground/10 transition-all duration-200 hover:shadow-md border-border bg-card shadow-sm">
+    <div 
+      data-category-id={category.id}
+      className="overflow-hidden rounded-2xl border hover:border-foreground/10 transition-all duration-200 hover:shadow-md border-border bg-card shadow-sm">
+    
       {/* Card Header */}
       <button
         onClick={onToggle}
@@ -248,13 +251,27 @@ function CategoryCard({
           </div>
         </div>
 
-        {/* Expand Icon */}
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-muted/60 sm:h-10 sm:w-10">
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
-          )}
+        {/* Share & Expand Icons */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              const categoryUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://manifesto.page'}${typeof window !== 'undefined' ? window.location.pathname : ''}?category=${category.id}`
+              navigator.clipboard.writeText(categoryUrl)
+              alert('Category link copied to clipboard!')
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 transition-colors hover:bg-orange-500/20 active:scale-95 sm:h-10 sm:w-10"
+            title="Share category"
+          >
+            <Share2 className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
+          </button>
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-muted/60 sm:h-10 sm:w-10">
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
+            )}
+          </div>
         </div>
       </button>
 
@@ -1039,6 +1056,25 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       saveStatuses(statuses)
     }
   }, [statuses, hydrated])
+
+  // Handle category URL parameter for sharing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const categoryId = params.get('category')
+      if (categoryId) {
+        setExpandedCategories(new Set([categoryId]))
+        setCategoryFilter(categoryId)
+        // Scroll to category after a brief delay
+        setTimeout(() => {
+          const element = document.querySelector(`[data-category-id="${categoryId}"]`)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          }
+        }, 100)
+      }
+    }
+  }, [])
 
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
   const total = totalPromises

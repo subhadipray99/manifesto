@@ -201,7 +201,10 @@ function CategoryCard({
   const progressPercent = total > 0 ? Math.round(((fulfilled * 1 + inProgress * 0.5) / total) * 100) : 0
 
   return (
-    <div className="overflow-hidden rounded-2xl border hover:border-foreground/10 transition-all duration-200 hover:shadow-md border-border bg-card shadow-sm">
+    <div 
+      data-category-id={category.id}
+      className="overflow-hidden rounded-2xl border hover:border-foreground/10 transition-all duration-200 hover:shadow-md border-border bg-card shadow-sm">
+    
       {/* Card Header */}
       <button
         onClick={onToggle}
@@ -248,13 +251,40 @@ function CategoryCard({
           </div>
         </div>
 
-        {/* Expand Icon */}
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-muted/60 sm:h-10 sm:w-10">
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
-          )}
+        {/* Share & Expand Icons */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              const categoryUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://manifesto.page'}${typeof window !== 'undefined' ? window.location.pathname : ''}?category=${category.id}`
+              
+              // Try clipboard API first, fall back to modal if blocked
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(categoryUrl).then(() => {
+                  alert('Category link copied to clipboard!')
+                }).catch(() => {
+                  // Clipboard blocked, show modal instead
+                  setShareCategoryUrl(categoryUrl)
+                  setShowCategoryShareModal(true)
+                })
+              } else {
+                // Clipboard API not available, show modal
+                setShareCategoryUrl(categoryUrl)
+                setShowCategoryShareModal(true)
+              }
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 transition-colors hover:bg-orange-500/20 active:scale-95 sm:h-10 sm:w-10"
+            title="Share category"
+          >
+            <Share2 className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
+          </button>
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-muted/60 sm:h-10 sm:w-10">
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
+            )}
+          </div>
         </div>
       </button>
 
@@ -923,6 +953,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     category: Category
   } | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showCategoryShareModal, setShowCategoryShareModal] = useState(false)
+  const [shareCategoryUrl, setShareCategoryUrl] = useState("")
   const [hydrated, setHydrated] = useState(false)
   const [daysInPower, setDaysInPower] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -1039,6 +1071,25 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       saveStatuses(statuses)
     }
   }, [statuses, hydrated])
+
+  // Handle category URL parameter for sharing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const categoryId = params.get('category')
+      if (categoryId) {
+        setExpandedCategories(new Set([categoryId]))
+        setCategoryFilter(categoryId)
+        // Scroll to category after a brief delay
+        setTimeout(() => {
+          const element = document.querySelector(`[data-category-id="${categoryId}"]`)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          }
+        }, 100)
+      }
+    }
+  }, [])
 
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
   const total = totalPromises
@@ -1594,6 +1645,59 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       {/* Share Modal */}
       {showShareModal && (
         <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />
+      )}
+
+      {/* Category Share Modal */}
+      {showCategoryShareModal && shareCategoryUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground">Share Category</h3>
+              <button
+                onClick={() => setShowCategoryShareModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Copy this link to share this category:
+            </p>
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
+              <input
+                type="text"
+                value={shareCategoryUrl}
+                readOnly
+                className="flex-1 bg-transparent text-sm text-foreground outline-none"
+              />
+              <button
+                onClick={() => {
+                  // Try to copy with fallback to manual selection
+                  const input = document.querySelector('input[readonly]') as HTMLInputElement
+                  if (input) {
+                    input.select()
+                    try {
+                      document.execCommand('copy')
+                      alert('Link copied to clipboard!')
+                      setShowCategoryShareModal(false)
+                    } catch {
+                      alert('Please copy the link manually')
+                    }
+                  }
+                }}
+                className="flex-shrink-0 rounded-lg bg-orange-600 px-3 py-1 text-xs font-bold text-white hover:bg-orange-700 transition-colors active:scale-95"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              onClick={() => setShowCategoryShareModal(false)}
+              className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-bold text-foreground hover:bg-muted transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

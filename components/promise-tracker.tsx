@@ -257,8 +257,21 @@ function CategoryCard({
             onClick={(e) => {
               e.stopPropagation()
               const categoryUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://manifesto.page'}${typeof window !== 'undefined' ? window.location.pathname : ''}?category=${category.id}`
-              navigator.clipboard.writeText(categoryUrl)
-              alert('Category link copied to clipboard!')
+              
+              // Try clipboard API first, fall back to modal if blocked
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(categoryUrl).then(() => {
+                  alert('Category link copied to clipboard!')
+                }).catch(() => {
+                  // Clipboard blocked, show modal instead
+                  setShareCategoryUrl(categoryUrl)
+                  setShowCategoryShareModal(true)
+                })
+              } else {
+                // Clipboard API not available, show modal
+                setShareCategoryUrl(categoryUrl)
+                setShowCategoryShareModal(true)
+              }
             }}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 transition-colors hover:bg-orange-500/20 active:scale-95 sm:h-10 sm:w-10"
             title="Share category"
@@ -940,6 +953,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     category: Category
   } | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showCategoryShareModal, setShowCategoryShareModal] = useState(false)
+  const [shareCategoryUrl, setShareCategoryUrl] = useState("")
   const [hydrated, setHydrated] = useState(false)
   const [daysInPower, setDaysInPower] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -1630,6 +1645,59 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       {/* Share Modal */}
       {showShareModal && (
         <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />
+      )}
+
+      {/* Category Share Modal */}
+      {showCategoryShareModal && shareCategoryUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground">Share Category</h3>
+              <button
+                onClick={() => setShowCategoryShareModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Copy this link to share this category:
+            </p>
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
+              <input
+                type="text"
+                value={shareCategoryUrl}
+                readOnly
+                className="flex-1 bg-transparent text-sm text-foreground outline-none"
+              />
+              <button
+                onClick={() => {
+                  // Try to copy with fallback to manual selection
+                  const input = document.querySelector('input[readonly]') as HTMLInputElement
+                  if (input) {
+                    input.select()
+                    try {
+                      document.execCommand('copy')
+                      alert('Link copied to clipboard!')
+                      setShowCategoryShareModal(false)
+                    } catch {
+                      alert('Please copy the link manually')
+                    }
+                  }
+                }}
+                className="flex-shrink-0 rounded-lg bg-orange-600 px-3 py-1 text-xs font-bold text-white hover:bg-orange-700 transition-colors active:scale-95"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              onClick={() => setShowCategoryShareModal(false)}
+              className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-bold text-foreground hover:bg-muted transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

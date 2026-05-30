@@ -17,21 +17,21 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "The Manifesto | BJP West Bengal Promise Tracker",
+  title: "BJP West Bengal Promise Tracker | West Bengal BJP Manifesto Accountability",
   description:
-    "Track every BJP manifesto promise for West Bengal. Monitor fulfillment of election commitments with real-time updates. Citizen-powered accountability platform.",
+    "Track BJP West Bengal promises with real-time updates. Monitor promise fulfillment across categories like governance, employment, and infrastructure. Citizen-powered accountability for West Bengal elections.",
   generator: "v0.app",
   keywords: [
-    "BJP",
-    "West Bengal",
-    "Promise Tracker",
-    "Election Manifesto",
-    "Accountability",
-    "Political Promises",
-    "Governance",
-    "The Manifesto",
-    "Bengal Elections",
-    "Promise Fulfillment",
+    "BJP West Bengal promise tracker",
+    "West Bengal BJP manifesto tracker",
+    "BJP promises West Bengal",
+    "West Bengal election manifesto",
+    "BJP promise fulfillment",
+    "West Bengal governance promises",
+    "BJP West Bengal accountability",
+    "Promise tracker West Bengal",
+    "Bengal elections 2026",
+    "Election manifesto tracker India",
   ],
   authors: [{ name: "ObserverFiles", url: "https://observerfile.com" }],
   referrer: "strict-origin-when-cross-origin",
@@ -46,9 +46,9 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   openGraph: {
-    title: "The Manifesto | BJP West Bengal Promise Tracker",
-    description: "Track every BJP manifesto promise for West Bengal. Are they keeping their word? Find out now.",
-    url: "https://themanifesto.vercel.app",
+    title: "BJP West Bengal Promise Tracker - Monitor Manifesto Promises",
+    description: "Track West Bengal BJP manifesto promises in real-time. Monitor fulfillment across governance, employment, infrastructure, and more. Citizen accountability platform for West Bengal elections.",
+    url: "https://manifesto.page",
     siteName: "The Manifesto",
     locale: "en_IN",
     type: "website",
@@ -63,8 +63,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Manifesto | BJP West Bengal Promise Tracker",
-    description: "Track every BJP manifesto promise for West Bengal. Citizen-powered accountability.",
+    title: "BJP West Bengal Promise Tracker - Manifesto Accountability",
+    description: "Monitor West Bengal BJP manifesto promises with real-time tracking. Track fulfillment across categories. Citizen-powered accountability platform.",
     images: ["/og-image.jpg"],
     creator: "@observerfiles",
   },
@@ -81,7 +81,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://themanifesto.vercel.app",
+    canonical: "https://manifesto.page",
   },
 }
 
@@ -98,8 +98,30 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "The Manifesto",
+    url: "https://manifesto.page",
+    logo: "https://manifesto.page/manifesto-logo.png",
+    description: "Citizen-powered accountability platform tracking BJP West Bengal manifesto promises",
+    sameAs: [
+      "https://twitter.com/observerfiles",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: "toddwake666@gmail.com",
+    },
+  }
+
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
       <body className="font-sans antialiased">
         <ClerkProvider>
           {children}

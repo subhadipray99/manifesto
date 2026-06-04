@@ -1448,6 +1448,18 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* ── RIGHT COLUMN: Sidebar — sticky from the very top of the grid ── */}
         <aside className="hidden lg:col-span-1 lg:block">
           <div className="sticky top-24 space-y-6">
+            {/* X (Twitter) Link */}
+            <a
+              href="https://x.com/ManifestoPage"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 transition-all hover:bg-neutral-900 active:scale-95"
+              title="Get latest updates on X"
+            >
+              <Twitter className="h-5 w-5 text-white" />
+              <span className="text-sm font-bold text-white">Get Updates on X</span>
+            </a>
+
             {/* Top Contributors */}
             {contributors.length > 0 && (
               <section id="leaderboard" className="rounded-xl border border-border bg-card p-4">
@@ -1547,17 +1559,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               <p className="mt-3 text-xs text-muted-foreground">
                 Citizen-powered accountability for {stateConfig.name}
               </p>
-              {/* X (Twitter) Link */}
-              <a
-                href="https://x.com/ManifestoPage"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-black px-3 py-2 transition-all hover:bg-neutral-900 active:scale-95"
-                title="Get latest updates on X"
-              >
-                <Twitter className="h-4 w-4 text-white" />
-                <span className="text-xs font-bold text-white">Get Updates on X</span>
-              </a>
             </div>
           </div>
         </aside>

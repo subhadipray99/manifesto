@@ -955,6 +955,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [showShareModal, setShowShareModal] = useState(false)
   const [showCategoryShareModal, setShowCategoryShareModal] = useState(false)
   const [shareCategoryUrl, setShareCategoryUrl] = useState("")
+  const [headerHeight, setHeaderHeight] = useState(0)
+  const headerRef = useRef<HTMLElement>(null)
   const [hydrated, setHydrated] = useState(false)
   const [daysInPower, setDaysInPower] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -1091,6 +1093,19 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     }
   }, [])
 
+  // Measure header height dynamically for banner positioning
+  useEffect(() => {
+    const measureHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight)
+      }
+    }
+    
+    measureHeaderHeight()
+    window.addEventListener('resize', measureHeaderHeight)
+    return () => window.removeEventListener('resize', measureHeaderHeight)
+  }, [])
+
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
   const total = totalPromises
   const stats = {
@@ -1141,7 +1156,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-4 py-3 shadow-lg sm:py-4">
+      <header ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-4 py-3 shadow-lg sm:py-4">
         {/* Top row: menu, logo, actions */}
         <div className="flex items-center gap-2">
           {/* Left: Hamburger Menu */}
@@ -1277,7 +1292,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
       {/* Sign In Banner for Non-Authenticated Users */}
       {!isSignedIn && showSignInBanner && (
-        <div className="sticky top-20 z-20 bg-black px-4 py-3 sm:py-4">
+        <div 
+          style={{ top: `${headerHeight}px` }}
+          className="sticky z-20 bg-black px-4 py-3 sm:py-4">
           <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
             <button
               onClick={() => openSignIn()}

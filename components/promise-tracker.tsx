@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter } from "lucide-react"
 import Link from "next/link"
 
 const STATUS_CONFIG: Record<
@@ -1547,6 +1547,17 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               <p className="mt-3 text-xs text-muted-foreground">
                 Citizen-powered accountability for {stateConfig.name}
               </p>
+              {/* X (Twitter) Link */}
+              <a
+                href="https://x.com/ManifestoPage"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-black px-3 py-2 transition-all hover:bg-neutral-900 active:scale-95"
+                title="Get latest updates on X"
+              >
+                <Twitter className="h-4 w-4 text-white" />
+                <span className="text-xs font-bold text-white">Get Updates on X</span>
+              </a>
             </div>
           </div>
         </aside>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter } from "lucide-react"
 import Link from "next/link"
 
 const STATUS_CONFIG: Record<
@@ -1448,6 +1448,18 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* ── RIGHT COLUMN: Sidebar — sticky from the very top of the grid ── */}
         <aside className="hidden lg:col-span-1 lg:block">
           <div className="sticky top-24 space-y-6">
+            {/* X (Twitter) Link */}
+            <a
+              href="https://x.com/ManifestoPage"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 transition-all hover:bg-neutral-900 active:scale-95"
+              title="Get latest updates on X"
+            >
+              <Twitter className="h-5 w-5 text-white" />
+              <span className="text-sm font-bold text-white">Get Updates on X</span>
+            </a>
+
             {/* Top Contributors */}
             {contributors.length > 0 && (
               <section id="leaderboard" className="rounded-xl border border-border bg-card p-4">

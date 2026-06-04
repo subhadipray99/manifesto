@@ -1277,7 +1277,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
       {/* Sign In Banner for Non-Authenticated Users */}
       {!isSignedIn && showSignInBanner && (
-        <div className="sticky top-0 z-30 bg-black px-4 py-3 sm:py-4">
+        <div className="sticky top-16 z-20 bg-black px-4 py-3 sm:py-4">
           <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
             <button
               onClick={() => openSignIn()}

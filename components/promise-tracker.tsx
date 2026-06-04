@@ -955,6 +955,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [showShareModal, setShowShareModal] = useState(false)
   const [showCategoryShareModal, setShowCategoryShareModal] = useState(false)
   const [shareCategoryUrl, setShareCategoryUrl] = useState("")
+  const [headerHeight, setHeaderHeight] = useState(0)
+  const headerRef = useRef<HTMLElement>(null)
   const [hydrated, setHydrated] = useState(false)
   const [daysInPower, setDaysInPower] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -1091,6 +1093,19 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     }
   }, [])
 
+  // Measure header height dynamically for banner positioning
+  useEffect(() => {
+    const measureHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight)
+      }
+    }
+    
+    measureHeaderHeight()
+    window.addEventListener('resize', measureHeaderHeight)
+    return () => window.removeEventListener('resize', measureHeaderHeight)
+  }, [])
+
   const allPromises = CATEGORIES.flatMap((c) => c.promises)
   const total = totalPromises
   const stats = {
@@ -1141,7 +1156,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-4 py-3 shadow-lg sm:py-4">
+      <header ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-4 py-3 shadow-lg sm:py-4">
         {/* Top row: menu, logo, actions */}
         <div className="flex items-center gap-2">
           {/* Left: Hamburger Menu */}
@@ -1277,7 +1292,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
       {/* Sign In Banner for Non-Authenticated Users */}
       {!isSignedIn && showSignInBanner && (
-        <div className="sticky top-0 z-30 bg-black px-4 py-3 sm:py-4">
+        <div 
+          style={{ top: `${headerHeight}px` }}
+          className="sticky z-20 bg-black px-4 py-3 sm:py-4">
           <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
             <button
               onClick={() => openSignIn()}
@@ -1447,117 +1464,107 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
         {/* ── RIGHT COLUMN: Sidebar — sticky from the very top of the grid ── */}
         <aside className="hidden lg:col-span-1 lg:block">
-          <div className="sticky top-24 space-y-6">
-            {/* X (Twitter) Link */}
+          <div className="sticky top-24 space-y-5">
+            {/* X (Twitter) Link - Neobrutalist */}
             <a
               href="https://x.com/ManifestoPage"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 transition-all hover:bg-neutral-900 active:scale-95"
+              className="flex items-center justify-center gap-3 bg-black px-0 py-4 border-4 border-black transition-all active:scale-95 hover:bg-black hover:shadow-2xl"
               title="Get latest updates on X"
             >
               <Twitter className="h-5 w-5 text-white" />
-              <span className="text-sm font-bold text-white">Get Updates on X</span>
+              <span className="text-xs font-black tracking-widest text-white uppercase">Updates on X</span>
             </a>
 
-            {/* Top Contributors */}
+            {/* Top Contributors - Neobrutalist */}
             {contributors.length > 0 && (
-              <section id="leaderboard" className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-4 flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-amber-500" />
-                  <h3 className="font-serif font-black text-foreground">Top Contributors</h3>
+              <section id="leaderboard" className="border-4 border-black bg-white p-6 space-y-4">
+                <div className="flex items-center gap-3 pb-4 border-b-4 border-black">
+                  <Trophy className="h-5 w-5 text-black" />
+                  <h3 className="text-sm font-black uppercase tracking-wider text-black">Contributors</h3>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {contributors.slice(0, 5).map((contributor, index) => (
                     <div
                       key={contributor.name}
-                      className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2 border-2 border-black transition-all hover:bg-orange-500 hover:text-white hover:border-orange-500"
                     >
                       <div
-                        className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${index === 0
-                            ? "bg-amber-500"
+                        className={`flex h-7 w-7 flex-shrink-0 items-center justify-center font-black text-white border-2 border-black ${index === 0
+                            ? "bg-orange-500"
                             : index === 1
-                              ? "bg-neutral-400"
+                              ? "bg-gray-400"
                               : index === 2
-                                ? "bg-amber-700"
-                                : "bg-neutral-300"
+                                ? "bg-orange-700"
+                                : "bg-gray-300"
                           }`}
                       >
                         {index + 1}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-foreground">{contributor.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="truncate text-xs font-black text-inherit">{contributor.name}</p>
+                        <p className="text-[10px] text-inherit opacity-75">
                           {contributor.contribution_count} update{contributor.contribution_count !== 1 ? "s" : ""}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <p className="mt-3 text-center text-xs text-muted-foreground">Submit verified updates to appear</p>
               </section>
             )}
 
-            {/* How to Read Guide */}
-            <section className="rounded-xl border border-border bg-card p-4">
-              <h3 className="mb-3 font-serif font-black text-foreground">How to Read</h3>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
-                    ✓
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-green-600">Fulfilled</p>
-                    <p className="text-[11px] text-muted-foreground">Completed (1 point)</p>
+            {/* How to Read Guide - Neobrutalist */}
+            <section className="border-4 border-black bg-white p-6 space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-wider text-black pb-4 border-b-4 border-black">Progress</h3>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3 px-2 py-1.5 border-2 border-black bg-green-50">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center bg-green-500 border-2 border-black font-black text-white text-xs">✓</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-green-900">FULFILLED</p>
                   </div>
+                  <p className="text-xs font-bold text-green-900">1 pt</p>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
-                    ◐
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-amber-600">In Progress</p>
-                    <p className="text-[11px] text-muted-foreground">Started (0.5 points)</p>
+                <div className="flex items-center gap-3 px-2 py-1.5 border-2 border-black bg-amber-50">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center bg-amber-500 border-2 border-black font-black text-white text-xs">◐</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-amber-900">IN PROGRESS</p>
                   </div>
+                  <p className="text-xs font-bold text-amber-900">0.5 pt</p>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    ✗
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-red-600">Broken</p>
-                    <p className="text-[11px] text-muted-foreground">Not kept (0 points)</p>
+                <div className="flex items-center gap-3 px-2 py-1.5 border-2 border-black bg-red-50">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center bg-red-500 border-2 border-black font-black text-white text-xs">✗</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-red-900">BROKEN</p>
                   </div>
+                  <p className="text-xs font-bold text-red-900">0 pt</p>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-neutral-400 text-[10px] font-bold text-white">
-                    ○
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-neutral-600">Not Rated</p>
-                    <p className="text-[11px] text-muted-foreground">No action (0 points)</p>
+                <div className="flex items-center gap-3 px-2 py-1.5 border-2 border-black bg-gray-50">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center bg-gray-400 border-2 border-black font-black text-white text-xs">○</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-gray-900">NOT RATED</p>
                   </div>
+                  <p className="text-xs font-bold text-gray-900">0 pt</p>
                 </div>
-              </div>
-              <div className="mt-3 rounded-lg border border-border/50 bg-muted/50 p-2.5">
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-bold">Score:</span> (Fulfilled + In Progress×0.5) / Total ×100
-                </p>
               </div>
             </section>
 
-            {/* Footer Info */}
-            <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
-              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
-              <p className="mb-3 text-sm font-black text-foreground">{stateConfig.party}</p>
-              <a
-                href="mailto:toddwake666@gmail.com"
-                className="inline-block text-xs font-semibold text-orange-600 transition-colors hover:text-orange-700"
-              >
-                Contact Admin
-              </a>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Citizen-powered accountability for {stateConfig.name}
+            {/* Footer Info - Neobrutalist */}
+            <div className="border-4 border-black bg-orange-500 p-6 text-center space-y-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-white mb-2">Ruling Party</p>
+                <p className="text-lg font-black text-white">{stateConfig.party}</p>
+              </div>
+              <div className="pt-4 border-t-4 border-black">
+                <a
+                  href="mailto:toddwake666@gmail.com"
+                  className="text-xs font-black uppercase tracking-wider text-black hover:underline transition-all"
+                >
+                  Contact Admin →
+                </a>
+              </div>
+              <p className="text-xs font-bold text-white">
+                Citizen accountability for {stateConfig.name}
               </p>
             </div>
           </div>

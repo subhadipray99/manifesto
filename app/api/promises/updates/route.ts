@@ -42,11 +42,10 @@ export async function GET(request: NextRequest) {
         link, 
         description, 
         created_at, 
-        COALESCE(submitted_by, u.name, u.email, 'Anonymous') as submitted_by,
+        COALESCE(NULLIF(submitted_by, ''), 'Anonymous') as submitted_by,
         user_email,
         user_id
       FROM timeline_updates
-      LEFT JOIN neon_auth."user" u ON timeline_updates.user_id = u.id
       WHERE promise_id = ${promiseId} AND state_id = ${stateId} AND status = 'approved'
       ORDER BY created_at DESC
     `

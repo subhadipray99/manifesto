@@ -15,7 +15,7 @@ async function getAllStates(): Promise<string[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const stateIds = await getAllStates()
-  const baseUrl = "https://themanifesto.vercel.app"
+  const baseUrl = "https://manifesto.page"
 
   const stateUrls: MetadataRoute.Sitemap = stateIds.map((stateId) => ({
     url: `${baseUrl}/${stateId}`,
@@ -36,6 +36,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
     },
     ...stateUrls,
   ]

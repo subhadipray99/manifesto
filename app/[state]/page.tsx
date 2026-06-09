@@ -106,19 +106,20 @@ export async function generateMetadata({
 
   const title = `${stateConfig.party} ${stateConfig.name} Promise Tracker | The Manifesto`
   const description = `Track every ${stateConfig.party} manifesto promise for ${stateConfig.name}. Monitor fulfillment of election commitments with citizen-powered accountability.`
-  const url = `https://themanifesto.vercel.app/${state}`
+  const url = `https://manifesto.page/${state}`
 
   return {
     title,
     description,
     keywords: [
-      stateConfig.party,
-      stateConfig.name,
-      "Promise Tracker",
-      "Election Manifesto",
-      "Accountability",
-      "Political Promises",
-      "Governance",
+      `${stateConfig.party} promise tracker`,
+      `${stateConfig.party} manifesto tracker`,
+      `${stateConfig.party} ${stateConfig.name} promise tracker`,
+      `${stateConfig.party} promises`,
+      "promise tracker",
+      "election manifesto tracker",
+      "political accountability",
+      "promise fulfillment",
     ],
     openGraph: {
       title,

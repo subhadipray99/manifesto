@@ -17,21 +17,22 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "BJP West Bengal Promise Tracker | West Bengal BJP Manifesto Accountability",
+  metadataBase: new URL("https://manifesto.page"),
+  title: "BJP Promise Tracker | Track BJP Manifesto Promises & Fulfillment",
   description:
-    "Track BJP West Bengal promises with real-time updates. Monitor promise fulfillment across categories like governance, employment, and infrastructure. Citizen-powered accountability for West Bengal elections.",
+    "BJP Promise Tracker — monitor every BJP manifesto promise and its fulfillment in real time. Track election commitments across governance, employment, and infrastructure with citizen-powered accountability.",
   generator: "v0.app",
   keywords: [
-    "BJP West Bengal promise tracker",
-    "West Bengal BJP manifesto tracker",
-    "BJP promises West Bengal",
-    "West Bengal election manifesto",
+    "BJP promise tracker",
+    "BJP manifesto tracker",
+    "BJP promises tracker",
+    "BJP manifesto promises",
     "BJP promise fulfillment",
-    "West Bengal governance promises",
-    "BJP West Bengal accountability",
-    "Promise tracker West Bengal",
-    "Bengal elections 2026",
-    "Election manifesto tracker India",
+    "track BJP promises",
+    "BJP West Bengal promise tracker",
+    "BJP election manifesto tracker",
+    "BJP accountability tracker",
+    "political promise tracker India",
   ],
   authors: [{ name: "ObserverFiles", url: "https://observerfile.com" }],
   referrer: "strict-origin-when-cross-origin",
@@ -46,8 +47,8 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   openGraph: {
-    title: "BJP West Bengal Promise Tracker - Monitor Manifesto Promises",
-    description: "Track West Bengal BJP manifesto promises in real-time. Monitor fulfillment across governance, employment, infrastructure, and more. Citizen accountability platform for West Bengal elections.",
+    title: "BJP Promise Tracker — Track Every BJP Manifesto Promise",
+    description: "Monitor BJP manifesto promises and their fulfillment in real time. Track election commitments across governance, employment, infrastructure, and more with citizen-powered accountability.",
     url: "https://manifesto.page",
     siteName: "The Manifesto",
     locale: "en_IN",
@@ -57,14 +58,14 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "The Manifesto - BJP West Bengal Promise Tracker",
+        alt: "BJP Promise Tracker - The Manifesto",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "BJP West Bengal Promise Tracker - Manifesto Accountability",
-    description: "Monitor West Bengal BJP manifesto promises with real-time tracking. Track fulfillment across categories. Citizen-powered accountability platform.",
+    title: "BJP Promise Tracker — Track BJP Manifesto Promises",
+    description: "Monitor BJP manifesto promises and fulfillment in real time. Citizen-powered accountability platform tracking election commitments.",
     images: ["/og-image.jpg"],
     creator: "@observerfiles",
   },
@@ -100,18 +101,68 @@ export default function RootLayout({
 }>) {
   const organizationSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "The Manifesto",
-    url: "https://manifesto.page",
-    logo: "https://manifesto.page/manifesto-logo.png",
-    description: "Citizen-powered accountability platform tracking BJP West Bengal manifesto promises",
-    sameAs: [
-      "https://twitter.com/observerfiles",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://manifesto.page/#organization",
+        name: "The Manifesto",
+        url: "https://manifesto.page",
+        logo: "https://manifesto.page/manifesto-logo.png",
+        description: "Citizen-powered accountability platform tracking BJP manifesto promises and their fulfillment.",
+        sameAs: ["https://x.com/ManifestoPage"],
+        contactPoint: {
+          "@type": "ContactPoint",
+          email: "toddwake666@gmail.com",
+          contactType: "customer support",
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://manifesto.page/#website",
+        url: "https://manifesto.page",
+        name: "BJP Promise Tracker",
+        description: "Track every BJP manifesto promise and its fulfillment in real time.",
+        publisher: { "@id": "https://manifesto.page/#organization" },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: "https://manifesto.page/?q={search_term_string}",
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://manifesto.page/#faq",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "What is the BJP Promise Tracker?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "The BJP Promise Tracker is a citizen-powered accountability platform that monitors every BJP manifesto promise and tracks whether it has been fulfilled, is in progress, or is broken — across categories like governance, employment, and infrastructure.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "How are BJP promises tracked and scored?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Each promise is rated as Fulfilled (1 point), In Progress (0.5 points), Broken (0 points), or Not Rated. The overall score is calculated as (Fulfilled + In Progress × 0.5) divided by total promises, giving a transparent fulfillment percentage.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Is the BJP Promise Tracker free to use?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Yes. The BJP Promise Tracker is a free, citizen-powered platform. Anyone can view promise progress, and signed-in users can submit verified updates.",
+            },
+          },
+        ],
+      },
     ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      email: "toddwake666@gmail.com",
-    },
   }
 
   return (

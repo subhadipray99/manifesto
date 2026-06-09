@@ -10,13 +10,15 @@ export async function GET(request: NextRequest) {
     
     const contributors = await getDb()`
       SELECT 
-        submitted_by as name,
-        MAX(user_id) as user_id,
+        t.submitted_by as name,
+        MAX(t.user_id) as user_id,
+        MAX(u.username) as username,
         COUNT(*) as contribution_count,
-        MAX(created_at) as last_contribution
-      FROM timeline_updates
-      WHERE status = 'approved' AND submitted_by IS NOT NULL AND state_id = ${stateId}
-      GROUP BY submitted_by
+        MAX(t.created_at) as last_contribution
+      FROM timeline_updates t
+      LEFT JOIN usernames u ON u.user_id = t.user_id
+      WHERE t.status = 'approved' AND t.submitted_by IS NOT NULL AND t.state_id = ${stateId}
+      GROUP BY t.submitted_by
       ORDER BY contribution_count DESC, last_contribution DESC
       LIMIT 10
     `

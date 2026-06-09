@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
+import { ensureUsername } from "@/lib/usernames"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -38,16 +39,18 @@ export async function GET(request: NextRequest) {
 
     const updates = await getDb()`
       SELECT 
-        id, 
-        title, 
-        link, 
-        description, 
-        created_at, 
-        COALESCE(NULLIF(TRIM(submitted_by), ''), 'Community Member') as submitted_by,
-        user_id
-      FROM timeline_updates
-      WHERE promise_id = ${promiseId} AND state_id = ${stateId} AND status = 'approved'
-      ORDER BY created_at DESC
+        t.id, 
+        t.title, 
+        t.link, 
+        t.description, 
+        t.created_at, 
+        COALESCE(NULLIF(TRIM(t.submitted_by), ''), 'Community Member') as submitted_by,
+        t.user_id,
+        u.username
+      FROM timeline_updates t
+      LEFT JOIN usernames u ON u.user_id = t.user_id
+      WHERE t.promise_id = ${promiseId} AND t.state_id = ${stateId} AND t.status = 'approved'
+      ORDER BY t.created_at DESC
     `
 
     return NextResponse.json(updates)
@@ -107,6 +110,9 @@ export async function POST(request: NextRequest) {
         ${userId}, ${resolvedName}, ${stateId}
       )
     `
+
+    // Ensure the contributor has a clean username for their public profile
+    await ensureUsername(userId, resolvedName)
 
     return NextResponse.json(
       { 

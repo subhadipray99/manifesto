@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useAuth, useClerk } from "@clerk/nextjs"
 import Link from "next/link"
-import { Calendar, ExternalLink, ArrowLeft, FileText, MapPin, Flame, Clock, Settings } from "lucide-react"
+import { Calendar, ExternalLink, ArrowLeft, FileText, MapPin, Flame, Clock, Settings, AtSign, Check, X, Pencil } from "lucide-react"
 
 interface ProfileData {
   profile: {
     userId: string
+    username: string | null
     name: string
     totalContributions: number
     pendingContributions: number
@@ -190,25 +191,64 @@ function StatCard({
 
 export default function ProfilePage() {
   const params = useParams()
-  const userId = params.userId as string
+  const router = useRouter()
+  const identifier = params.userId as string
   const { userId: viewerId } = useAuth()
   const { openUserProfile } = useClerk()
-  const isOwnProfile = viewerId === userId
   const [data, setData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  // Username editing state
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [usernameInput, setUsernameInput] = useState("")
+  const [usernameError, setUsernameError] = useState("")
+  const [savingUsername, setSavingUsername] = useState(false)
+
   useEffect(() => {
-    if (!userId) return
-    fetch(`/api/profile/${userId}`)
+    if (!identifier) return
+    fetch(`/api/profile/${identifier}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.error) setError(d.error)
-        else setData(d)
+        else {
+          setData(d)
+          // If the URL used a raw Clerk ID but a clean username exists, swap the URL
+          if (d.profile?.username && identifier !== d.profile.username) {
+            router.replace(`/profile/${d.profile.username}`)
+          }
+        }
       })
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false))
-  }, [userId])
+  }, [identifier, router])
+
+  const isOwnProfile = !!viewerId && !!data && viewerId === data.profile.userId
+
+  async function saveUsername() {
+    const value = usernameInput.toLowerCase().trim()
+    setUsernameError("")
+    setSavingUsername(true)
+    try {
+      const res = await fetch("/api/username", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: value }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setUsernameError(json.error || "Could not update username")
+        return
+      }
+      setEditingUsername(false)
+      setData((prev) => (prev ? { ...prev, profile: { ...prev.profile, username: json.username } } : prev))
+      router.replace(`/profile/${json.username}`)
+    } catch {
+      setUsernameError("Something went wrong. Try again.")
+    } finally {
+      setSavingUsername(false)
+    }
+  }
 
   const avatarColors = [
     "bg-orange-500", "bg-blue-500", "bg-green-500",
@@ -263,6 +303,62 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="font-serif text-3xl font-bold text-foreground sm:text-4xl text-balance">{profile.name}</h1>
+
+            {/* Username handle */}
+            {editingUsername ? (
+              <div className="mt-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center rounded-lg border-2 border-border bg-card px-2 py-1 focus-within:border-orange-500">
+                    <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
+                    <input
+                      autoFocus
+                      value={usernameInput}
+                      onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      onKeyDown={(e) => { if (e.key === "Enter") saveUsername(); if (e.key === "Escape") setEditingUsername(false) }}
+                      maxLength={40}
+                      placeholder="username"
+                      className="w-40 bg-transparent px-1 text-sm font-medium text-foreground outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={saveUsername}
+                    disabled={savingUsername}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    title="Save"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => { setEditingUsername(false); setUsernameError("") }}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-border text-muted-foreground transition-colors hover:bg-muted"
+                    title="Cancel"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {usernameError && <p className="mt-1 text-xs font-medium text-red-600">{usernameError}</p>}
+              </div>
+            ) : (
+              <div className="mt-1 flex items-center gap-2">
+                {profile.username && (
+                  <span className="inline-flex items-center text-sm font-medium text-orange-600">
+                    <AtSign className="h-3.5 w-3.5" />
+                    {profile.username}
+                  </span>
+                )}
+                {isOwnProfile && (
+                  <button
+                    onClick={() => { setUsernameInput(profile.username || ""); setEditingUsername(true) }}
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    title="Edit username"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Edit
+                  </button>
+                )}
+              </div>
+            )}
+
             <p className="mt-1 text-sm text-muted-foreground">
               Citizen contributor &middot; Member since {formatDate(profile.memberSince)}
             </p>

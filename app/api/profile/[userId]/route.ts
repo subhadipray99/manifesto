@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
+import { resolveUserId, ensureUsername } from "@/lib/usernames"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -8,10 +9,17 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = await params
+    const { userId: identifier } = await params
+
+    if (!identifier) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    }
+
+    // The route param may be a clean username or a raw Clerk user_id
+    const userId = await resolveUserId(identifier)
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
     }
 
     // Get profile info + aggregated stats in one query
@@ -68,9 +76,13 @@ export async function GET(
       ORDER BY day ASC
     `
 
+    // Ensure this user has a clean username (backfill on first view)
+    const username = await ensureUsername(userId, profile.name as string | undefined)
+
     return NextResponse.json({
       profile: {
         userId: profile.user_id,
+        username,
         name: profile.name,
         totalContributions: Number(profile.total_contributions),
         pendingContributions: Number(profile.pending_contributions),

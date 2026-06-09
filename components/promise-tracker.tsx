@@ -117,6 +117,7 @@ async function fetchTimelineUpdatesFromDB(promiseId: string, stateId: string): P
       created_at: item.created_at,
       submitted_by: item.submitted_by,
       user_id: item.user_id,
+      username: item.username,
     }))
   } catch (error) {
     console.error("[v0] Error fetching updates from DB:", error)
@@ -514,7 +515,7 @@ function PromiseDetail({
                 const colors = ["bg-orange-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-red-500"]
                 const colorIndex = name.charCodeAt(0) % colors.length
                 
-                const profileHref = update.user_id ? `/profile/${update.user_id}` : null
+                const profileHref = update.username ? `/profile/${update.username}` : update.user_id ? `/profile/${update.user_id}` : null
 
                 return (
                   <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
@@ -788,7 +789,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [latestUpdates, setLatestUpdates] = useState<Array<{ id: string; promise_id: string; title: string; link: string; submitted_by: string | null; created_at: string }>>([])
-  const [contributors, setContributors] = useState<Array<{ name: string; user_id: string | null; contribution_count: number; last_contribution: string }>>([])
+  const [contributors, setContributors] = useState<Array<{ name: string; user_id: string | null; username: string | null; contribution_count: number; last_contribution: string }>>([])
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showSignInBanner, setShowSignInBanner] = useState(true)
   const [showContributors, setShowContributors] = useState(false)
@@ -1193,8 +1194,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                     )
                     return (
                       <li key={c.name} className="border-b border-border last:border-0">
-                        {c.user_id ? (
-                          <Link href={`/profile/${c.user_id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
+                        {c.user_id || c.username ? (
+                          <Link href={`/profile/${c.username || c.user_id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
                             {row}
                           </Link>
                         ) : (
@@ -1336,8 +1337,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                   )
                   return (
                     <li key={c.name} className="border-b border-border last:border-0">
-                      {c.user_id ? (
-                        <Link href={`/profile/${c.user_id}`} onClick={() => setShowContributors(false)} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors">
+                      {c.user_id || c.username ? (
+                        <Link href={`/profile/${c.username || c.user_id}`} onClick={() => setShowContributors(false)} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors">
                           {row}
                         </Link>
                       ) : (

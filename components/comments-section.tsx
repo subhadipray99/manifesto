@@ -11,6 +11,7 @@ type CommentType = {
   parent_id: string | null
   body: string
   user_id: string
+  username?: string | null
   author_name: string
   upvotes: number
   downvotes: number
@@ -76,6 +77,7 @@ function CommentNode({
 
   const colorIndex = node.author_name.charCodeAt(0) % AVATAR_COLORS.length
   const initials = node.author_name[0]?.toUpperCase() || "?"
+  const profileHref = `/profile/${node.username || node.user_id}`
   const isReplying = replyingTo === node.id
 
   const handleReplySubmit = async () => {
@@ -95,14 +97,14 @@ function CommentNode({
       <div className="rounded-xl border-2 border-border bg-card p-3">
         <div className="flex items-start gap-2.5">
           <a
-            href={`/profile/${node.user_id}`}
+            href={profileHref}
             className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${AVATAR_COLORS[colorIndex]} text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-80`}
           >
             {initials}
           </a>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <a href={`/profile/${node.user_id}`} className="text-sm font-bold text-foreground hover:text-orange-600 hover:underline">
+              <a href={profileHref} className="text-sm font-bold text-foreground hover:text-orange-600 hover:underline">
                 {node.author_name}
               </a>
               <span className="text-xs text-muted-foreground">{timeAgo(node.created_at)}</span>

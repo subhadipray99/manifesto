@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const contributors = await getDb()`
       SELECT 
         submitted_by as name,
+        MAX(user_id) as user_id,
         COUNT(*) as contribution_count,
         MAX(created_at) as last_contribution
       FROM timeline_updates

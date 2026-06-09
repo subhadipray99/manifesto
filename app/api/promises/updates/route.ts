@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
+import { currentUser } from "@clerk/nextjs/server"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -59,15 +60,25 @@ export async function GET(request: NextRequest) {
 // POST /api/promises/updates - Submit a new timeline update (goes to pending)
 export async function POST(request: NextRequest) {
   try {
-    const { promiseId, title, link, description, userName, userEmail, userId, stateId = "west-bengal" } = await request.json()
+    // Always resolve user identity server-side from the Clerk session
+    const clerkUser = await currentUser()
 
-    // Require authentication (userId passed from client)
-    if (!userId) {
+    if (!clerkUser) {
       return NextResponse.json(
         { error: "You must be signed in to submit updates" },
         { status: 401 }
       )
     }
+
+    const userId = clerkUser.id
+    const resolvedName =
+      clerkUser.fullName ||
+      [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+      clerkUser.username ||
+      clerkUser.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+      "Community Member"
+
+    const { promiseId, title, link, description, stateId = "west-bengal" } = await request.json()
 
     // Rate limiting
     const rateLimit = checkRateLimit(userId)
@@ -89,11 +100,11 @@ export async function POST(request: NextRequest) {
     await getDb()`
       INSERT INTO timeline_updates (
         id, promise_id, title, link, description, status, 
-        user_id, submitted_by, user_email, state_id
+        user_id, submitted_by, state_id
       )
       VALUES (
         ${updateId}, ${promiseId}, ${title}, ${link}, ${description || null}, 'pending',
-        ${userId}, ${userName || "Anonymous"}, ${userEmail || null}, ${stateId}
+        ${userId}, ${resolvedName}, ${stateId}
       )
     `
 

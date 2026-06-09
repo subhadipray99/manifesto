@@ -352,8 +352,6 @@ function PromiseDetail({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError("")
-    const email = user?.primaryEmailAddress?.emailAddress
-    const displayName = user?.fullName || user?.firstName || user?.username || (email ? email.split("@")[0] : null) || "Anonymous"
     setSubmitSuccess("")
     if (!isSignedIn) {
       setSubmitError("Please sign in to submit updates")
@@ -376,9 +374,6 @@ function PromiseDetail({
           title: formTitle.trim(),
           link: formLink.trim(),
           description: formDescription.trim() || undefined,
-          userName: displayName,
-          userEmail: user?.primaryEmailAddress?.emailAddress || null,
-          userId: userId,
           stateId: stateId,
         }),
       })

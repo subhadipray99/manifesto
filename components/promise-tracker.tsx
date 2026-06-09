@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
 import Link from "next/link"
+import { CommentsSection } from "@/components/comments-section"
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -112,6 +113,9 @@ async function fetchTimelineUpdatesFromDB(promiseId: string, stateId: string): P
       link: item.link,
       description: item.description,
       timestamp: item.created_at,
+      created_at: item.created_at,
+      submitted_by: item.submitted_by,
+      user_id: item.user_id,
     }))
   } catch (error) {
     console.error("[v0] Error fetching updates from DB:", error)
@@ -340,6 +344,7 @@ function PromiseDetail({
   const { user } = useUser()
   const { openSignIn } = useClerk()
   const config = STATUS_CONFIG[status]
+  const [activeTab, setActiveTab] = useState<"updates" | "comments">("updates")
   const [showAddForm, setShowAddForm] = useState(false)
   const [formTitle, setFormTitle] = useState("")
   const [formLink, setFormLink] = useState("")
@@ -433,6 +438,28 @@ function PromiseDetail({
           </div>
         </div>
 
+        <div className="border-t-2 border-border bg-card">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("updates")}
+              className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${activeTab === "updates" ? "border-orange-500 text-orange-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
+              <Calendar className="h-4 w-4" />
+              Updates
+            </button>
+            <button
+              onClick={() => setActiveTab("comments")}
+              className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${activeTab === "comments" ? "border-orange-500 text-orange-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
+              <MessageSquare className="h-4 w-4" />
+              Comments
+            </button>
+          </div>
+        </div>
+
+        {activeTab === "comments" ? (
+          <CommentsSection promiseId={promise.id} stateId={stateId} isSignedIn={isSignedIn} isAdmin={isAdmin} />
+        ) : (
         <div className="border-t-2 border-border bg-muted/30 px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-base font-black text-foreground sm:text-lg">Updates Timeline</h2>
@@ -535,6 +562,7 @@ function PromiseDetail({
             </div>
           )}
         </div>
+        )}
       </div>
 
       {isAdmin && (

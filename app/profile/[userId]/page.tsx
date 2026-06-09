@@ -52,6 +52,14 @@ function timeAgo(date: string) {
   return `${Math.floor(days / 365)} years ago`
 }
 
+// Format a Date as YYYY-MM-DD using local time (avoids UTC timezone shifts)
+function toLocalDateKey(date: Date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
 // Build a 52-week grid with correct day offsets
 function buildHeatmapGrid(activityData: { day: string; count: number }[]) {
   const today = new Date()
@@ -63,7 +71,11 @@ function buildHeatmapGrid(activityData: { day: string; count: number }[]) {
   const dayOfWeek = startDate.getDay()
   startDate.setDate(startDate.getDate() - dayOfWeek)
 
-  const activityMap = new Map(activityData.map((d) => [d.day.split("T")[0], d.count]))
+  // Normalize the day key (handles both "2026-05-17" and full ISO strings)
+  // and coerce count to a number (neon returns COUNT(*) as a string).
+  const activityMap = new Map(
+    activityData.map((d) => [String(d.day).split("T")[0], Number(d.count)]),
+  )
 
   const weeks: { date: Date; count: number; isPlaceholder: boolean }[][] = []
   let currentDate = new Date(startDate)
@@ -71,7 +83,7 @@ function buildHeatmapGrid(activityData: { day: string; count: number }[]) {
   while (currentDate <= today) {
     const week: { date: Date; count: number; isPlaceholder: boolean }[] = []
     for (let i = 0; i < 7; i++) {
-      const dateStr = currentDate.toISOString().split("T")[0]
+      const dateStr = toLocalDateKey(currentDate)
       const isFuture = currentDate > today
       week.push({
         date: new Date(currentDate),

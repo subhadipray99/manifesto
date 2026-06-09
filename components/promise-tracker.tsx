@@ -352,8 +352,6 @@ function PromiseDetail({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError("")
-    const email = user?.primaryEmailAddress?.emailAddress
-    const displayName = user?.fullName || user?.firstName || user?.username || (email ? email.split("@")[0] : null) || "Anonymous"
     setSubmitSuccess("")
     if (!isSignedIn) {
       setSubmitError("Please sign in to submit updates")
@@ -376,9 +374,6 @@ function PromiseDetail({
           title: formTitle.trim(),
           link: formLink.trim(),
           description: formDescription.trim() || undefined,
-          userName: displayName,
-          userEmail: user?.primaryEmailAddress?.emailAddress || null,
-          userId: userId,
           stateId: stateId,
         }),
       })
@@ -486,23 +481,37 @@ function PromiseDetail({
           {timeline.length > 0 ? (
             <div className="mt-4 space-y-3">
               {timeline.map((update) => {
-                // Use email initial as fallback, or a simple color-coded avatar
-                const initials = (update.submitted_by || "?")[0].toUpperCase()
+                const name = update.submitted_by || "Community Member"
+                const initials = name[0].toUpperCase()
                 const colors = ["bg-orange-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-red-500"]
-                const colorIndex = (update.user_email || "").charCodeAt(0) % colors.length
+                const colorIndex = name.charCodeAt(0) % colors.length
                 
+                const profileHref = update.user_id ? `/profile/${update.user_id}` : null
+
                 return (
                   <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
                     <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
                     <div className="flex items-start gap-3">
-                      {/* Submitter Avatar with colored background */}
-                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
-                        {initials}
-                      </div>
+                      {/* Submitter Avatar */}
+                      {profileHref ? (
+                        <a href={profileHref} className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm hover:opacity-80 transition-opacity`}>
+                          {initials}
+                        </a>
+                      ) : (
+                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
+                          {initials}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         {/* Submitter Name */}
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-bold text-foreground">{update.submitted_by || "Anonymous"}</p>
+                          {profileHref ? (
+                            <a href={profileHref} className="text-sm font-bold text-foreground hover:text-orange-600 hover:underline transition-colors">
+                              {name}
+                            </a>
+                          ) : (
+                            <p className="text-sm font-bold text-foreground">{name}</p>
+                          )}
                         </div>
                         <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
                         {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
@@ -511,7 +520,7 @@ function PromiseDetail({
                             <ExternalLink className="h-3.5 w-3.5" />Read Article
                           </a>
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />{formatDate(update.timestamp)}
+                            <Calendar className="h-3 w-3" />{formatDate(update.created_at)}
                           </span>
                         </div>
                       </div>

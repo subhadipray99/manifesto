@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { useAuth, useClerk } from "@clerk/nextjs"
 import Link from "next/link"
-import { Calendar, ExternalLink, ArrowLeft, FileText, MapPin, Flame, Clock } from "lucide-react"
+import { Calendar, ExternalLink, ArrowLeft, FileText, MapPin, Flame, Clock, Settings } from "lucide-react"
 
 interface ProfileData {
   profile: {
@@ -190,6 +191,9 @@ function StatCard({
 export default function ProfilePage() {
   const params = useParams()
   const userId = params.userId as string
+  const { userId: viewerId } = useAuth()
+  const { openUserProfile } = useClerk()
+  const isOwnProfile = viewerId === userId
   const [data, setData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -271,6 +275,15 @@ export default function ProfilePage() {
                 <Clock className="h-3 w-3" />
                 Last active {timeAgo(profile.lastActive)}
               </span>
+              {isOwnProfile && (
+                <button
+                  onClick={() => openUserProfile()}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-xs font-bold text-background transition-opacity hover:opacity-90"
+                >
+                  <Settings className="h-3 w-3" />
+                  Manage Account
+                </button>
+              )}
             </div>
           </div>
         </div>

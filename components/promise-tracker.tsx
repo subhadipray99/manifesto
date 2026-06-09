@@ -5,6 +5,7 @@ import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
 import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
 
 const STATUS_CONFIG: Record<
@@ -771,6 +772,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
   const { openSignIn, openUserProfile } = useClerk()
+  const router = useRouter()
   const [statuses, setStatuses] = useState<Record<string, PromiseStatus>>({})
   const [timelines, setTimelines] = useState<Record<string, TimelineUpdate[]>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -786,9 +788,10 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [latestUpdates, setLatestUpdates] = useState<Array<{ id: string; promise_id: string; title: string; link: string; submitted_by: string | null; created_at: string }>>([])
-  const [contributors, setContributors] = useState<Array<{ name: string; contribution_count: number; last_contribution: string }>>([])
+  const [contributors, setContributors] = useState<Array<{ name: string; user_id: string | null; contribution_count: number; last_contribution: string }>>([])
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showSignInBanner, setShowSignInBanner] = useState(true)
+  const [showContributors, setShowContributors] = useState(false)
   const [availableStates, setAvailableStates] = useState<Array<{ id: string; name: string; party: string }>>([])
 
   useEffect(() => {
@@ -968,14 +971,14 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button onClick={() => document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth" })} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Top Contributors">
+            <button onClick={() => { const el = document.getElementById("leaderboard"); if (el && window.innerWidth >= 1024) { el.scrollIntoView({ behavior: "smooth" }) } else { setShowContributors(true) } }} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Top Contributors">
               <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button onClick={() => setShowShareModal(true)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Share">
               <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             {isSignedIn && user ? (
-              <button onClick={() => openUserProfile()} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "Account"}>
+              <button onClick={() => router.push(`/profile/${userId}`)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "My Profile"}>
                 {user.imageUrl ? (
                   <img src={user.imageUrl} alt={user.firstName || "Account"} className="h-full w-full object-cover" />
                 ) : (
@@ -1176,8 +1179,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                 <ul>
                   {contributors.slice(0, 5).map((c, i) => {
                     const initials = c.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
-                    return (
-                      <li key={c.name} className="flex items-center gap-3 px-4 py-2.5 border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
+                    const row = (
+                      <>
                         <span className="text-xs text-muted-foreground w-4 text-center flex-shrink-0">{i + 1}</span>
                         <div className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-medium flex-shrink-0 ${avatarColors[i] ?? "bg-muted text-muted-foreground"}`}>
                           {initials}
@@ -1186,6 +1189,17 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                         <span className="text-xs text-muted-foreground flex-shrink-0">
                           {c.contribution_count} update{c.contribution_count !== 1 ? "s" : ""}
                         </span>
+                      </>
+                    )
+                    return (
+                      <li key={c.name} className="border-b border-border last:border-0">
+                        {c.user_id ? (
+                          <Link href={`/profile/${c.user_id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
+                            {row}
+                          </Link>
+                        ) : (
+                          <div className="flex items-center gap-3 px-4 py-2.5">{row}</div>
+                        )}
                       </li>
                     )
                   })}
@@ -1288,6 +1302,55 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
       {/* Share Modal */}
       {showShareModal && <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />}
+
+      {/* Top Contributors Modal (mobile) */}
+      {showContributors && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={() => setShowContributors(false)}>
+          <div className="w-full max-w-md rounded-t-2xl border border-border bg-card shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-orange-500" />
+                <h3 className="text-base font-bold text-foreground">Top Contributors</h3>
+              </div>
+              <button onClick={() => setShowContributors(false)} className="text-muted-foreground hover:text-foreground transition-colors" title="Close">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {contributors.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No contributors yet. Be the first to submit an update!</p>
+            ) : (
+              <ul className="max-h-[60vh] overflow-y-auto">
+                {contributors.slice(0, 10).map((c, i) => {
+                  const initials = c.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
+                  const row = (
+                    <>
+                      <span className="w-5 flex-shrink-0 text-center text-sm font-bold text-muted-foreground">{i + 1}</span>
+                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${avatarColors[i] ?? "bg-muted text-muted-foreground"}`}>
+                        {initials}
+                      </div>
+                      <span className="flex-1 truncate text-sm font-semibold text-foreground">{c.name}</span>
+                      <span className="flex-shrink-0 text-xs font-medium text-muted-foreground">
+                        {c.contribution_count} update{c.contribution_count !== 1 ? "s" : ""}
+                      </span>
+                    </>
+                  )
+                  return (
+                    <li key={c.name} className="border-b border-border last:border-0">
+                      {c.user_id ? (
+                        <Link href={`/profile/${c.user_id}`} onClick={() => setShowContributors(false)} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors">
+                          {row}
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-3 px-5 py-3">{row}</div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Category Share Modal */}
       {showCategoryShareModal && shareCategoryUrl && (

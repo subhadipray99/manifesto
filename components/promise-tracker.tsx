@@ -486,18 +486,32 @@ function PromiseDetail({
                 const colors = ["bg-orange-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-red-500"]
                 const colorIndex = name.charCodeAt(0) % colors.length
                 
+                const profileHref = update.user_id ? `/profile/${update.user_id}` : null
+
                 return (
                   <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
                     <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
                     <div className="flex items-start gap-3">
-                      {/* Submitter Avatar with colored background */}
-                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
-                        {initials}
-                      </div>
+                      {/* Submitter Avatar */}
+                      {profileHref ? (
+                        <a href={profileHref} className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm hover:opacity-80 transition-opacity`}>
+                          {initials}
+                        </a>
+                      ) : (
+                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
+                          {initials}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         {/* Submitter Name */}
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-bold text-foreground">{name}</p>
+                          {profileHref ? (
+                            <a href={profileHref} className="text-sm font-bold text-foreground hover:text-orange-600 hover:underline transition-colors">
+                              {name}
+                            </a>
+                          ) : (
+                            <p className="text-sm font-bold text-foreground">{name}</p>
+                          )}
                         </div>
                         <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
                         {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}

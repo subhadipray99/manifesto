@@ -8,6 +8,7 @@ export type TimelineUpdate = {
   timestamp: string
   submitted_by?: string
   user_id?: string
+  username?: string | null
   created_at?: string
 }
 

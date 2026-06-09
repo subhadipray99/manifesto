@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
+import { ensureUsername } from "@/lib/usernames"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -32,11 +33,12 @@ export async function GET(request: NextRequest) {
 
     const db = getDb()
     const rows = await db`
-      SELECT id, promise_id, state_id, parent_id, body, user_id, author_name,
-             upvotes, downvotes, created_at
-      FROM comments
-      WHERE promise_id = ${promiseId} AND state_id = ${stateId}
-      ORDER BY created_at ASC
+      SELECT c.id, c.promise_id, c.state_id, c.parent_id, c.body, c.user_id, c.author_name,
+             c.upvotes, c.downvotes, c.created_at, u.username
+      FROM comments c
+      LEFT JOIN usernames u ON u.user_id = c.user_id
+      WHERE c.promise_id = ${promiseId} AND c.state_id = ${stateId}
+      ORDER BY c.created_at ASC
     `
 
     // Attach the current user's votes (if signed in)
@@ -92,13 +94,16 @@ export async function POST(request: NextRequest) {
     const id = `c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const authorName = resolveName(user)
 
+    // Ensure the commenter has a clean username for profile links
+    const username = await ensureUsername(user.id, authorName)
+
     const inserted = await db`
       INSERT INTO comments (id, promise_id, state_id, parent_id, body, user_id, author_name)
       VALUES (${id}, ${promiseId}, ${stateId}, ${parentId || null}, ${body.trim()}, ${user.id}, ${authorName})
       RETURNING id, promise_id, state_id, parent_id, body, user_id, author_name, upvotes, downvotes, created_at
     `
 
-    const comment = { ...inserted[0], score: 0, userVote: 0 }
+    const comment = { ...inserted[0], username, score: 0, userVote: 0 }
     return NextResponse.json({ comment })
   } catch (error) {
     console.error("[v0] Error creating comment:", error)

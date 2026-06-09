@@ -112,6 +112,9 @@ async function fetchTimelineUpdatesFromDB(promiseId: string, stateId: string): P
       link: item.link,
       description: item.description,
       timestamp: item.created_at,
+      created_at: item.created_at,
+      submitted_by: item.submitted_by,
+      user_id: item.user_id,
     }))
   } catch (error) {
     console.error("[v0] Error fetching updates from DB:", error)

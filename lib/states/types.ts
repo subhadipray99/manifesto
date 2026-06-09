@@ -6,6 +6,9 @@ export type TimelineUpdate = {
   link: string
   description?: string
   timestamp: string
+  submitted_by?: string
+  user_id?: string
+  created_at?: string
 }
 
 export type Promise = {

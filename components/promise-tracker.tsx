@@ -481,10 +481,10 @@ function PromiseDetail({
           {timeline.length > 0 ? (
             <div className="mt-4 space-y-3">
               {timeline.map((update) => {
-                // Use email initial as fallback, or a simple color-coded avatar
-                const initials = (update.submitted_by || "?")[0].toUpperCase()
+                const name = update.submitted_by || "Community Member"
+                const initials = name[0].toUpperCase()
                 const colors = ["bg-orange-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-red-500"]
-                const colorIndex = (update.user_email || "").charCodeAt(0) % colors.length
+                const colorIndex = name.charCodeAt(0) % colors.length
                 
                 return (
                   <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
@@ -497,7 +497,7 @@ function PromiseDetail({
                       <div className="flex-1 min-w-0">
                         {/* Submitter Name */}
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-bold text-foreground">{update.submitted_by || "Anonymous"}</p>
+                          <p className="text-sm font-bold text-foreground">{name}</p>
                         </div>
                         <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
                         {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
@@ -506,7 +506,7 @@ function PromiseDetail({
                             <ExternalLink className="h-3.5 w-3.5" />Read Article
                           </a>
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />{formatDate(update.timestamp)}
+                            <Calendar className="h-3 w-3" />{formatDate(update.created_at)}
                           </span>
                         </div>
                       </div>

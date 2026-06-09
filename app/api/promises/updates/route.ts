@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         link, 
         description, 
         created_at, 
-        COALESCE(NULLIF(submitted_by, ''), 'Anonymous') as submitted_by,
+        COALESCE(NULLIF(submitted_by, ''), user_email, 'Anonymous') as submitted_by,
         user_email,
         user_id
       FROM timeline_updates

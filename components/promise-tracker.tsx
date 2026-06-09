@@ -485,25 +485,40 @@ function PromiseDetail({
 
           {timeline.length > 0 ? (
             <div className="mt-4 space-y-3">
-              {timeline.map((update) => (
-                <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
-                      {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
-                      <div className="mt-2 flex flex-wrap items-center gap-3">
-                        <a href={update.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline">
-                          <ExternalLink className="h-3.5 w-3.5" />Read Article
-                        </a>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />{formatDate(update.timestamp)}
-                        </span>
+              {timeline.map((update) => {
+                // Use email initial as fallback, or a simple color-coded avatar
+                const initials = (update.submitted_by || "?")[0].toUpperCase()
+                const colors = ["bg-orange-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-red-500"]
+                const colorIndex = (update.user_email || "").charCodeAt(0) % colors.length
+                
+                return (
+                  <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
+                    <div className="flex items-start gap-3">
+                      {/* Submitter Avatar with colored background */}
+                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Submitter Name */}
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-bold text-foreground">{update.submitted_by || "Anonymous"}</p>
+                        </div>
+                        <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
+                        {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <a href={update.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline">
+                            <ExternalLink className="h-3.5 w-3.5" />Read Article
+                          </a>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />{formatDate(update.timestamp)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="mt-4 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 text-center">

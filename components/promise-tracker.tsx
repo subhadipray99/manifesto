@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter } from "lucide-react"
 import Link from "next/link"
 
 const STATUS_CONFIG: Record<
@@ -485,25 +485,40 @@ function PromiseDetail({
 
           {timeline.length > 0 ? (
             <div className="mt-4 space-y-3">
-              {timeline.map((update) => (
-                <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
-                      {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
-                      <div className="mt-2 flex flex-wrap items-center gap-3">
-                        <a href={update.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline">
-                          <ExternalLink className="h-3.5 w-3.5" />Read Article
-                        </a>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />{formatDate(update.timestamp)}
-                        </span>
+              {timeline.map((update) => {
+                // Use email initial as fallback, or a simple color-coded avatar
+                const initials = (update.submitted_by || "?")[0].toUpperCase()
+                const colors = ["bg-orange-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-red-500"]
+                const colorIndex = (update.user_email || "").charCodeAt(0) % colors.length
+                
+                return (
+                  <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
+                    <div className="flex items-start gap-3">
+                      {/* Submitter Avatar with colored background */}
+                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Submitter Name */}
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-bold text-foreground">{update.submitted_by || "Anonymous"}</p>
+                        </div>
+                        <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
+                        {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <a href={update.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline">
+                            <ExternalLink className="h-3.5 w-3.5" />Read Article
+                          </a>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />{formatDate(update.timestamp)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="mt-4 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 text-center">
@@ -621,6 +636,19 @@ function LatestUpdatesSlider({
   const isPausedRef = useRef(false)
   const animFrameRef = useRef<number | null>(null)
 
+  const scrollByCards = (direction: "left" | "right") => {
+    const el = scrollRef.current
+    if (!el) return
+    // Pause auto-scroll briefly while the user navigates manually
+    isPausedRef.current = true
+    const amount = Math.min(el.clientWidth * 0.8, 380)
+    el.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" })
+    window.clearTimeout((scrollByCards as any)._t)
+    ;(scrollByCards as any)._t = window.setTimeout(() => {
+      isPausedRef.current = false
+    }, 2500)
+  }
+
   const resolved = updates.flatMap((update) => {
     for (const cat of categories) {
       const p = cat.promises.find((p) => p.id === update.promise_id)
@@ -654,18 +682,46 @@ function LatestUpdatesSlider({
         <span className="text-sm font-black text-foreground">Latest Updates</span>
         <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600">{resolved.length} new</span>
       </div>
-      <div ref={scrollRef} className="flex gap-3 overflow-x-hidden pb-4 px-4" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }} onMouseEnter={() => { isPausedRef.current = true }} onMouseLeave={() => { isPausedRef.current = false }} onTouchStart={() => { isPausedRef.current = true }} onTouchEnd={() => { isPausedRef.current = false }}>
-        {resolved.map(({ update, promise, category }, i) => (
-          <button key={`${update.id}-${i}`} onClick={() => onSelectPromise(promise, category)} className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border hover:border-orange-300 bg-card p-4 text-left shadow-sm transition-all hover:shadow-lg active:scale-[0.98]">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">{category.localName || category.name}</span>
-              <span className="text-[10px] text-muted-foreground">{new Date(update.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
-            </div>
-            <p className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-orange-600">{update.title}</p>
-            <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">Re: {promise.title}</p>
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl bg-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
-          </button>
-        ))}
+      <div className="group/slider relative">
+        {/* Left Arrow - desktop only */}
+        <button
+          type="button"
+          aria-label="Scroll to previous updates"
+          onClick={() => scrollByCards("left")}
+          className="absolute left-2 top-1/2 z-10 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/90 p-2 shadow-md backdrop-blur-sm transition-all hover:bg-orange-500 hover:text-white active:scale-90 md:flex"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-4 px-4 md:px-12"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+          onMouseEnter={() => { isPausedRef.current = true }}
+          onMouseLeave={() => { isPausedRef.current = false }}
+          onTouchStart={() => { isPausedRef.current = true }}
+          onPointerDown={() => { isPausedRef.current = true }}
+        >
+          {resolved.map(({ update, promise, category }, i) => (
+            <button key={`${update.id}-${i}`} onClick={() => onSelectPromise(promise, category)} className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border hover:border-orange-300 bg-card p-4 text-left shadow-sm transition-all hover:shadow-lg active:scale-[0.98]">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">{category.localName || category.name}</span>
+                <span className="text-[10px] text-muted-foreground">{new Date(update.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+              </div>
+              <p className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-orange-600">{update.title}</p>
+              <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">Re: {promise.title}</p>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl bg-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
+          ))}
+        </div>
+        {/* Right Arrow - desktop only */}
+        <button
+          type="button"
+          aria-label="Scroll to next updates"
+          onClick={() => scrollByCards("right")}
+          className="absolute right-2 top-1/2 z-10 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/90 p-2 shadow-md backdrop-blur-sm transition-all hover:bg-orange-500 hover:text-white active:scale-90 md:flex"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
     </div>
   )

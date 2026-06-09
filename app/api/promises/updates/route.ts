@@ -36,7 +36,14 @@ export async function GET(request: NextRequest) {
     }
 
     const updates = await getDb()`
-      SELECT id, title, link, description, created_at, submitted_by, user_email
+      SELECT 
+        id, 
+        title, 
+        link, 
+        description, 
+        created_at, 
+        COALESCE(NULLIF(TRIM(submitted_by), ''), 'Community Member') as submitted_by,
+        user_id
       FROM timeline_updates
       WHERE promise_id = ${promiseId} AND state_id = ${stateId} AND status = 'approved'
       ORDER BY created_at DESC

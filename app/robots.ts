@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/api/"],
     },
-    sitemap: "https://themanifesto.vercel.app/sitemap.xml",
-    host: "https://themanifesto.vercel.app",
+    sitemap: "https://manifesto.page/sitemap.xml",
+    host: "https://manifesto.page",
   }
 }

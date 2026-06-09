@@ -3,11 +3,14 @@ import { getStateConfig } from "@/lib/states"
 import PromiseTracker from "@/components/promise-tracker"
 
 export const metadata: Metadata = {
-  title: "BJP West Bengal Promise Tracker | West Bengal BJP Manifesto Accountability",
-  description: "Track BJP West Bengal promises with real-time updates. Monitor promise fulfillment across categories like governance, employment, and infrastructure. Citizen-powered accountability for West Bengal elections.",
+  title: "BJP Promise Tracker | Track BJP Manifesto Promises & Fulfillment",
+  description: "BJP Promise Tracker — monitor every BJP manifesto promise and its fulfillment in real time. Track election commitments across governance, employment, and infrastructure with citizen-powered accountability.",
+  alternates: {
+    canonical: "https://manifesto.page",
+  },
   openGraph: {
-    title: "BJP West Bengal Promise Tracker - Monitor Manifesto Promises",
-    description: "Track West Bengal BJP manifesto promises in real-time. Monitor fulfillment across governance, employment, infrastructure, and more.",
+    title: "BJP Promise Tracker — Track Every BJP Manifesto Promise",
+    description: "Monitor BJP manifesto promises and fulfillment in real time across governance, employment, infrastructure, and more.",
     url: "https://manifesto.page",
     type: "website",
   },

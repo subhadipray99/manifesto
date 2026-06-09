@@ -42,8 +42,7 @@ export async function GET(request: NextRequest) {
         link, 
         description, 
         created_at, 
-        COALESCE(NULLIF(submitted_by, ''), user_email, 'Anonymous') as submitted_by,
-        user_email,
+        COALESCE(NULLIF(TRIM(submitted_by), ''), 'Community Member') as submitted_by,
         user_id
       FROM timeline_updates
       WHERE promise_id = ${promiseId} AND state_id = ${stateId} AND status = 'approved'

@@ -76,14 +76,20 @@ export async function GET(
       ORDER BY day ASC
     `
 
-    // Ensure this user has a clean username (backfill on first view)
+    // Ensure this user has a clean username (backfill on first view) and fetch bio/social_links
     const username = await ensureUsername(userId, profile.name as string | undefined)
+
+    const [usernameMeta] = await getDb()`
+      SELECT bio, social_links FROM usernames WHERE user_id = ${userId}
+    `
 
     return NextResponse.json({
       profile: {
         userId: profile.user_id,
         username,
         name: profile.name,
+        bio: usernameMeta?.bio ?? null,
+        socialLinks: usernameMeta?.social_links ?? {},
         totalContributions: Number(profile.total_contributions),
         pendingContributions: Number(profile.pending_contributions),
         activeDays: Number(profile.active_days),

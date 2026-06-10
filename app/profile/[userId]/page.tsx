@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAuth, useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import {
   Calendar, ExternalLink, ArrowLeft, FileText, MapPin,
-  Flame, Clock, Settings, AtSign, Check, X, Pencil, Plus, Trash2, Globe,
+  Flame, Clock, Settings, AtSign, Check, X, Pencil, Plus, Trash2, Globe, Loader2, AlertCircle,
 } from "lucide-react"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -311,6 +311,12 @@ export default function ProfilePage() {
   const [usernameInput, setUsernameInput] = useState("")
   const [usernameError, setUsernameError] = useState("")
   const [savingUsername, setSavingUsername] = useState(false)
+  // Live availability check
+  const [checkStatus, setCheckStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle")
+  const [checkMessage, setCheckMessage] = useState("")
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Rate limit info
+  const [changeInfo, setChangeInfo] = useState<{ remaining: number; resetsAt: string | null } | null>(null)
 
   // Bio editing
   const [editingBio, setEditingBio] = useState(false)
@@ -326,15 +332,55 @@ export default function ProfilePage() {
       .then((r) => r.json())
       .then((d) => {
         if (d.error) setError(d.error)
-        else {
-          setData(d)
-        }
+        else setData(d)
       })
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false))
   }, [identifier, router])
 
+  // Fetch rate-limit info for the owner
+  useEffect(() => {
+    if (!viewerId) return
+    fetch("/api/username")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d && setChangeInfo({ remaining: d.remaining ?? 2, resetsAt: d.resetsAt ?? null }))
+      .catch(() => {})
+  }, [viewerId])
+
   const isOwnProfile = !!viewerId && !!data && viewerId === data.profile.userId
+
+  function handleUsernameInput(value: string) {
+    const normalized = value.toLowerCase().replace(/[^a-z0-9-]/g, "")
+    setUsernameInput(normalized)
+    setUsernameError("")
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+
+    if (!normalized || normalized === data?.profile.username) {
+      setCheckStatus("idle")
+      setCheckMessage("")
+      return
+    }
+    setCheckStatus("checking")
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/username/check?username=${encodeURIComponent(normalized)}`)
+        const json = await res.json()
+        if (!json.valid) {
+          setCheckStatus("invalid")
+          setCheckMessage(json.message)
+        } else if (json.available) {
+          setCheckStatus("available")
+          setCheckMessage(json.message)
+        } else {
+          setCheckStatus("taken")
+          setCheckMessage(json.message)
+        }
+      } catch {
+        setCheckStatus("idle")
+      }
+    }, 400)
+  }
 
   async function saveUsername() {
     const value = usernameInput.toLowerCase().trim()
@@ -349,7 +395,9 @@ export default function ProfilePage() {
       const json = await res.json()
       if (!res.ok) { setUsernameError(json.error || "Could not update username"); return }
       setEditingUsername(false)
+      setCheckStatus("idle")
       setData((prev) => (prev ? { ...prev, profile: { ...prev.profile, username: json.username } } : prev))
+      if (json.remaining !== undefined) setChangeInfo({ remaining: json.remaining, resetsAt: json.resetsAt ?? null })
       router.replace(`/profile/${json.username}`)
     } catch {
       setUsernameError("Something went wrong. Try again.")
@@ -446,28 +494,54 @@ export default function ProfilePage() {
 
               {/* Username */}
               {editingUsername ? (
-                <div className="mt-2">
+                <div className="mt-2 space-y-1.5">
+                  {/* Rate limit banner */}
+                  {changeInfo !== null && (
+                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium ${changeInfo.remaining === 0 ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400" : changeInfo.remaining === 1 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>
+                      <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                      {changeInfo.remaining === 0
+                        ? `No changes left${changeInfo.resetsAt ? ` — resets ${new Date(changeInfo.resetsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : " for 14 days"}`
+                        : `${changeInfo.remaining} of 2 change${changeInfo.remaining !== 1 ? "s" : ""} remaining in 14 days`}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center rounded-lg border-2 border-border bg-background px-2 py-1 focus-within:border-orange-500">
-                      <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className={`flex items-center rounded-lg border-2 bg-background px-2 py-1 transition-colors focus-within:ring-1 ${checkStatus === "available" ? "border-green-500 focus-within:ring-green-500" : checkStatus === "taken" || checkStatus === "invalid" ? "border-red-400 focus-within:ring-red-400" : "border-border focus-within:border-orange-500 focus-within:ring-orange-500"}`}>
+                      <AtSign className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                       <input
                         autoFocus
                         value={usernameInput}
-                        onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                        onKeyDown={(e) => { if (e.key === "Enter") saveUsername(); if (e.key === "Escape") setEditingUsername(false) }}
+                        onChange={(e) => handleUsernameInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && checkStatus === "available") saveUsername(); if (e.key === "Escape") { setEditingUsername(false); setCheckStatus("idle") } }}
                         maxLength={40}
                         placeholder="username"
-                        className="w-40 bg-transparent px-1 text-sm font-medium text-foreground outline-none"
+                        className="w-44 bg-transparent px-1 text-sm font-medium text-foreground outline-none"
                       />
+                      {/* Live status icon */}
+                      {checkStatus === "checking" && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                      {checkStatus === "available" && <Check className="h-3.5 w-3.5 text-green-500" />}
+                      {(checkStatus === "taken" || checkStatus === "invalid") && <X className="h-3.5 w-3.5 text-red-500" />}
                     </div>
-                    <button onClick={saveUsername} disabled={savingUsername} className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-white hover:opacity-90 disabled:opacity-50" title="Save">
-                      <Check className="h-4 w-4" />
+                    <button
+                      onClick={saveUsername}
+                      disabled={savingUsername || checkStatus !== "available" || changeInfo?.remaining === 0}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Save username"
+                    >
+                      {savingUsername ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => { setEditingUsername(false); setUsernameError("") }} className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-border text-muted-foreground hover:bg-muted" title="Cancel">
+                    <button onClick={() => { setEditingUsername(false); setUsernameError(""); setCheckStatus("idle") }} className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-border text-muted-foreground hover:bg-muted transition-colors" title="Cancel">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                  {usernameError && <p className="mt-1 text-xs font-medium text-red-600">{usernameError}</p>}
+
+                  {/* Live feedback message */}
+                  {checkMessage && checkStatus !== "idle" && checkStatus !== "checking" && (
+                    <p className={`text-xs font-medium ${checkStatus === "available" ? "text-green-600" : "text-red-600"}`}>
+                      {checkMessage}
+                    </p>
+                  )}
+                  {usernameError && <p className="text-xs font-medium text-red-600">{usernameError}</p>}
                 </div>
               ) : (
                 <div className="mt-1 flex items-center gap-2">
@@ -477,8 +551,17 @@ export default function ProfilePage() {
                     </span>
                   )}
                   {isOwnProfile && (
-                    <button onClick={() => { setUsernameInput(profile.username || ""); setEditingUsername(true) }} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors" title="Edit username">
+                    <button
+                      onClick={() => { setUsernameInput(profile.username || ""); setEditingUsername(true); setCheckStatus("idle") }}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      title="Edit username"
+                    >
                       <Pencil className="h-3 w-3" /> Edit
+                      {changeInfo !== null && changeInfo.remaining < 2 && (
+                        <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${changeInfo.remaining === 0 ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"}`}>
+                          {changeInfo.remaining === 0 ? "0 left" : `${changeInfo.remaining} left`}
+                        </span>
+                      )}
                     </button>
                   )}
                 </div>

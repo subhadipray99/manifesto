@@ -107,7 +107,47 @@ export async function getUsername(userId: string): Promise<string | null> {
   return rows.length > 0 ? (rows[0].username as string) : null
 }
 
-// Change a user's username to a custom value. Throws on invalid/taken.
+const CHANGE_LIMIT = 2
+const CHANGE_WINDOW_DAYS = 14
+
+// Returns how many username changes the user has made in the last 14 days
+// and when the window resets (oldest change timestamp + 14 days).
+export async function getUsernameChangeInfo(userId: string): Promise<{
+  changesInWindow: number
+  remaining: number
+  resetsAt: Date | null
+}> {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT username_change_count, username_last_changed_at
+    FROM usernames WHERE user_id = ${userId} LIMIT 1
+  `
+  if (rows.length === 0) return { changesInWindow: 0, remaining: CHANGE_LIMIT, resetsAt: null }
+
+  const lastChanged: Date | null = rows[0].username_last_changed_at
+    ? new Date(rows[0].username_last_changed_at as string)
+    : null
+
+  const windowStart = new Date(Date.now() - CHANGE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+  const inWindow = lastChanged && lastChanged > windowStart ? (rows[0].username_change_count as number) : 0
+  const remaining = Math.max(0, CHANGE_LIMIT - inWindow)
+  const resetsAt = lastChanged && inWindow > 0
+    ? new Date(lastChanged.getTime() + CHANGE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+    : null
+
+  return { changesInWindow: inWindow, remaining, resetsAt }
+}
+
+// Check if a username is available (case-insensitive) for a given user.
+export async function isUsernameAvailable(username: string, ignoreUserId: string): Promise<boolean> {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT user_id FROM usernames WHERE LOWER(username) = LOWER(${username}) AND user_id != ${ignoreUserId} LIMIT 1
+  `
+  return rows.length === 0
+}
+
+// Change a user's username to a custom value. Throws on invalid/taken/limit exceeded.
 export async function setUsername(userId: string, newUsername: string): Promise<void> {
   const sql = getDb()
   const normalized = newUsername.toLowerCase().trim()
@@ -123,9 +163,24 @@ export async function setUsername(userId: string, newUsername: string): Promise<
     throw new Error("TAKEN")
   }
 
+  // Enforce rate limit: max 2 changes per 14-day rolling window
+  const { remaining } = await getUsernameChangeInfo(userId)
+  if (remaining <= 0) {
+    throw new Error("RATE_LIMITED")
+  }
+
   await sql`
-    INSERT INTO usernames (user_id, username, is_custom, updated_at)
-    VALUES (${userId}, ${normalized}, TRUE, NOW())
-    ON CONFLICT (user_id) DO UPDATE SET username = ${normalized}, is_custom = TRUE, updated_at = NOW()
+    INSERT INTO usernames (user_id, username, is_custom, updated_at, username_change_count, username_last_changed_at)
+    VALUES (${userId}, ${normalized}, TRUE, NOW(), 1, NOW())
+    ON CONFLICT (user_id) DO UPDATE SET
+      username = ${normalized},
+      is_custom = TRUE,
+      updated_at = NOW(),
+      username_change_count = CASE
+        WHEN usernames.username_last_changed_at > NOW() - INTERVAL '14 days'
+        THEN usernames.username_change_count + 1
+        ELSE 1
+      END,
+      username_last_changed_at = NOW()
   `
 }

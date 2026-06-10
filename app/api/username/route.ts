@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
-import { setUsername, getUsername, ensureUsername, isValidUsername } from "@/lib/usernames"
+import { setUsername, getUsername, ensureUsername, isValidUsername, getUsernameChangeInfo } from "@/lib/usernames"
 
 // GET /api/username - returns the signed-in user's current username
 export async function GET() {
@@ -12,7 +12,8 @@ export async function GET() {
     const displayName =
       user.fullName || user.firstName || user.username || (user.emailAddresses?.[0]?.emailAddress ?? undefined)
     const username = await ensureUsername(user.id, displayName)
-    return NextResponse.json({ username })
+    const changeInfo = await getUsernameChangeInfo(user.id)
+    return NextResponse.json({ username, ...changeInfo })
   } catch (error) {
     console.error("[v0] Error getting username:", error)
     return NextResponse.json({ error: "Failed to get username" }, { status: 500 })
@@ -41,9 +42,20 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const current = await getUsername(user.id)
+    const [current, changeInfo] = await Promise.all([
+      getUsername(user.id),
+      getUsernameChangeInfo(user.id),
+    ])
+
     if (current === normalized) {
-      return NextResponse.json({ username: normalized })
+      return NextResponse.json({ username: normalized, ...changeInfo })
+    }
+
+    if (changeInfo.remaining <= 0) {
+      return NextResponse.json(
+        { error: `You can only change your username ${2} times every 14 days. Try again after ${changeInfo.resetsAt ? new Date(changeInfo.resetsAt).toLocaleDateString() : "14 days"}.` },
+        { status: 429 },
+      )
     }
 
     try {
@@ -55,10 +67,14 @@ export async function PATCH(request: NextRequest) {
       if (e.message === "INVALID") {
         return NextResponse.json({ error: "That username is not valid" }, { status: 400 })
       }
+      if (e.message === "RATE_LIMITED") {
+        return NextResponse.json({ error: "Username change limit reached. Try again in 14 days." }, { status: 429 })
+      }
       throw e
     }
 
-    return NextResponse.json({ username: normalized })
+    const updatedInfo = await getUsernameChangeInfo(user.id)
+    return NextResponse.json({ username: normalized, ...updatedInfo })
   } catch (error) {
     console.error("[v0] Error setting username:", error)
     return NextResponse.json({ error: "Failed to update username" }, { status: 500 })

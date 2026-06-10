@@ -796,6 +796,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [showSignInBanner, setShowSignInBanner] = useState(true)
   const [showContributors, setShowContributors] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [myUsername, setMyUsername] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [availableStates, setAvailableStates] = useState<Array<{ id: string; name: string; party: string }>>([])
 
@@ -859,6 +860,15 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     }
     initializeData()
   }, [stateConfig.id, stateConfig.startDate])
+
+  // Fetch viewer's own username once on sign-in so the profile button navigates directly
+  useEffect(() => {
+    if (!isSignedIn) { setMyUsername(null); return }
+    fetch("/api/username")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d?.username && setMyUsername(d.username))
+      .catch(() => {})
+  }, [isSignedIn])
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -1025,7 +1035,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             </button>
             {isSignedIn && <NotificationBell />}
             {isSignedIn && user ? (
-              <button onClick={() => router.push(`/profile/${userId}`)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "My Profile"}>
+              <button onClick={() => router.push(`/profile/${myUsername ?? userId}`)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "My Profile"}>
                 {user.imageUrl ? (
                   <img src={user.imageUrl} alt={user.firstName || "Account"} className="h-full w-full object-cover" />
                 ) : (

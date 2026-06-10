@@ -52,15 +52,17 @@ export async function GET(
         t.created_at,
         t.state_id,
         t.promise_id,
-        p.title as promise_title,
-        c.name as category_name,
-        c.color as category_color
+        p.title    as promise_title,
+        cat.name   as category_name,
+        cat.color  as category_color,
+        s.name     as state_name
       FROM timeline_updates t
-      LEFT JOIN promises p ON t.promise_id = p.id
-      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN promises    p   ON p.id   = t.promise_id
+      LEFT JOIN categories  cat ON cat.id = p.category_id
+      LEFT JOIN states      s   ON s.id   = t.state_id
       WHERE t.user_id = ${userId} AND t.status = 'approved'
       ORDER BY t.created_at DESC
-      LIMIT 20
+      LIMIT 50
     `
 
     // Build activity heatmap data — contributions per day last 52 weeks

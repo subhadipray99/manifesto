@@ -7,6 +7,7 @@ import Link from "next/link"
 import {
   Calendar, ExternalLink, ArrowLeft, FileText, MapPin,
   Flame, Clock, Settings, AtSign, Check, X, Pencil, Plus, Trash2, Globe, Loader2, AlertCircle,
+  MessageSquare, ArrowUpDown, ThumbsUp,
 } from "lucide-react"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -76,12 +77,29 @@ interface ProfileData {
     description: string
     created_at: string
     state_id: string
+    state_name: string
     promise_id: string
     promise_title: string
     category_name: string
     category_color: string
   }[]
   activityData: { day: string; count: number }[]
+}
+
+interface CommentActivity {
+  id: string
+  body: string
+  created_at: string
+  upvotes: number
+  downvotes: number
+  promise_id: string
+  state_id: string
+  state_name: string
+  parent_id: string | null
+  promise_title: string
+  category_name: string
+  category_color: string
+  category_icon: string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -318,6 +336,14 @@ export default function ProfilePage() {
   // Rate limit info
   const [changeInfo, setChangeInfo] = useState<{ remaining: number; resetsAt: string | null } | null>(null)
 
+  // Tabs + comment activity
+  const [activeTab, setActiveTab] = useState<"contributions" | "comments">("contributions")
+  const [contribSort, setContribSort] = useState<"date" | "promise">("date")
+  const [commentSort, setCommentSort] = useState<"date" | "promise">("date")
+  const [commentActivities, setCommentActivities] = useState<CommentActivity[]>([])
+  const [commentLoading, setCommentLoading] = useState(false)
+  const [commentLoaded, setCommentLoaded] = useState(false)
+
   // Bio editing
   const [editingBio, setEditingBio] = useState(false)
   const [bioInput, setBioInput] = useState("")
@@ -337,6 +363,17 @@ export default function ProfilePage() {
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false))
   }, [identifier, router])
+
+  // Fetch comment activity when Comments tab is active
+  useEffect(() => {
+    if (activeTab !== "comments" || !identifier) return
+    setCommentLoading(true)
+    fetch(`/api/profile/comments?userId=${encodeURIComponent(identifier)}&sort=${commentSort}`)
+      .then((r) => r.ok ? r.json() : { comments: [] })
+      .then((d) => { setCommentActivities(d.comments ?? []); setCommentLoaded(true) })
+      .catch(() => {})
+      .finally(() => setCommentLoading(false))
+  }, [activeTab, commentSort, identifier])
 
   // Fetch rate-limit info for the owner
   useEffect(() => {
@@ -677,42 +714,166 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* Recent contributions */}
+        {/* Tabs */}
         <div>
-          <h2 className="mb-4 text-sm font-black uppercase tracking-wide text-foreground">Recent Contributions</h2>
-          {contributions.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center">
-              <p className="text-sm text-muted-foreground">No approved contributions yet.</p>
+          {/* Tab header */}
+          <div className="mb-5 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex rounded-xl border-2 border-border bg-muted/40 p-1 gap-1">
+              <button
+                onClick={() => setActiveTab("contributions")}
+                className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-bold transition-all ${activeTab === "contributions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <FileText className="h-4 w-4" />
+                Contributions
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${activeTab === "contributions" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                  {contributions.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("comments")}
+                className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-bold transition-all ${activeTab === "comments" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Comments
+                {commentLoaded && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${activeTab === "comments" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                    {commentActivities.length}
+                  </span>
+                )}
+              </button>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {contributions.map((c) => (
-                <div key={c.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5 transition-shadow hover:shadow-md">
-                  <div className="absolute bottom-0 left-0 top-0 w-1 rounded-l-xl bg-orange-500" />
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      {c.category_name && (
-                        <span className="mb-1.5 inline-block rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
-                          {c.category_name}
-                        </span>
-                      )}
-                      <p className="font-bold leading-snug text-foreground">{c.title}</p>
-                      {c.promise_title && (
-                        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">Re: {c.promise_title}</p>
-                      )}
-                      <div className="mt-2 flex flex-wrap items-center gap-3">
-                        <a href={c.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline">
-                          <ExternalLink className="h-3.5 w-3.5" /> Read Article
-                        </a>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" /> {formatDate(c.created_at)}
-                        </span>
+
+            {/* Sort control */}
+            <div className="flex items-center gap-1.5 rounded-xl border-2 border-border bg-muted/40 p-1">
+              <ArrowUpDown className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
+              {(["date", "promise"] as const).map((opt) => {
+                const current = activeTab === "contributions" ? contribSort : commentSort
+                const setter  = activeTab === "contributions" ? setContribSort : setCommentSort
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setter(opt)}
+                    className={`rounded-lg px-3 py-1 text-xs font-bold capitalize transition-all ${current === opt ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {opt === "date" ? "By Date" : "By Promise"}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* ── Contributions tab ─────────────────────────────── */}
+          {activeTab === "contributions" && (() => {
+            const sorted = contribSort === "promise"
+              ? [...contributions].sort((a, b) => (a.promise_title || "").localeCompare(b.promise_title || ""))
+              : contributions
+            return sorted.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center">
+                <p className="text-sm text-muted-foreground">No approved contributions yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sorted.map((c) => (
+                  <div key={c.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5 transition-shadow hover:shadow-md">
+                    <div className="absolute bottom-0 left-0 top-0 w-1 rounded-l-xl" style={{ backgroundColor: c.category_color || "#f97316" }} />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* Badges row */}
+                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                          {c.category_name && (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white" style={{ backgroundColor: c.category_color || "#f97316" }}>
+                              {c.category_name}
+                            </span>
+                          )}
+                          {c.state_name && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                              <MapPin className="h-2.5 w-2.5" />{c.state_name}
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-bold leading-snug text-foreground">{c.title}</p>
+                        {c.promise_title && (
+                          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">Re: {c.promise_title}</p>
+                        )}
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          {c.link && (
+                            <a href={c.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 hover:underline">
+                              <ExternalLink className="h-3 w-3" /> Source
+                            </a>
+                          )}
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" /> {formatDate(c.created_at)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
+          })()}
+
+          {/* ── Comments tab ──────────────────────────────────── */}
+          {activeTab === "comments" && (
+            commentLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : commentActivities.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center">
+                <p className="text-sm text-muted-foreground">No comments yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {commentActivities.map((c) => (
+                  <div key={c.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5 transition-shadow hover:shadow-md">
+                    <div className="absolute bottom-0 left-0 top-0 w-1 rounded-l-xl" style={{ backgroundColor: c.category_color || "#6366f1" }} />
+                    <div className="flex-1 min-w-0">
+                      {/* Badges */}
+                      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                        {c.category_name && (
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white" style={{ backgroundColor: c.category_color || "#6366f1" }}>
+                            {c.category_name}
+                          </span>
+                        )}
+                        {c.state_name && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                            <MapPin className="h-2.5 w-2.5" />{c.state_name}
+                          </span>
+                        )}
+                        {c.parent_id && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                            <MessageSquare className="h-2.5 w-2.5" /> Reply
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Promise */}
+                      {c.promise_title && (
+                        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase tracking-wide line-clamp-1">
+                          On: {c.promise_title}
+                        </p>
+                      )}
+
+                      {/* Comment body */}
+                      <p className="line-clamp-3 text-sm leading-relaxed text-foreground">{c.body}</p>
+
+                      {/* Footer */}
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3" /> {formatDate(c.created_at)}
+                        </span>
+                        {(c.upvotes > 0 || c.downvotes > 0) && (
+                          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                            <ThumbsUp className="h-3 w-3" /> {c.upvotes - c.downvotes > 0 ? "+" : ""}{c.upvotes - c.downvotes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>

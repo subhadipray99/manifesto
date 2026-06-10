@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@clerk/nextjs/server"
 import { clerkClient } from "@clerk/nextjs/server"
-import { getDb } from "@/lib/db"
+import { neon } from "@neondatabase/serverless"
 import { slugifyName } from "@/lib/usernames"
+
+function getDb() {
+  return neon(process.env.DATABASE_URL!)
+}
 
 /**
  * Admin-only migration endpoint: backfill existing auto-generated usernames

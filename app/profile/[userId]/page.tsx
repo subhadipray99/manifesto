@@ -9,6 +9,7 @@ import {
   Flame, Clock, Settings, AtSign, Check, X, Pencil, Plus, Trash2, Globe, Loader2, AlertCircle,
   MessageSquare, ArrowUpDown, ThumbsUp,
 } from "lucide-react"
+import { getContrastTextColor } from "@/lib/utils"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -781,7 +782,7 @@ export default function ProfilePage() {
                         {/* Badges row */}
                         <div className="mb-2 flex flex-wrap items-center gap-1.5">
                           {c.category_name && (
-                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white" style={{ backgroundColor: c.category_color || "#f97316" }}>
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide" style={{ backgroundColor: c.category_color || "#f97316", color: getContrastTextColor(c.category_color || "#f97316") }}>
                               {c.category_name}
                             </span>
                           )}
@@ -832,7 +833,7 @@ export default function ProfilePage() {
                       {/* Badges */}
                       <div className="mb-2 flex flex-wrap items-center gap-1.5">
                         {c.category_name && (
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white" style={{ backgroundColor: c.category_color || "#6366f1" }}>
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide" style={{ backgroundColor: c.category_color || "#6366f1", color: getContrastTextColor(c.category_color || "#6366f1") }}>
                             {c.category_name}
                           </span>
                         )}

@@ -1,7 +1,21 @@
 import { neon } from "@neondatabase/serverless"
+import { clerkClient } from "@clerk/nextjs/server"
 
 function getDb() {
   return neon(process.env.DATABASE_URL!)
+}
+
+// Best-effort mirror of our username into Clerk's native username field, so the
+// two systems stay in sync. Never throws — Clerk remains a secondary store.
+async function syncUsernameToClerk(userId: string, username: string): Promise<void> {
+  try {
+    const client = await clerkClient()
+    await client.users.updateUser(userId, { username })
+  } catch (err) {
+    // Clerk may reject (e.g. already taken on its side, or feature mismatch).
+    // We log and continue — our DB is the source of truth.
+    console.error("[v0] Failed to sync username to Clerk:", err)
+  }
 }
 
 // Turn a display name into a URL-safe base slug
@@ -64,14 +78,22 @@ async function findAvailableUsername(base: string, ignoreUserId?: string): Promi
 
 // Ensure a username row exists for the given user. Returns the username.
 // If the user already has one, it is returned unchanged.
-export async function ensureUsername(userId: string, displayName?: string): Promise<string | null> {
+// `clerkUsername` (when Clerk's native usernames are enabled) is preferred as
+// the base slug, falling back to a slug derived from the display name.
+export async function ensureUsername(
+  userId: string,
+  displayName?: string,
+  clerkUsername?: string | null,
+): Promise<string | null> {
   if (!userId) return null
   const sql = getDb()
 
   const existing = await sql`SELECT username FROM usernames WHERE user_id = ${userId} LIMIT 1`
   if (existing.length > 0) return existing[0].username as string
 
-  const base = slugifyName(displayName || "user")
+  // Prefer Clerk's username as the seed when it exists and is usable
+  const preferred = clerkUsername ? slugifyName(clerkUsername) : ""
+  const base = preferred && isValidUsername(preferred) ? preferred : slugifyName(displayName || "user")
   const username = await findAvailableUsername(base, userId)
 
   await sql`
@@ -183,4 +205,7 @@ export async function setUsername(userId: string, newUsername: string): Promise<
       END,
       username_last_changed_at = NOW()
   `
+
+  // Keep Clerk's native username in sync (best-effort, never blocks).
+  await syncUsernameToClerk(userId, normalized)
 }

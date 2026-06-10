@@ -328,9 +328,6 @@ export default function ProfilePage() {
         if (d.error) setError(d.error)
         else {
           setData(d)
-          if (d.profile?.username && identifier !== d.profile.username) {
-            router.replace(`/profile/${d.profile.username}`)
-          }
         }
       })
       .catch(() => setError("Failed to load profile"))

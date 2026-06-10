@@ -1315,7 +1315,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           <div className="rounded-lg bg-muted/50 p-3 mb-6">
             <p className="text-xs text-muted-foreground"><span className="font-bold">Progress Formula:</span> (Fulfilled x 1 + In Progress x 0.5) / Total Promises x 100</p>
           </div>
-          <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4">
+          <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/30 p-4 mb-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ruling Party</p>
               <p className="mt-1 text-sm font-black text-foreground">{stateConfig.party}</p>
@@ -1325,7 +1325,15 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               <a href="mailto:toddwake666@gmail.com" className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors">Email</a>
             </div>
           </div>
-          <p className="mt-4 text-center text-xs text-muted-foreground">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
+          <p className="text-center text-xs text-muted-foreground mb-4">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
+          
+          {/* Footer links */}
+          <div className="flex items-center justify-between px-1 border-t border-border pt-4">
+            <span className="text-[11px] text-muted-foreground">Powered by ObserverFile</span>
+            <a href="mailto:toddwake666@gmail.com" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              Contact admin <ArrowLeft className="h-3 w-3 rotate-180" />
+            </a>
+          </div>
         </div>
       </footer>
 

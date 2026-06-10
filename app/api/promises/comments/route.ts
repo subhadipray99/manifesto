@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     const authorName = resolveName(user)
 
     // Ensure the commenter has a clean username for profile links
-    const username = await ensureUsername(user.id, authorName)
+    const username = await ensureUsername(user.id, authorName, user.username)
 
     const inserted = await db`
       INSERT INTO comments (id, promise_id, state_id, parent_id, body, user_id, author_name)

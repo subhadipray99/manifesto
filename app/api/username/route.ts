@@ -11,7 +11,7 @@ export async function GET() {
     }
     const displayName =
       user.fullName || user.firstName || user.username || (user.emailAddresses?.[0]?.emailAddress ?? undefined)
-    const username = await ensureUsername(user.id, displayName)
+    const username = await ensureUsername(user.id, displayName, user.username)
     const changeInfo = await getUsernameChangeInfo(user.id)
     return NextResponse.json({ username, ...changeInfo })
   } catch (error) {

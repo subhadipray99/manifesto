@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useAuth, useClerk } from "@clerk/nextjs"
+import { useAuth, useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { Calendar, ExternalLink, ArrowLeft, FileText, MapPin, Flame, Clock, Settings, AtSign, Check, X, Pencil } from "lucide-react"
 
@@ -195,6 +195,7 @@ export default function ProfilePage() {
   const identifier = params.userId as string
   const { userId: viewerId } = useAuth()
   const { openUserProfile } = useClerk()
+  const { user: clerkUser } = useUser()
   const [data, setData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -298,9 +299,17 @@ export default function ProfilePage() {
       <div className="mx-auto max-w-4xl px-4 py-8 sm:py-12">
         {/* Hero */}
         <div className="mb-8 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-          <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl ${colorClass} text-3xl font-black text-white shadow-lg`}>
-            {initials}
-          </div>
+          {isOwnProfile && clerkUser?.imageUrl ? (
+            <img
+              src={clerkUser.imageUrl}
+              alt={profile.name}
+              className="h-20 w-20 flex-shrink-0 rounded-2xl object-cover shadow-lg ring-2 ring-border"
+            />
+          ) : (
+            <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl ${colorClass} text-3xl font-black text-white shadow-lg`}>
+              {initials}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <h1 className="font-serif text-3xl font-bold text-foreground sm:text-4xl text-balance">{profile.name}</h1>
 

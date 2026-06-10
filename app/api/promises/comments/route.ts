@@ -104,6 +104,31 @@ export async function POST(request: NextRequest) {
     `
 
     const comment = { ...inserted[0], username, score: 0, userVote: 0 }
+
+    // Fire a notification if this is a reply and the parent author is different
+    if (parentId) {
+      try {
+        const [parentComment, promiseTitleRows] = await Promise.all([
+          db`SELECT user_id, author_name FROM comments WHERE id = ${parentId}`,
+          db`SELECT title FROM promises WHERE id = ${promiseId} LIMIT 1`,
+        ])
+        const parentAuthorId = parentComment[0]?.user_id
+        const promiseTitle = promiseTitleRows[0]?.title ?? promiseId
+
+        if (parentAuthorId && parentAuthorId !== user.id) {
+          const notifId = `n-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+          await db`
+            INSERT INTO notifications
+              (id, recipient_user_id, type, comment_id, parent_comment_id, promise_id, state_id, promise_title, actor_name, actor_user_id, body_preview)
+            VALUES
+              (${notifId}, ${parentAuthorId}, 'reply', ${id}, ${parentId}, ${promiseId}, ${stateId}, ${promiseTitle}, ${authorName}, ${user.id}, ${body.trim().slice(0, 120)})
+          `
+        }
+      } catch {
+        // Notifications are non-critical — don't fail the whole request
+      }
+    }
+
     return NextResponse.json({ comment })
   } catch (error) {
     console.error("[v0] Error creating comment:", error)

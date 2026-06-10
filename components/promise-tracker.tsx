@@ -7,6 +7,7 @@ import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
+import { NotificationBell } from "@/components/notification-bell"
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -978,6 +979,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             <button onClick={() => setShowShareModal(true)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Share">
               <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
+            {isSignedIn && <NotificationBell />}
             {isSignedIn && user ? (
               <button onClick={() => router.push(`/profile/${userId}`)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "My Profile"}>
                 {user.imageUrl ? (

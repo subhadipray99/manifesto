@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
 import { NotificationBell } from "@/components/notification-bell"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -794,6 +795,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showSignInBanner, setShowSignInBanner] = useState(true)
   const [showContributors, setShowContributors] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [availableStates, setAvailableStates] = useState<Array<{ id: string; name: string; party: string }>>([])
 
   useEffect(() => {
@@ -856,6 +859,44 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
     }
     initializeData()
   }, [stateConfig.id, stateConfig.startDate])
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName.toLowerCase()
+      const isTyping = tag === "input" || tag === "textarea" || tag === "select" || (e.target as HTMLElement).isContentEditable
+      if (e.key === "Escape") {
+        if (showShortcuts) { setShowShortcuts(false); return }
+        if (selectedPromise) { setSelectedPromise(null); return }
+        if (showShareModal) { setShowShareModal(false); return }
+        if (showContributors) { setShowContributors(false); return }
+        if (searchQuery) { setSearchQuery(""); searchInputRef.current?.blur(); return }
+        return
+      }
+      if (isTyping) return
+      if (e.key === "/" || e.key === "f" || e.key === "F") {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+      if (e.key === "?" || (e.key === "h" || e.key === "H")) {
+        setShowShortcuts((v) => !v)
+        return
+      }
+      if (e.key === "s" || e.key === "S") {
+        setShowShareModal((v) => !v)
+        return
+      }
+      if (e.key === "t" || e.key === "T") {
+        const el = document.getElementById("leaderboard")
+        if (el && window.innerWidth >= 1024) el.scrollIntoView({ behavior: "smooth" })
+        else setShowContributors((v) => !v)
+        return
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [showShortcuts, selectedPromise, showShareModal, showContributors, searchQuery])
 
   useEffect(() => {
     if (hydrated && Object.keys(statuses).length > 0) saveStatuses(statuses)
@@ -979,6 +1020,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             <button onClick={() => setShowShareModal(true)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Share">
               <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
+            <button onClick={() => setShowShortcuts(true)} className="hidden sm:flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white font-bold text-sm transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Keyboard shortcuts (?)">
+              ?
+            </button>
             {isSignedIn && <NotificationBell />}
             {isSignedIn && user ? (
               <button onClick={() => router.push(`/profile/${userId}`)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "My Profile"}>
@@ -1081,7 +1125,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 flex-shrink-0 text-muted-foreground" />
-                  <input type="text" placeholder="Search promises..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl" />
+                  <input ref={searchInputRef} type="text" placeholder="Search promises... (press /)" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-9 w-full rounded-lg border border-border bg-card pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:rounded-xl" />
                 </div>
                 <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="h-9 w-full flex-shrink-0 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400 sm:w-auto sm:rounded-xl">
                   <option value="all">All</option>
@@ -1305,6 +1349,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
       {/* Share Modal */}
       {showShareModal && <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />}
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 
       {/* Top Contributors Modal (mobile) */}
       {showContributors && (

@@ -1327,6 +1327,22 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </div>
           <p className="text-center text-xs text-muted-foreground mb-4">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
           
+          {/* X / Twitter Link */}
+          <a
+            href="https://x.com/ManifestoPage"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 mb-4 transition-colors hover:bg-muted/50"
+          >
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-black">
+              <Twitter className="h-3 w-3 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground">Follow @ManifestoPage</p>
+            </div>
+            <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+          </a>
+          
           {/* Footer links */}
           <div className="flex items-center justify-between px-1 border-t border-border pt-4">
             <span className="text-[11px] text-muted-foreground">Powered by ObserverFile</span>

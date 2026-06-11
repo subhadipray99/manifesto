@@ -10,6 +10,7 @@ import { CommentsSection } from "@/components/comments-section"
 import { NotificationBell } from "@/components/notification-bell"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import { DonationModal } from "@/components/donation-modal"
+import { ArticlesSection } from "@/components/articles-section"
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -1239,6 +1240,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         <aside className="hidden lg:col-span-1 lg:block">
           <div className="sticky top-24 space-y-3">
 
+            {/* Articles from ObserverFiles */}
+            <ArticlesSection />
+
             {/* X / Twitter */}
             <a
               href="https://x.com/ManifestoPage"
@@ -1407,6 +1411,11 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </div>
           <p className="text-center text-xs text-muted-foreground mb-4">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
           
+          {/* Articles from ObserverFiles - Mobile */}
+          <div className="mb-4">
+            <ArticlesSection />
+          </div>
+
           {/* X / Twitter Link */}
           <a
             href="https://x.com/ManifestoPage"

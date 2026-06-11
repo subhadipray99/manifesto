@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
 import { NotificationBell } from "@/components/notification-bell"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
+import { DonationModal } from "@/components/donation-modal"
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -834,6 +835,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [myUsername, setMyUsername] = useState<string | null>(null)
   const [deepLinkCommentId, setDeepLinkCommentId] = useState<string | null>(null)
+  const [showDonationModal, setShowDonationModal] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [availableStates, setAvailableStates] = useState<Array<{ id: string; name: string; party: string }>>([])
 
@@ -1254,6 +1256,20 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
             </a>
 
+            {/* Donation Box */}
+            <button
+              onClick={() => setShowDonationModal(true)}
+              className="w-full flex items-center gap-3 rounded-xl border-2 border-orange-500/30 bg-gradient-to-br from-orange-50 to-orange-50/50 dark:from-orange-950/30 dark:to-orange-950/20 px-4 py-3.5 transition-colors hover:border-orange-500/60 hover:bg-orange-50/80 dark:hover:bg-orange-950/40"
+            >
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-orange-500">
+                <span className="text-lg">🤝</span>
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-bold text-orange-700 dark:text-orange-400">Support us</p>
+                <p className="text-xs text-orange-600 dark:text-orange-500">Donation Box</p>
+              </div>
+            </button>
+
             {/* Days in power */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center gap-4 px-4 py-4">
@@ -1406,6 +1422,19 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             </div>
             <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
           </a>
+
+          {/* Donation Box - Mobile */}
+          <button
+            onClick={() => setShowDonationModal(true)}
+            className="w-full flex items-center gap-2 rounded-lg border-2 border-orange-500/30 bg-gradient-to-br from-orange-50 to-orange-50/50 dark:from-orange-950/30 dark:to-orange-950/20 px-3 py-2 mb-4 transition-colors hover:border-orange-500/60"
+          >
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-orange-500">
+              <span className="text-sm">🤝</span>
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-xs font-bold text-orange-700 dark:text-orange-400">Support us - Donation Box</p>
+            </div>
+          </button>
           
           {/* Footer links */}
           <div className="flex items-center justify-between px-1 border-t border-border pt-4">
@@ -1520,6 +1549,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </div>
         </div>
       )}
+
+      {/* Donation Modal */}
+      <DonationModal isOpen={showDonationModal} onClose={() => setShowDonationModal(false)} />
     </div>
   )
 }

@@ -143,17 +143,24 @@ function ArticleModal({ post, onClose }: { post: WPPost; onClose: () => void }) 
 export function ArticlesSection() {
   const [posts, setPosts] = useState<WPPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<WPPost | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     setLoading(true)
-    setError(false)
+    setError(null)
     fetch("/api/wordpress/posts")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => setPosts(d.posts ?? []))
-      .catch(() => setError(true))
+      .then((r) => r.json())
+      .then((d) => {
+        console.log("[v0] WordPress API response:", d)
+        if (d.error) setError(d.error)
+        setPosts(d.posts ?? [])
+      })
+      .catch((err) => {
+        console.error("[v0] WordPress fetch failed:", err)
+        setError("Failed to load articles")
+      })
       .finally(() => setLoading(false))
   }, [refreshKey])
 
@@ -187,7 +194,7 @@ export function ArticlesSection() {
         {/* Error */}
         {!loading && error && (
           <div className="px-4 py-5 text-center">
-            <p className="text-xs text-muted-foreground">Could not load articles.</p>
+            <p className="text-xs text-muted-foreground">{error}</p>
             <button
               onClick={() => setRefreshKey((k) => k + 1)}
               className="mt-2 text-xs font-semibold text-orange-600 hover:underline"

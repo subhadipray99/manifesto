@@ -13,6 +13,7 @@ type CommentType = {
   user_id: string
   username?: string | null
   author_name: string
+  image_url?: string | null
   upvotes: number
   downvotes: number
   score: number
@@ -79,6 +80,7 @@ function CommentNode({
   const initials = node.author_name[0]?.toUpperCase() || "?"
   const profileHref = `/profile/${node.username || node.user_id}`
   const isReplying = replyingTo === node.id
+  const hasAvatar = Boolean(node.image_url)
 
   const handleReplySubmit = async () => {
     if (!replyText.trim()) return
@@ -98,9 +100,18 @@ function CommentNode({
         <div className="flex items-start gap-2.5">
           <a
             href={profileHref}
-            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${AVATAR_COLORS[colorIndex]} text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-80`}
+            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full overflow-hidden shadow-sm transition-opacity hover:opacity-80 ${hasAvatar ? "" : `${AVATAR_COLORS[colorIndex]} text-xs font-bold text-white`}`}
           >
-            {initials}
+            {hasAvatar ? (
+              <img
+                src={node.image_url!}
+                alt={node.author_name}
+                className="h-8 w-8 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              initials
+            )}
           </a>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -210,11 +221,13 @@ export function CommentsSection({
   stateId,
   isSignedIn,
   isAdmin,
+  highlightCommentId,
 }: {
   promiseId: string
   stateId: string
   isSignedIn: boolean
   isAdmin: boolean
+  highlightCommentId?: string | null
 }) {
   const { openSignIn } = useClerk()
   const [comments, setComments] = useState<CommentType[]>([])
@@ -238,6 +251,18 @@ export function CommentsSection({
   useEffect(() => {
     loadComments()
   }, [loadComments])
+
+  // Scroll to and flash-highlight the deep-linked comment once loaded
+  useEffect(() => {
+    if (!highlightCommentId || loading) return
+    const el = document.getElementById(`comment-${highlightCommentId}`)
+    if (!el) return
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" })
+      el.classList.add("ring-2", "ring-orange-400", "ring-offset-2")
+      setTimeout(() => el.classList.remove("ring-2", "ring-orange-400", "ring-offset-2"), 2500)
+    }, 150)
+  }, [highlightCommentId, loading])
 
   const postComment = async (body: string, parentId: string | null) => {
     const res = await fetch("/api/promises/comments", {
@@ -306,7 +331,7 @@ export function CommentsSection({
     <div className="px-4 py-4 sm:px-6 sm:py-5">
       {/* New comment composer */}
       {isSignedIn ? (
-        <div className="rounded-xl border-2 border-border bg-card p-3">
+      <div id={`comment-${node.id}`} className="rounded-xl border-2 border-border bg-card p-3 transition-shadow">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

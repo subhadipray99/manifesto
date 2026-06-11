@@ -16,6 +16,12 @@ import {
   MapPin,
   FolderOpen,
   FileText,
+  Mail,
+  Send,
+  Users,
+  UserCheck,
+  Search,
+  Loader2,
 } from "lucide-react"
 
 // Types
@@ -61,7 +67,7 @@ interface PendingUpdate {
   status: string
 }
 
-type AdminTab = "submissions" | "states" | "categories" | "promises"
+type AdminTab = "submissions" | "states" | "categories" | "promises" | "email"
 
 export default function AdminDashboard() {
   const { isSignedIn, isLoaded, userId } = useAuth()
@@ -98,6 +104,19 @@ export default function AdminDashboard() {
   const [editingPromiseId, setEditingPromiseId] = useState<string | null>(null)
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>("")
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("")
+
+  // Email broadcast state
+  const [emailSubject, setEmailSubject] = useState("")
+  const [emailBody, setEmailBody] = useState("")
+  const [emailRecipientType, setEmailRecipientType] = useState<"all" | "specific">("all")
+  const [userSearchQuery, setUserSearchQuery] = useState("")
+  const [userSearchResults, setUserSearchResults] = useState<{ id: string; name: string; email: string }[]>([])
+  const [selectedUsers, setSelectedUsers] = useState<{ id: string; name: string; email: string }[]>([])
+  const [searchingUsers, setSearchingUsers] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailResult, setEmailResult] = useState<{ sent: number; failed: number; noEmail: number; total: number } | null>(null)
+  const [emailError, setEmailError] = useState("")
+  const [showPreview, setShowPreview] = useState(false)
 
   // Fetch functions — defined with useCallback so they can be stable deps
   const fetchUpdates = useCallback(async (status: "pending" | "approved") => {
@@ -442,6 +461,7 @@ export default function AdminDashboard() {
             { id: "states", label: "States", icon: MapPin },
             { id: "categories", label: "Categories", icon: FolderOpen },
             { id: "promises", label: "Promises", icon: FileText },
+            { id: "email", label: "Send Email", icon: Mail },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1058,6 +1078,237 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Email Tab */}
+        {activeTab === "email" && (
+          <div className="mt-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-foreground">Broadcast Email</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Send a custom email to all users or a selected group</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Compose Form */}
+              <div className="space-y-4 rounded-2xl border-2 border-border bg-card p-6">
+                <h3 className="font-black text-foreground flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-orange-500" /> Compose
+                </h3>
+
+                {/* Recipients */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Recipients</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEmailRecipientType("all")}
+                      className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-bold transition-colors ${emailRecipientType === "all" ? "border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-950/20" : "border-border text-muted-foreground hover:border-orange-300"}`}
+                    >
+                      <Users className="h-4 w-4" /> All Users
+                    </button>
+                    <button
+                      onClick={() => setEmailRecipientType("specific")}
+                      className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-bold transition-colors ${emailRecipientType === "specific" ? "border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-950/20" : "border-border text-muted-foreground hover:border-orange-300"}`}
+                    >
+                      <UserCheck className="h-4 w-4" /> Specific Users
+                    </button>
+                  </div>
+                </div>
+
+                {/* User search (specific mode) */}
+                {emailRecipientType === "specific" && (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={userSearchQuery}
+                        onChange={async (e) => {
+                          setUserSearchQuery(e.target.value)
+                          if (!e.target.value.trim()) { setUserSearchResults([]); return }
+                          setSearchingUsers(true)
+                          try {
+                            const res = await fetch(`/api/admin/send-email?q=${encodeURIComponent(e.target.value)}`)
+                            const d = await res.json()
+                            setUserSearchResults(d.users ?? [])
+                          } catch { /* ignore */ } finally { setSearchingUsers(false) }
+                        }}
+                        placeholder="Search by name or email..."
+                        className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-sm focus:border-orange-500 focus:outline-none"
+                      />
+                      {searchingUsers && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />}
+                    </div>
+                    {userSearchResults.length > 0 && (
+                      <div className="rounded-xl border border-border bg-background shadow-sm max-h-48 overflow-y-auto">
+                        {userSearchResults.map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={() => {
+                              if (!selectedUsers.find((s) => s.id === u.id)) {
+                                setSelectedUsers((prev) => [...prev, u])
+                              }
+                              setUserSearchResults([])
+                              setUserSearchQuery("")
+                            }}
+                            className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-600">
+                              {u.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-foreground">{u.name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {selectedUsers.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedUsers.map((u) => (
+                          <span key={u.id} className="flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
+                            {u.name}
+                            <button onClick={() => setSelectedUsers((prev) => prev.filter((s) => s.id !== u.id))} className="text-muted-foreground hover:text-red-500">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Subject */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Subject</label>
+                  <input
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder="Email subject..."
+                    className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Body */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Message</label>
+                  <textarea
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    rows={8}
+                    placeholder={"Write your message here...\n\nEach new line becomes a paragraph."}
+                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">{emailBody.length} characters</p>
+                </div>
+
+                {emailError && (
+                  <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/30 dark:text-red-400">
+                    {emailError}
+                  </div>
+                )}
+
+                <button
+                  disabled={sendingEmail || !emailSubject.trim() || !emailBody.trim() || (emailRecipientType === "specific" && selectedUsers.length === 0)}
+                  onClick={async () => {
+                    setSendingEmail(true)
+                    setEmailError("")
+                    setEmailResult(null)
+                    try {
+                      const res = await fetch("/api/admin/send-email", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          subject: emailSubject,
+                          body: emailBody,
+                          recipientType: emailRecipientType,
+                          specificUserIds: emailRecipientType === "specific" ? selectedUsers.map((u) => u.id) : [],
+                        }),
+                      })
+                      const d = await res.json()
+                      if (!res.ok) { setEmailError(d.error || "Failed to send"); return }
+                      setEmailResult(d)
+                    } catch { setEmailError("Something went wrong. Try again.") } finally { setSendingEmail(false) }
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {sendingEmail ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</> : <><Send className="h-4 w-4" /> Send Email</>}
+                </button>
+              </div>
+
+              {/* Preview + Result */}
+              <div className="space-y-4">
+                {/* Preview */}
+                <div className="rounded-2xl border-2 border-border bg-card p-6">
+                  <h3 className="mb-3 font-black text-foreground">Preview</h3>
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    {/* Header */}
+                    <div className="mb-3 rounded-lg bg-orange-500 px-4 py-3">
+                      <p className="text-sm font-black text-white">The Manifesto</p>
+                      <p className="text-[10px] font-medium uppercase tracking-widest text-orange-200">Citizen-powered accountability</p>
+                    </div>
+                    {/* Body */}
+                    <div className="px-1 py-2">
+                      {emailSubject ? (
+                        <p className="mb-3 text-base font-black text-foreground">{emailSubject}</p>
+                      ) : (
+                        <p className="mb-3 text-base font-black text-muted-foreground/40">Your subject line</p>
+                      )}
+                      {emailBody ? (
+                        emailBody.split("\n").map((line, i) => (
+                          <p key={i} className="mb-2 text-sm leading-relaxed text-foreground/80">{line || <>&nbsp;</>}</p>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground/40">Your message will appear here...</p>
+                      )}
+                    </div>
+                    {/* Footer */}
+                    <div className="mt-3 border-t border-border pt-3">
+                      <p className="text-center text-[10px] text-muted-foreground">You received this because you have an account on The Manifesto</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Mail className="h-3.5 w-3.5" />
+                    {emailRecipientType === "all"
+                      ? "Will be sent to all users"
+                      : selectedUsers.length > 0
+                        ? `Will be sent to ${selectedUsers.length} selected user${selectedUsers.length !== 1 ? "s" : ""}`
+                        : "No recipients selected yet"}
+                  </div>
+                </div>
+
+                {/* Result */}
+                {emailResult && (
+                  <div className="rounded-2xl border-2 border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-950/20">
+                    <h3 className="mb-4 font-black text-green-800 dark:text-green-400">Email sent successfully</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-xl bg-green-100 p-3 text-center dark:bg-green-900/30">
+                        <p className="text-2xl font-black text-green-700 dark:text-green-400">{emailResult.sent}</p>
+                        <p className="text-xs font-semibold text-green-600">Delivered</p>
+                      </div>
+                      <div className="rounded-xl bg-amber-100 p-3 text-center dark:bg-amber-900/30">
+                        <p className="text-2xl font-black text-amber-700 dark:text-amber-400">{emailResult.noEmail}</p>
+                        <p className="text-xs font-semibold text-amber-600">No email</p>
+                      </div>
+                      <div className="rounded-xl bg-red-100 p-3 text-center dark:bg-red-900/30">
+                        <p className="text-2xl font-black text-red-700 dark:text-red-400">{emailResult.failed}</p>
+                        <p className="text-xs font-semibold text-red-600">Failed</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-center text-xs text-muted-foreground">{emailResult.total} total recipients processed</p>
+                    <button
+                      onClick={() => { setEmailResult(null); setEmailSubject(""); setEmailBody(""); setSelectedUsers([]) }}
+                      className="mt-4 w-full rounded-xl border border-green-300 py-2 text-sm font-bold text-green-700 hover:bg-green-100 transition-colors"
+                    >
+                      Compose another
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

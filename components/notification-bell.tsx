@@ -140,9 +140,10 @@ export function NotificationBell() {
               <ul>
                 {notifications.map((n) => (
                   <li key={n.id} className={`border-b border-border last:border-0 ${!n.is_read ? "bg-orange-50 dark:bg-orange-950/20" : ""}`}>
-                    <button
+                    <Link
+                      href={`/${n.state_id}?promise=${n.promise_id}${n.comment_id ? `&comment=${n.comment_id}` : ""}`}
                       className="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-                      onClick={() => markOneRead(n.id)}
+                      onClick={() => { markOneRead(n.id); setOpen(false) }}
                     >
                       {/* Icon */}
                       <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
@@ -168,7 +169,7 @@ export function NotificationBell() {
                       {!n.is_read && (
                         <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-orange-500" />
                       )}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>

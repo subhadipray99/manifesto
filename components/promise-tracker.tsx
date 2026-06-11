@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import dynamic from "next/dynamic"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
 import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
@@ -12,10 +11,7 @@ import { NotificationBell } from "@/components/notification-bell"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import { DonationModal } from "@/components/donation-modal"
 
-const ArticlesSection = dynamic(
-  () => import("@/components/articles-section").then((m) => m.ArticlesSection),
-  { ssr: false, loading: () => null }
-)
+
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -1133,14 +1129,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-5 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
-
-        {/* ── LEFT SIDEBAR: Articles ── */}
-        <aside className="hidden lg:col-span-1 lg:block">
-          <div className="sticky top-24">
-            <ArticlesSection />
-          </div>
-        </aside>
+      <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
 
         {/* ── MAIN COLUMN ── */}
         <div className="lg:col-span-3">

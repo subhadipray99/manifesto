@@ -37,7 +37,11 @@ export function DonationModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
           {/* QR Code */}
           <div className="flex justify-center">
             <div className="rounded-xl border-2 border-border bg-white p-4">
-              <img src="/qr-code.svg" alt="UPI QR Code" className="h-56 w-56" />
+              <img 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/receive_money_image-NL7NG5OvtXPdA3Ei5XUwfEGPHLe40K.png" 
+                alt="UPI QR Code" 
+                className="h-56 w-56"
+              />
             </div>
           </div>
 

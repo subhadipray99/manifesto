@@ -52,10 +52,28 @@ export async function GET(request: NextRequest) {
       voteMap = Object.fromEntries(votes.map((v: any) => [v.comment_id, v.vote]))
     }
 
+    // Batch-fetch Clerk profile images for all unique user_ids
+    const uniqueUserIds = [...new Set(rows.map((c: any) => c.user_id).filter(Boolean))] as string[]
+    const avatarMap: Record<string, string> = {}
+    if (uniqueUserIds.length > 0) {
+      try {
+        const client = await clerkClient()
+        await Promise.all(
+          uniqueUserIds.map(async (uid) => {
+            try {
+              const u = await client.users.getUser(uid)
+              if (u.imageUrl) avatarMap[uid] = u.imageUrl
+            } catch { /* skip */ }
+          })
+        )
+      } catch { /* skip avatar enrichment */ }
+    }
+
     const comments = rows.map((c: any) => ({
       ...c,
       score: (c.upvotes || 0) - (c.downvotes || 0),
       userVote: voteMap[c.id] || 0,
+      image_url: avatarMap[c.user_id] || null,
     }))
 
     return NextResponse.json({ comments })
@@ -104,7 +122,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, promise_id, state_id, parent_id, body, user_id, author_name, upvotes, downvotes, created_at
     `
 
-    const comment = { ...inserted[0], username, score: 0, userVote: 0 }
+    const comment = { ...inserted[0], username, score: 0, userVote: 0, image_url: user.imageUrl || null }
 
     // Fire a notification if this is a reply and the parent author is different
     if (parentId) {
@@ -148,8 +166,8 @@ export async function POST(request: NextRequest) {
             console.error("[v0] Reply email notification failed:", emailErr)
           }
         }
-      } catch {
-        // Notifications are non-critical — don't fail the whole request
+      } catch (notifErr) {
+        console.error("[v0] Notification/email block failed:", notifErr)
       }
     }
 

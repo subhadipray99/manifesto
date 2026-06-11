@@ -13,6 +13,7 @@ type CommentType = {
   user_id: string
   username?: string | null
   author_name: string
+  image_url?: string | null
   upvotes: number
   downvotes: number
   score: number
@@ -79,6 +80,7 @@ function CommentNode({
   const initials = node.author_name[0]?.toUpperCase() || "?"
   const profileHref = `/profile/${node.username || node.user_id}`
   const isReplying = replyingTo === node.id
+  const hasAvatar = Boolean(node.image_url)
 
   const handleReplySubmit = async () => {
     if (!replyText.trim()) return
@@ -98,9 +100,18 @@ function CommentNode({
         <div className="flex items-start gap-2.5">
           <a
             href={profileHref}
-            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${AVATAR_COLORS[colorIndex]} text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-80`}
+            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full overflow-hidden shadow-sm transition-opacity hover:opacity-80 ${hasAvatar ? "" : `${AVATAR_COLORS[colorIndex]} text-xs font-bold text-white`}`}
           >
-            {initials}
+            {hasAvatar ? (
+              <img
+                src={node.image_url!}
+                alt={node.author_name}
+                className="h-8 w-8 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              initials
+            )}
           </a>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

@@ -221,11 +221,13 @@ export function CommentsSection({
   stateId,
   isSignedIn,
   isAdmin,
+  highlightCommentId,
 }: {
   promiseId: string
   stateId: string
   isSignedIn: boolean
   isAdmin: boolean
+  highlightCommentId?: string | null
 }) {
   const { openSignIn } = useClerk()
   const [comments, setComments] = useState<CommentType[]>([])
@@ -249,6 +251,18 @@ export function CommentsSection({
   useEffect(() => {
     loadComments()
   }, [loadComments])
+
+  // Scroll to and flash-highlight the deep-linked comment once loaded
+  useEffect(() => {
+    if (!highlightCommentId || loading) return
+    const el = document.getElementById(`comment-${highlightCommentId}`)
+    if (!el) return
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" })
+      el.classList.add("ring-2", "ring-orange-400", "ring-offset-2")
+      setTimeout(() => el.classList.remove("ring-2", "ring-orange-400", "ring-offset-2"), 2500)
+    }, 150)
+  }, [highlightCommentId, loading])
 
   const postComment = async (body: string, parentId: string | null) => {
     const res = await fetch("/api/promises/comments", {
@@ -317,7 +331,7 @@ export function CommentsSection({
     <div className="px-4 py-4 sm:px-6 sm:py-5">
       {/* New comment composer */}
       {isSignedIn ? (
-        <div className="rounded-xl border-2 border-border bg-card p-3">
+      <div id={`comment-${node.id}`} className="rounded-xl border-2 border-border bg-card p-3 transition-shadow">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

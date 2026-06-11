@@ -331,12 +331,14 @@ function PromiseDetail({
   isSignedIn,
   userId,
   isAdmin,
+  highlightCommentId,
 }: {
   promise: PromiseType
   category: Category
   status: PromiseStatus
   timeline: TimelineUpdate[]
   stateId: string
+  highlightCommentId?: string | null
   onStatusChange: (status: PromiseStatus) => void
   onAddUpdate: (update: Omit<TimelineUpdate, "id" | "timestamp">) => void
   onClose: () => void
@@ -496,7 +498,7 @@ function PromiseDetail({
         </div>
 
         {activeTab === "comments" ? (
-          <CommentsSection promiseId={promise.id} stateId={stateId} isSignedIn={isSignedIn} isAdmin={isAdmin} />
+          <CommentsSection promiseId={promise.id} stateId={stateId} isSignedIn={isSignedIn} isAdmin={isAdmin} highlightCommentId={highlightCommentId} />
         ) : (
         <div className="border-t-2 border-border bg-muted/30 px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -831,6 +833,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [showContributors, setShowContributors] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [myUsername, setMyUsername] = useState<string | null>(null)
+  const [deepLinkCommentId, setDeepLinkCommentId] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [availableStates, setAvailableStates] = useState<Array<{ id: string; name: string; party: string }>>([])
 
@@ -949,6 +952,8 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
+
+      // Deep-link to a specific category
       const categoryId = params.get("category")
       if (categoryId) {
         setExpandedCategories(new Set([categoryId]))
@@ -957,6 +962,21 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           const element = document.querySelector(`[data-category-id="${categoryId}"]`)
           if (element) element.scrollIntoView({ behavior: "smooth", block: "nearest" })
         }, 100)
+      }
+
+      // Deep-link to a specific promise (and optional comment)
+      const promiseId = params.get("promise")
+      const commentId = params.get("comment")
+      if (promiseId) {
+        // Find the promise across all categories
+        for (const cat of CATEGORIES) {
+          const found = cat.promises.find((p) => p.id === promiseId)
+          if (found) {
+            if (commentId) setDeepLinkCommentId(commentId)
+            setSelectedPromise({ promise: found, category: cat })
+            break
+          }
+        }
       }
     }
   }, [])
@@ -1407,11 +1427,12 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           stateId={stateConfig.id}
           onStatusChange={(s) => handleStatusChange(selectedPromise.promise.id, s)}
           onAddUpdate={(update) => handleAddTimelineUpdate(selectedPromise.promise.id, update)}
-          onClose={() => setSelectedPromise(null)}
+          onClose={() => { setSelectedPromise(null); setDeepLinkCommentId(null) }}
           onShare={() => setShowShareModal(true)}
           isSignedIn={isSignedIn ?? false}
           userId={userId ?? null}
           isAdmin={isAdmin}
+          highlightCommentId={deepLinkCommentId}
         />
       )}
 

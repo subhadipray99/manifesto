@@ -1,5 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
+import { clerkClient } from "@clerk/nextjs/server"
+import { sendUpdateApprovedEmail } from "@/lib/email"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -64,11 +66,45 @@ export async function PUT(request: NextRequest) {
 
     const newStatus = action === "approve" ? "approved" : "rejected"
 
-    await getDb()`
+    const [update] = await getDb()`
       UPDATE timeline_updates
       SET status = ${newStatus}
       WHERE id = ${updateId}
+      RETURNING user_id, user_email, submitted_by, title, promise_id, state_id
     `
+
+    // Send approval email (best-effort, non-blocking)
+    if (action === "approve" && update) {
+      try {
+        // Prefer stored email; fall back to fetching from Clerk
+        let toEmail = update.user_email as string | null
+        let recipientName = update.submitted_by as string || "Contributor"
+
+        if (!toEmail && update.user_id) {
+          const client = await clerkClient()
+          const clerkUser = await client.users.getUser(update.user_id as string)
+          toEmail = clerkUser.emailAddresses?.[0]?.emailAddress ?? null
+          recipientName = clerkUser.fullName || clerkUser.firstName || recipientName
+        }
+
+        if (toEmail) {
+          // Fetch promise title for the email
+          const [promise] = await getDb()`
+            SELECT title FROM promises WHERE id = ${update.promise_id} LIMIT 1
+          `
+          sendUpdateApprovedEmail({
+            toEmail,
+            recipientName,
+            updateTitle: update.title as string,
+            promiseTitle: promise?.title ?? update.promise_id,
+            stateId: update.state_id as string || "west-bengal",
+            promiseId: update.promise_id as string,
+          })
+        }
+      } catch (emailErr) {
+        console.error("[v0] Email notification failed:", emailErr)
+      }
+    }
 
     return NextResponse.json({ success: true, message: `Update ${action}ed` })
   } catch (error) {

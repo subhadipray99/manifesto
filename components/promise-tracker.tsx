@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare, Bell, BellOff } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
@@ -451,10 +451,9 @@ function PromiseDetail({
           <button
             onClick={toggleFollow}
             disabled={followLoading}
-            title={following ? "Unfollow promise" : "Follow promise"}
-            className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors active:scale-95 disabled:opacity-50 ${following ? "bg-orange-500 text-white" : "bg-muted text-foreground"}`}
+            className={`flex h-9 flex-shrink-0 items-center justify-center rounded-full px-4 text-xs font-bold transition-colors active:scale-95 disabled:opacity-50 ${following ? "bg-orange-500 text-white" : "border-2 border-border bg-muted text-foreground hover:border-orange-500 hover:text-orange-500"}`}
           >
-            {following ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+            {followLoading ? "..." : following ? "Following" : "Follow"}
           </button>
           <button onClick={onShare} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted transition-colors active:scale-95">
             <Share2 className="h-4 w-4 text-foreground" />

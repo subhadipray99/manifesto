@@ -331,7 +331,7 @@ export function CommentsSection({
     <div className="px-4 py-4 sm:px-6 sm:py-5">
       {/* New comment composer */}
       {isSignedIn ? (
-      <div id={`comment-${node.id}`} className="rounded-xl border-2 border-border bg-card p-3 transition-shadow">
+        <div className="rounded-xl border-2 border-border bg-card p-3 transition-shadow">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

@@ -10,7 +10,8 @@ import { CommentsSection } from "@/components/comments-section"
 import { NotificationBell } from "@/components/notification-bell"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import { DonationModal } from "@/components/donation-modal"
-import { ArticlesSection } from "@/components/articles-section"
+
+
 
 const STATUS_CONFIG: Record<
   PromiseStatus,
@@ -1128,14 +1129,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-5 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
-
-        {/* ── LEFT SIDEBAR: Articles ── */}
-        <aside className="hidden lg:col-span-1 lg:block">
-          <div className="sticky top-24">
-            <ArticlesSection />
-          </div>
-        </aside>
+      <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
 
         {/* ── MAIN COLUMN ── */}
         <div className="lg:col-span-3">

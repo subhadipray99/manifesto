@@ -129,18 +129,24 @@ function ArticleModal({ post, onClose }: { post: WPPost; onClose: () => void }) 
 // ── Articles Section ──────────────────────────────────────────────────────────
 
 export function ArticlesSection() {
+  const [mounted, setMounted] = useState(false)
   const [posts, setPosts] = useState<WPPost[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<WPPost | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
+  // Only mount on client to avoid SSR/hydration mismatch
+  useEffect(() => { setMounted(true) }, [])
+
   useEffect(() => {
+    if (!mounted) return
+    const controller = new AbortController()
     setLoading(true)
     setError(null)
     fetch(
       "https://observerfiles.com/wp-json/wp/v2/posts?per_page=7&_embed=wp:featuredmedia,wp:term",
-      { headers: { Accept: "application/json" } }
+      { headers: { Accept: "application/json" }, signal: controller.signal }
     )
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -163,9 +169,14 @@ export function ArticlesSection() {
         })
         setPosts(mapped)
       })
-      .catch(() => setError("Could not load articles"))
+      .catch((err) => {
+        if (err.name !== "AbortError") setError("Could not load articles")
+      })
       .finally(() => setLoading(false))
-  }, [refreshKey])
+    return () => controller.abort()
+  }, [mounted, refreshKey])
+
+  if (!mounted) return null
 
   return (
     <>

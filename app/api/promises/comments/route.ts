@@ -1,7 +1,8 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
-import { currentUser } from "@clerk/nextjs/server"
+import { currentUser, clerkClient } from "@clerk/nextjs/server"
 import { ensureUsername } from "@/lib/usernames"
+import { sendReplyNotificationEmail, isEmailEnabled } from "@/lib/email"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -123,6 +124,29 @@ export async function POST(request: NextRequest) {
             VALUES
               (${notifId}, ${parentAuthorId}, 'reply', ${id}, ${parentId}, ${promiseId}, ${stateId}, ${promiseTitle}, ${authorName}, ${user.id}, ${body.trim().slice(0, 120)})
           `
+
+          // Send email notification to the parent comment author
+          try {
+            const client = await clerkClient()
+            const parentClerkUser = await client.users.getUser(parentAuthorId as string)
+            const toEmail = parentClerkUser.emailAddresses?.[0]?.emailAddress
+            const recipientName = parentClerkUser.fullName || parentClerkUser.firstName || parentComment[0]?.author_name || "Community Member"
+            const replyEmailEnabled = await isEmailEnabled(parentAuthorId as string, "email_on_reply")
+            if (toEmail && replyEmailEnabled) {
+              sendReplyNotificationEmail({
+                toEmail,
+                recipientName,
+                replierName: authorName,
+                replyBody: body.trim(),
+                promiseTitle,
+                stateId,
+                promiseId,
+                commentId: id,
+              })
+            }
+          } catch (emailErr) {
+            console.error("[v0] Reply email notification failed:", emailErr)
+          }
         }
       } catch {
         // Notifications are non-critical — don't fail the whole request

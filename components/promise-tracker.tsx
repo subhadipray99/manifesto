@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare, Bell, BellOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
@@ -357,6 +357,33 @@ function PromiseDetail({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [submitSuccess, setSubmitSuccess] = useState("")
+  const [following, setFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isSignedIn) return
+    fetch(`/api/follows?promiseId=${promise.id}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d && setFollowing(d.following))
+      .catch(() => {})
+  }, [promise.id, isSignedIn])
+
+  async function toggleFollow() {
+    if (!isSignedIn) { openSignIn(); return }
+    setFollowLoading(true)
+    try {
+      const res = following
+        ? await fetch(`/api/follows?promiseId=${promise.id}`, { method: "DELETE" })
+        : await fetch("/api/follows", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ promiseId: promise.id, stateId }),
+          })
+      if (res.ok) setFollowing((v) => !v)
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -421,6 +448,14 @@ function PromiseDetail({
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold uppercase tracking-widest text-muted-foreground">{category.localName || category.name}</p>
           </div>
+          <button
+            onClick={toggleFollow}
+            disabled={followLoading}
+            title={following ? "Unfollow promise" : "Follow promise"}
+            className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors active:scale-95 disabled:opacity-50 ${following ? "bg-orange-500 text-white" : "bg-muted text-foreground"}`}
+          >
+            {following ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+          </button>
           <button onClick={onShare} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted transition-colors active:scale-95">
             <Share2 className="h-4 w-4 text-foreground" />
           </button>

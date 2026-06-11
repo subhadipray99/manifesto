@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser, clerkClient } from "@clerk/nextjs/server"
 import { ensureUsername } from "@/lib/usernames"
-import { sendReplyNotificationEmail } from "@/lib/email"
+import { sendReplyNotificationEmail, isEmailEnabled } from "@/lib/email"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -131,7 +131,8 @@ export async function POST(request: NextRequest) {
             const parentClerkUser = await client.users.getUser(parentAuthorId as string)
             const toEmail = parentClerkUser.emailAddresses?.[0]?.emailAddress
             const recipientName = parentClerkUser.fullName || parentClerkUser.firstName || parentComment[0]?.author_name || "Community Member"
-            if (toEmail) {
+            const replyEmailEnabled = await isEmailEnabled(parentAuthorId as string, "email_on_reply")
+            if (toEmail && replyEmailEnabled) {
               sendReplyNotificationEmail({
                 toEmail,
                 recipientName,

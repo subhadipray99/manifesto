@@ -7,7 +7,7 @@ import Link from "next/link"
 import {
   Calendar, ExternalLink, ArrowLeft, FileText, MapPin,
   Flame, Clock, Settings, AtSign, Check, X, Pencil, Plus, Trash2, Globe, Loader2, AlertCircle,
-  MessageSquare, ArrowUpDown, ThumbsUp,
+  MessageSquare, ArrowUpDown, ThumbsUp, Bell,
 } from "lucide-react"
 import { getContrastTextColor } from "@/lib/utils"
 
@@ -662,12 +662,20 @@ export default function ProfilePage() {
                   Last active {timeAgo(profile.lastActive)}
                 </span>
                 {isOwnProfile && (
-                  <button
-                    onClick={() => openUserProfile()}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-xs font-bold text-background hover:opacity-90 transition-opacity"
-                  >
-                    <Settings className="h-3 w-3" /> Manage Account
-                  </button>
+                  <>
+                    <button
+                      onClick={() => openUserProfile()}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-xs font-bold text-background hover:opacity-90 transition-opacity"
+                    >
+                      <Settings className="h-3 w-3" /> Manage Account
+                    </button>
+                    <a
+                      href="/settings"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-foreground hover:bg-muted/70 transition-colors"
+                    >
+                      <Bell className="h-3 w-3" /> Notifications
+                    </a>
+                  </>
                 )}
               </div>
 

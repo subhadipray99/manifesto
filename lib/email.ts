@@ -1,9 +1,29 @@
 import { Resend } from "resend"
 
+import { neon } from "@neondatabase/serverless"
+
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 const FROM = "The Manifesto <notifications@themanifesto.in>"
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://themanifesto.in"
+
+const getDb = () => neon(process.env.DATABASE_URL!)
+
+// Returns whether a specific email notification type is enabled for a user.
+// Defaults to true (opt-in) if no settings row exists yet.
+export async function isEmailEnabled(
+  userId: string,
+  type: "email_on_update_approved" | "email_on_reply" | "email_on_followed_update",
+): Promise<boolean> {
+  try {
+    const db = getDb()
+    const rows = await db`SELECT ${db.unsafe(type)} FROM notification_settings WHERE user_id = ${userId} LIMIT 1`
+    if (rows.length === 0) return true
+    return rows[0][type] as boolean
+  } catch {
+    return true
+  }
+}
 
 // ── Templates ────────────────────────────────────────────────────────────────
 
@@ -111,6 +131,39 @@ function replyReceivedHtml(params: {
   `)
 }
 
+function followedPromiseUpdateHtml(params: {
+  recipientName: string
+  promiseTitle: string
+  updateTitle: string
+  submittedBy: string
+  stateId: string
+  promiseId: string
+}): string {
+  const url = `${BASE_URL}/${params.stateId}?promise=${params.promiseId}`
+  return baseTemplate("New update on a promise you follow", `
+    <h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1a1a18;">
+      New update on a promise you follow
+    </h2>
+    <p style="margin:0 0 24px;font-size:15px;color:#6b6b65;line-height:1.6;">
+      Hi ${params.recipientName}, a new update has been submitted and approved for a promise you are tracking.
+    </p>
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c2410c;">Promise</p>
+      <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a18;">${params.promiseTitle}</p>
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c2410c;">New Update</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#3a3a36;">${params.updateTitle}</p>
+      <p style="margin:0;font-size:12px;color:#78716c;">Submitted by ${params.submittedBy}</p>
+    </div>
+    <a href="${url}" style="display:inline-block;background:#ea580c;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:8px;">
+      View Update
+    </a>
+    <p style="margin:24px 0 0;font-size:12px;color:#a0a09a;">
+      To stop receiving these emails, go to your
+      <a href="${BASE_URL}/settings" style="color:#ea580c;text-decoration:none;">notification settings</a>.
+    </p>
+  `)
+}
+
 // ── Senders ───────────────────────────────────────────────────────────────────
 
 export async function sendUpdateApprovedEmail(params: {
@@ -130,6 +183,27 @@ export async function sendUpdateApprovedEmail(params: {
     })
   } catch (err) {
     console.error("[v0] sendUpdateApprovedEmail failed:", err)
+  }
+}
+
+export async function sendFollowedPromiseUpdateEmail(params: {
+  toEmail: string
+  recipientName: string
+  promiseTitle: string
+  updateTitle: string
+  submittedBy: string
+  stateId: string
+  promiseId: string
+}): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: params.toEmail,
+      subject: `New update on "${params.promiseTitle}" — The Manifesto`,
+      html: followedPromiseUpdateHtml(params),
+    })
+  } catch (err) {
+    console.error("[v0] sendFollowedPromiseUpdateEmail failed:", err)
   }
 }
 

@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
 import { clerkClient } from "@clerk/nextjs/server"
-import { sendUpdateApprovedEmail } from "@/lib/email"
+import { sendUpdateApprovedEmail, sendFollowedPromiseUpdateEmail, isEmailEnabled } from "@/lib/email"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 
@@ -87,19 +87,50 @@ export async function PUT(request: NextRequest) {
           recipientName = clerkUser.fullName || clerkUser.firstName || recipientName
         }
 
+        const [promise] = await getDb()`
+          SELECT title FROM promises WHERE id = ${update.promise_id} LIMIT 1
+        `
+        const promiseTitle = promise?.title ?? update.promise_id as string
+
         if (toEmail) {
-          // Fetch promise title for the email
-          const [promise] = await getDb()`
-            SELECT title FROM promises WHERE id = ${update.promise_id} LIMIT 1
-          `
           sendUpdateApprovedEmail({
             toEmail,
             recipientName,
             updateTitle: update.title as string,
-            promiseTitle: promise?.title ?? update.promise_id,
+            promiseTitle,
             stateId: update.state_id as string || "west-bengal",
             promiseId: update.promise_id as string,
           })
+        }
+
+        // Fan-out email to all followers of this promise
+        try {
+          const followers = await getDb()`
+            SELECT user_id FROM promise_follows WHERE promise_id = ${update.promise_id}
+          `
+          const client = await clerkClient()
+          for (const follower of followers) {
+            // Don't double-email the submitter
+            if (follower.user_id === update.user_id) continue
+            try {
+              const enabled = await isEmailEnabled(follower.user_id as string, "email_on_followed_update")
+              if (!enabled) continue
+              const followerUser = await client.users.getUser(follower.user_id as string)
+              const followerEmail = followerUser.emailAddresses?.[0]?.emailAddress
+              if (!followerEmail) continue
+              sendFollowedPromiseUpdateEmail({
+                toEmail: followerEmail,
+                recipientName: followerUser.fullName || followerUser.firstName || "Follower",
+                promiseTitle,
+                updateTitle: update.title as string,
+                submittedBy: update.submitted_by as string || "Community Member",
+                stateId: update.state_id as string || "west-bengal",
+                promiseId: update.promise_id as string,
+              })
+            } catch { /* skip this follower */ }
+          }
+        } catch (fanOutErr) {
+          console.error("[v0] Follower fan-out failed:", fanOutErr)
         }
       } catch (emailErr) {
         console.error("[v0] Email notification failed:", emailErr)

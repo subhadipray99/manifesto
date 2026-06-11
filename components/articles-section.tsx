@@ -129,18 +129,13 @@ function ArticleModal({ post, onClose }: { post: WPPost; onClose: () => void }) 
 // ── Articles Section ──────────────────────────────────────────────────────────
 
 export function ArticlesSection() {
-  const [mounted, setMounted] = useState(false)
   const [posts, setPosts] = useState<WPPost[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<WPPost | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  // Only mount on client to avoid SSR/hydration mismatch
-  useEffect(() => { setMounted(true) }, [])
-
   useEffect(() => {
-    if (!mounted) return
     const controller = new AbortController()
     setLoading(true)
     setError(null)
@@ -174,9 +169,7 @@ export function ArticlesSection() {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
-  }, [mounted, refreshKey])
-
-  if (!mounted) return null
+  }, [refreshKey])
 
   return (
     <>

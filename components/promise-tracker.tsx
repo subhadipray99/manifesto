@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import dynamic from "next/dynamic"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
 import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
@@ -10,7 +11,11 @@ import { CommentsSection } from "@/components/comments-section"
 import { NotificationBell } from "@/components/notification-bell"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import { DonationModal } from "@/components/donation-modal"
-import { ArticlesSection } from "@/components/articles-section"
+
+const ArticlesSection = dynamic(
+  () => import("@/components/articles-section").then((m) => m.ArticlesSection),
+  { ssr: false, loading: () => null }
+)
 
 const STATUS_CONFIG: Record<
   PromiseStatus,

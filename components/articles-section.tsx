@@ -9,7 +9,7 @@ type WPPost = {
   excerpt: string
   link: string
   date: string
-  categories: string[]
+  category: string | null
   featuredImage: string | null
 }
 
@@ -83,18 +83,13 @@ function ArticleModal({ post, onClose }: { post: WPPost; onClose: () => void }) 
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-          {/* Categories */}
-          {post.categories.length > 0 && (
+          {/* Category */}
+          {post.category && (
             <div className="flex flex-wrap gap-1.5">
-              {post.categories.map((cat) => (
-                <span
-                  key={cat}
-                  className="inline-flex items-center gap-1 rounded-full bg-orange-100 dark:bg-orange-950/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400"
-                >
-                  <Tag className="h-2.5 w-2.5" />
-                  {cat}
-                </span>
-              ))}
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 dark:bg-orange-950/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">
+                <Tag className="h-2.5 w-2.5" />
+                {post.category}
+              </span>
             </div>
           )}
 
@@ -150,17 +145,32 @@ export function ArticlesSection() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetch("/api/wordpress/posts")
-      .then((r) => r.json())
-      .then((d) => {
-        console.log("[v0] WordPress API response:", d)
-        if (d.error) setError(d.error)
-        setPosts(d.posts ?? [])
+    fetch(
+      "https://observerfiles.com/wp-json/wp/v2/posts?per_page=7&_embed=wp:featuredmedia,wp:term",
+      { headers: { Accept: "application/json" } }
+    )
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
       })
-      .catch((err) => {
-        console.error("[v0] WordPress fetch failed:", err)
-        setError("Failed to load articles")
+      .then((data: any[]) => {
+        const mapped: WPPost[] = data.map((p) => {
+          const media = p._embedded?.["wp:featuredmedia"]?.[0]
+          const terms: any[] = (p._embedded?.["wp:term"] ?? []).flat()
+          const cat = terms.find((t) => t.taxonomy === "category")
+          return {
+            id: p.id,
+            title: p.title?.rendered ?? "",
+            excerpt: (p.excerpt?.rendered ?? "").replace(/<[^>]*>/g, "").trim(),
+            link: p.link,
+            date: p.date,
+            category: cat?.name ?? null,
+            featuredImage: media?.source_url ?? null,
+          }
+        })
+        setPosts(mapped)
       })
+      .catch(() => setError("Could not load articles"))
       .finally(() => setLoading(false))
   }, [refreshKey])
 
@@ -237,9 +247,9 @@ export function ArticlesSection() {
 
                   {/* Text */}
                   <div className="flex-1 min-w-0">
-                    {post.categories[0] && (
+                    {post.category && (
                       <span className="text-[9px] font-bold uppercase tracking-widest text-orange-500">
-                        {post.categories[0]}
+                        {post.category}
                       </span>
                     )}
                     <p className="text-xs font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">

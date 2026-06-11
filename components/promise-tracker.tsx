@@ -1128,9 +1128,16 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
+      <div className="lg:grid lg:grid-cols-5 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
 
-        {/* ── LEFT COLUMN ── */}
+        {/* ── LEFT SIDEBAR: Articles ── */}
+        <aside className="hidden lg:col-span-1 lg:block">
+          <div className="sticky top-24">
+            <ArticlesSection />
+          </div>
+        </aside>
+
+        {/* ── MAIN COLUMN ── */}
         <div className="lg:col-span-3">
 
           {/* Overall Progress Hero */}
@@ -1239,9 +1246,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* ── RIGHT COLUMN: Clean Sidebar ── */}
         <aside className="hidden lg:col-span-1 lg:block">
           <div className="sticky top-24 space-y-3">
-
-            {/* Articles from ObserverFiles */}
-            <ArticlesSection />
 
             {/* X / Twitter */}
             <a
@@ -1411,11 +1415,6 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </div>
           <p className="text-center text-xs text-muted-foreground mb-4">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
           
-          {/* Articles from ObserverFiles - Mobile */}
-          <div className="mb-4">
-            <ArticlesSection />
-          </div>
-
           {/* X / Twitter Link */}
           <a
             href="https://x.com/ManifestoPage"

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { ExternalLink, X, Calendar, Tag, BookOpen, Loader2, RefreshCw, ChevronRight } from "lucide-react"
+import { ObserverFileIcon } from "./observerfile-icon"
 
 type WPPost = {
   id: number
@@ -73,7 +74,7 @@ function ArticleModal({ post, onClose }: { post: WPPost; onClose: () => void }) 
           </div>
         ) : (
           <div className="flex items-center justify-between px-5 pt-5 pb-2 flex-shrink-0">
-            <BookOpen className="h-5 w-5 text-orange-500" />
+            <ObserverFileIcon className="h-5 w-5 text-orange-500" />
             <button
               onClick={onClose}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground hover:bg-muted/70 transition-colors"
@@ -194,7 +195,7 @@ export function ArticlesSection({ mobile = false }: { mobile?: boolean }) {
                   <img src={post.featuredImage} alt="" className="h-24 w-full object-cover" />
                 ) : (
                   <div className="flex h-24 w-full items-center justify-center bg-muted">
-                    <BookOpen className="h-6 w-6 text-muted-foreground" />
+                    <ObserverFileIcon className="h-6 w-6 text-muted-foreground" />
                   </div>
                 )}
                 <div className="p-2.5">
@@ -230,7 +231,7 @@ export function ArticlesSection({ mobile = false }: { mobile?: boolean }) {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-3.5 w-3.5 text-orange-500" />
+            <ObserverFileIcon className="h-3.5 w-3.5 text-orange-500" />
             <h3 className="text-xs font-bold uppercase tracking-wide text-foreground">From ObserverFile</h3>
           </div>
           <button
@@ -275,7 +276,7 @@ export function ArticlesSection({ mobile = false }: { mobile?: boolean }) {
                     <img src={post.featuredImage} alt="" className="flex-shrink-0 mt-0.5 h-12 w-12 rounded-lg object-cover border border-border" />
                   ) : (
                     <div className="flex-shrink-0 mt-0.5 flex h-12 w-12 items-center justify-center rounded-lg bg-muted border border-border">
-                      <BookOpen className="h-5 w-5 text-muted-foreground" />
+                      <ObserverFileIcon className="h-5 w-5 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">

@@ -140,7 +140,7 @@ export function ArticlesSection() {
     setLoading(true)
     setError(null)
     fetch(
-      "https://observerfiles.com/wp-json/wp/v2/posts?per_page=7&_embed=wp:featuredmedia,wp:term",
+      "https://observerfile.com/wp-json/wp/v2/posts?per_page=7&_embed=wp:featuredmedia,wp:term",
       { headers: { Accept: "application/json" }, signal: controller.signal }
     )
       .then((r) => {

@@ -1139,7 +1139,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
         {/* ── LEFT SIDEBAR: Articles — xl screens only ── */}
         <aside className="max-xl:hidden">
-          <div className="sticky top-24">
+          <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <ArticlesSection />
           </div>
         </aside>
@@ -1252,7 +1252,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
         {/* ── RIGHT COLUMN: Clean Sidebar ── */}
         <aside className="max-lg:hidden lg:col-span-1">
-          <div className="sticky top-24 space-y-3">
+          <div className="sticky top-24 space-y-3 max-h-[calc(100vh-6rem)] overflow-y-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
             {/* X / Twitter */}
             <a

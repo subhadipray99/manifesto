@@ -1135,7 +1135,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-4 xl:grid-cols-[1fr_3fr_1fr] lg:gap-4 lg:items-start lg:w-full lg:px-4 lg:pt-6">
+      <div className="lg:grid lg:grid-cols-4 xl:grid-cols-[1fr_3fr_1fr] lg:gap-4 lg:w-full lg:px-4 lg:pt-6">
 
         {/* ── LEFT SIDEBAR: Articles — xl screens only ── */}
         <aside className="max-xl:hidden">

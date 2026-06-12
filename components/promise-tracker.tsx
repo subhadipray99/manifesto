@@ -1119,7 +1119,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             <span className="h-1.5 w-1.5 rounded-full bg-green-400 shadow-sm sm:h-2 sm:w-2" />
             <span>{hydrated ? daysInPower : "—"} Days in Power</span>
           </div>
-          <a href="https://observerfile.com" target="_blank" rel="noopener noreferrer" className="text-[7px] font-semibold uppercase tracking-wider text-white hover:text-white/80 transition-colors sm:text-[8px]">Powered by ObserverFiles</a>
+          <a href="https://observerfile.com" target="_blank" rel="noopener noreferrer" className="text-[7px] font-semibold uppercase tracking-wider text-white hover:text-white/80 transition-colors sm:text-[8px]">Powered by ObserverFile</a>
         </div>
       </header>
 
@@ -1375,7 +1375,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
 
             {/* Footer links */}
             <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] text-muted-foreground">Powered by ObserverFiles</span>
+              <span className="text-[11px] text-muted-foreground">Powered by ObserverFile</span>
               <a href="mailto:toddwake666@gmail.com" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                 Contact admin <ArrowLeft className="h-3 w-3 rotate-180" />
               </a>
@@ -1459,7 +1459,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           
           {/* Footer links */}
           <div className="flex items-center justify-between px-1 border-t border-border pt-4">
-            <span className="text-[11px] text-muted-foreground">Powered by ObserverFiles</span>
+            <span className="text-[11px] text-muted-foreground">Powered by ObserverFile</span>
             <a href="mailto:toddwake666@gmail.com" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
               Contact admin <ArrowLeft className="h-3 w-3 rotate-180" />
             </a>

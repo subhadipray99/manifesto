@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     "BJP accountability tracker",
     "political promise tracker India",
   ],
-  authors: [{ name: "ObserverFiles", url: "https://observerfile.com" }],
+  authors: [{ name: "ObserverFile", url: "https://observerfile.com" }],
   referrer: "strict-origin-when-cross-origin",
   formatDetection: {
     email: false,

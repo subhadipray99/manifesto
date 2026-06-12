@@ -1135,17 +1135,17 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-5 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
+      <div className="lg:grid lg:grid-cols-[220px_1fr_260px] lg:gap-5 lg:items-start lg:mx-auto lg:max-w-[1400px] lg:px-4 lg:pt-6">
 
         {/* ── LEFT SIDEBAR: Articles ── */}
-        <aside className="lg:col-span-1 max-lg:hidden">
+        <aside className="max-lg:hidden">
           <div className="sticky top-24">
             <ArticlesSection />
           </div>
         </aside>
 
         {/* ── MAIN COLUMN ── */}
-        <div className="lg:col-span-3">
+        <div>
 
           {/* Overall Progress Hero */}
           <div className="border-b border-border bg-gradient-to-b from-card to-muted/20 px-4 py-4 lg:rounded-2xl lg:border-2 lg:mb-6 sm:py-6">
@@ -1251,7 +1251,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* ── END LEFT COLUMN ── */}
 
         {/* ── RIGHT COLUMN: Clean Sidebar ── */}
-        <aside className="hidden lg:col-span-1 lg:block">
+        <aside className="max-lg:hidden">
           <div className="sticky top-24 space-y-3">
 
             {/* X / Twitter */}

@@ -10,6 +10,12 @@ import { CommentsSection } from "@/components/comments-section"
 import { NotificationBell } from "@/components/notification-bell"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import { DonationModal } from "@/components/donation-modal"
+import dynamic from "next/dynamic"
+
+const ArticlesSection = dynamic(
+  () => import("@/components/articles-section").then((m) => m.ArticlesSection),
+  { ssr: false, loading: () => null }
+)
 
 
 
@@ -1129,10 +1135,17 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:mx-auto lg:max-w-7xl lg:px-4 lg:pt-6">
+      <div className="lg:grid lg:grid-cols-4 xl:grid-cols-[1fr_3fr_1fr] lg:gap-4 lg:items-start lg:w-full lg:px-4 lg:pt-6">
+
+        {/* ── LEFT SIDEBAR: Articles — xl screens only ── */}
+        <aside className="max-xl:hidden">
+          <div className="sticky top-24">
+            <ArticlesSection />
+          </div>
+        </aside>
 
         {/* ── MAIN COLUMN ── */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 xl:col-span-1">
 
           {/* Overall Progress Hero */}
           <div className="border-b border-border bg-gradient-to-b from-card to-muted/20 px-4 py-4 lg:rounded-2xl lg:border-2 lg:mb-6 sm:py-6">
@@ -1238,7 +1251,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* ── END LEFT COLUMN ── */}
 
         {/* ── RIGHT COLUMN: Clean Sidebar ── */}
-        <aside className="hidden lg:col-span-1 lg:block">
+        <aside className="max-lg:hidden lg:col-span-1">
           <div className="sticky top-24 space-y-3">
 
             {/* X / Twitter */}
@@ -1409,6 +1422,12 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </div>
           <p className="text-center text-xs text-muted-foreground mb-4">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
           
+          {/* Articles Slider - Mobile */}
+          <div className="mb-4">
+            <p className="mb-2 text-xs font-black uppercase tracking-widest text-muted-foreground">Latest from ObserverFile</p>
+            <ArticlesSection mobile />
+          </div>
+
           {/* X / Twitter Link */}
           <a
             href="https://x.com/ManifestoPage"

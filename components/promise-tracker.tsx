@@ -1145,7 +1145,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         </aside>
 
         {/* ── MAIN COLUMN ── */}
-        <div className="lg:col-span-3 xl:col-span-1">
+        <div className="lg:col-span-3 xl:col-span-1 min-w-0">
 
           {/* Overall Progress Hero */}
           <div className="border-b border-border bg-gradient-to-b from-card to-muted/20 px-4 py-4 lg:rounded-2xl lg:border-2 lg:mb-6 sm:py-6">

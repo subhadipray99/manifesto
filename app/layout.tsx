@@ -186,7 +186,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
       </head>
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased overflow-x-clip">
         <ClerkProvider>
           {children}
           {process.env.NODE_ENV === "production" && <Analytics />}

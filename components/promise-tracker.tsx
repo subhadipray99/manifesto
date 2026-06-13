@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare, Mail } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare, Mail, Download } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
@@ -184,16 +184,14 @@ function CategoryCard({
   isExpanded,
   onToggle,
   onPromiseSelect,
-  setShareCategoryUrl,
-  setShowCategoryShareModal,
+  onShare,
 }: {
   category: Category
   statuses: Record<string, PromiseStatus>
   isExpanded: boolean
   onToggle: () => void
   onPromiseSelect: (promise: PromiseType, category: Category) => void
-  setShareCategoryUrl: (url: string) => void
-  setShowCategoryShareModal: (show: boolean) => void
+  onShare: () => void
 }) {
   const total = category.promises.length
   const fulfilled = category.promises.filter((p) => statuses[p.id] === "fulfilled").length
@@ -248,18 +246,7 @@ function CategoryCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              const categoryUrl = `${typeof window !== "undefined" ? window.location.origin : "https://manifesto.page"}${typeof window !== "undefined" ? window.location.pathname : ""}?category=${category.id}`
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(categoryUrl).then(() => {
-                  alert("Category link copied to clipboard!")
-                }).catch(() => {
-                  setShareCategoryUrl(categoryUrl)
-                  setShowCategoryShareModal(true)
-                })
-              } else {
-                setShareCategoryUrl(categoryUrl)
-                setShowCategoryShareModal(true)
-              }
+              onShare()
             }}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 transition-colors hover:bg-orange-500/20 active:scale-95 sm:h-10 sm:w-10"
             title="Share category"
@@ -755,6 +742,347 @@ function ShareModal({
   )
 }
 
+function CategoryShareModal({
+  category,
+  statuses,
+  overallProgress,
+  stateConfig,
+  onClose,
+}: {
+  category: Category
+  statuses: Record<string, PromiseStatus>
+  overallProgress: number
+  stateConfig: StateConfig
+  onClose: () => void
+}) {
+  const [downloading, setDownloading] = useState(false)
+
+  const total = category.promises.length
+  const fulfilled = category.promises.filter((p) => statuses[p.id] === "fulfilled").length
+  const inProgress = category.promises.filter((p) => statuses[p.id] === "in-progress").length
+  const broken = category.promises.filter((p) => statuses[p.id] === "broken").length
+  const pending = total - fulfilled - inProgress - broken
+  const stats = { total, fulfilled, inProgress, broken, pending }
+
+  const shareUrl = `${typeof window !== "undefined" ? window.location.origin : "https://manifesto.page"}${typeof window !== "undefined" ? window.location.pathname : ""}?category=${category.id}`
+
+  const generateShareText = () => {
+    return `${stateConfig.name} - ${category.localName || category.name} Progress:\n\n` +
+      `✅ Fulfilled: ${stats.fulfilled}\n` +
+      `⏳ In Progress: ${stats.inProgress}\n` +
+      `❌ Broken/Stalled: ${stats.broken}\n` +
+      `⭕ Not Started: ${stats.pending}\n\n` +
+      `Check details:`
+  }
+
+  const handleShare = (platform: "twitter" | "whatsapp" | "copy") => {
+    const text = generateShareText()
+    if (platform === "twitter") {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`, "_blank")
+    } else if (platform === "whatsapp") {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + shareUrl)}`, "_blank")
+    } else if (platform === "copy") {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert("Category link copied to clipboard!")
+        onClose()
+      }).catch(() => {
+        alert("Failed to copy link. Please copy it manually.")
+      })
+    }
+  }
+
+  const handleDownloadImage = () => {
+    try {
+      setDownloading(true)
+      const canvas = document.createElement("canvas")
+      canvas.width = 1200
+      canvas.height = 630
+      const ctx = canvas.getContext("2d")
+      if (!ctx) throw new Error("Could not get canvas context")
+
+      // 1. Background Gradient
+      const grad = ctx.createLinearGradient(0, 0, 1200, 630)
+      grad.addColorStop(0, "#1c1917") // stone-900
+      grad.addColorStop(0.5, "#292524") // stone-800
+      grad.addColorStop(1, "#451a03") // orange-950
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, 1200, 630)
+
+      // 2. Decorative background circle/glow
+      ctx.beginPath()
+      const radialGrad = ctx.createRadialGradient(1000, 150, 50, 1000, 150, 400)
+      radialGrad.addColorStop(0, "rgba(249, 115, 22, 0.15)")
+      radialGrad.addColorStop(1, "rgba(249, 115, 22, 0)")
+      ctx.fillStyle = radialGrad
+      ctx.arc(1000, 150, 400, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 3. Header Branding
+      // Logo text
+      ctx.fillStyle = "#ea580c" // orange-600
+      ctx.font = "black 28px sans-serif"
+      ctx.fillText("THE MANIFESTO", 60, 85)
+
+      // Logo subtext
+      ctx.fillStyle = "#a8a29e" // stone-400
+      ctx.font = "bold 13px sans-serif"
+      ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 60, 112)
+
+      // State Tag (Right Aligned)
+      ctx.font = "bold 18px sans-serif"
+      ctx.fillStyle = "#f5f5f4" // stone-100
+      const stateText = `${stateConfig.name.toUpperCase()} TRACKER`
+      const stateTextWidth = ctx.measureText(stateText).width
+      ctx.fillText(stateText, 1140 - stateTextWidth, 85)
+
+      // State Subtag (party name)
+      ctx.font = "bold 13px sans-serif"
+      ctx.fillStyle = "#fb923c" // orange-400
+      const partyText = `${stateConfig.party.toUpperCase()} GOVERNMENT`
+      const partyTextWidth = ctx.measureText(partyText).width
+      ctx.fillText(partyText, 1140 - partyTextWidth, 112)
+
+      // Divider line
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.moveTo(60, 145)
+      ctx.lineTo(1140, 145)
+      ctx.stroke()
+
+      // 4. Category Title Section
+      ctx.fillStyle = "#f97316" // orange-500
+      ctx.font = "bold 14px sans-serif"
+      ctx.fillText("CATEGORY PROGRESS REPORT", 60, 195)
+
+      ctx.fillStyle = "#ffffff"
+      ctx.font = "black 38px sans-serif"
+      // Wrap category name if it's too long
+      const maxTitleWidth = 1080
+      const categoryTitle = category.localName || category.name
+      wrapText(ctx, categoryTitle, 60, 245, maxTitleWidth, 48)
+
+      // Helper function to draw rounded cards
+      const drawCard = (x: number, y: number, w: number, h: number, r: number, bgColor: string, borderColor: string) => {
+        ctx.save()
+        ctx.fillStyle = bgColor
+        ctx.strokeStyle = borderColor
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(x, y, w, h, r)
+        } else {
+          ctx.moveTo(x + r, y)
+          ctx.arcTo(x + w, y, x + w, y + h, r)
+          ctx.arcTo(x + w, y + h, x, y + h, r)
+          ctx.arcTo(x, y + h, x, y, r)
+          ctx.arcTo(x, y, x + w, y, r)
+        }
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+      }
+
+      // 5. Stats Cards (4 columns)
+      const cardY = 325
+      const cardW = 245
+      const cardH = 135
+      const gap = 30
+      const startX = 60
+      const borderRadius = 16
+
+      // Card 1: Fulfilled
+      drawCard(startX, cardY, cardW, cardH, borderRadius, "rgba(22, 163, 74, 0.08)", "rgba(22, 163, 74, 0.3)")
+      ctx.fillStyle = "#4ade80" // green-400
+      ctx.font = "bold 15px sans-serif"
+      ctx.fillText("FULFILLED", startX + 24, cardY + 40)
+      ctx.fillStyle = "#ffffff"
+      ctx.font = "bold 44px sans-serif"
+      ctx.fillText(String(stats.fulfilled), startX + 24, cardY + 98)
+
+      // Card 2: In Progress
+      const x2 = startX + cardW + gap
+      drawCard(x2, cardY, cardW, cardH, borderRadius, "rgba(217, 119, 6, 0.08)", "rgba(217, 119, 6, 0.3)")
+      ctx.fillStyle = "#fbbf24" // amber-400
+      ctx.font = "bold 15px sans-serif"
+      ctx.fillText("IN PROGRESS", x2 + 24, cardY + 40)
+      ctx.fillStyle = "#ffffff"
+      ctx.font = "bold 44px sans-serif"
+      ctx.fillText(String(stats.inProgress), x2 + 24, cardY + 98)
+
+      // Card 3: Broken
+      const x3 = x2 + cardW + gap
+      drawCard(x3, cardY, cardW, cardH, borderRadius, "rgba(220, 38, 38, 0.08)", "rgba(220, 38, 38, 0.3)")
+      ctx.fillStyle = "#f87171" // red-400
+      ctx.font = "bold 15px sans-serif"
+      ctx.fillText("BROKEN / STALLED", x3 + 24, cardY + 40)
+      ctx.fillStyle = "#ffffff"
+      ctx.font = "bold 44px sans-serif"
+      ctx.fillText(String(stats.broken), x3 + 24, cardY + 98)
+
+      // Card 4: Pending / Not Started
+      const x4 = x3 + cardW + gap
+      drawCard(x4, cardY, cardW, cardH, borderRadius, "rgba(115, 115, 115, 0.08)", "rgba(115, 115, 115, 0.3)")
+      ctx.fillStyle = "#a3a3a3" // neutral-400
+      ctx.font = "bold 15px sans-serif"
+      ctx.fillText("NOT STARTED", x4 + 24, cardY + 40)
+      ctx.fillStyle = "#ffffff"
+      ctx.font = "bold 44px sans-serif"
+      ctx.fillText(String(stats.pending), x4 + 24, cardY + 98)
+
+      // 6. Overall Progress Banner
+      const progressY = 505
+      ctx.fillStyle = "#e7e5e4" // stone-200
+      ctx.font = "bold 13px sans-serif"
+      ctx.fillText(`STATE OVERALL PROGRESS: ${overallProgress}%`, 60, progressY + 15)
+
+      // Progress Track
+      const trackW = 1080
+      const trackH = 14
+      drawCard(60, progressY + 28, trackW, trackH, 7, "#292524", "rgba(255, 255, 255, 0.05)")
+
+      // Progress Fill
+      if (overallProgress > 0) {
+        const fillW = Math.max(15, trackW * (overallProgress / 100))
+        const fillGrad = ctx.createLinearGradient(60, 0, 60 + fillW, 0)
+        fillGrad.addColorStop(0, "#ea580c") // orange-600
+        fillGrad.addColorStop(1, "#f59e0b") // amber-500
+        drawCard(60, progressY + 28, fillW, trackH, 7, fillGrad, "transparent")
+      }
+
+      // 7. Footer Info
+      ctx.fillStyle = "#78716c" // stone-500
+      ctx.font = "14px sans-serif"
+      ctx.fillText("manifesto.page", 60, 595)
+
+      const footerRight = "Powered by ObserverFile"
+      const footerRightWidth = ctx.measureText(footerRight).width
+      ctx.fillText(footerRight, 1140 - footerRightWidth, 595)
+
+      // Trigger download
+      const dataUrl = canvas.toDataURL("image/png")
+      const link = document.createElement("a")
+      link.download = `${category.id}-progress-manifesto.png`
+      link.href = dataUrl
+      link.click()
+      setDownloading(false)
+    } catch (err) {
+      console.error("Failed to generate image:", err)
+      alert("Failed to generate image. Please try again.")
+      setDownloading(false)
+    }
+  }
+
+  function wrapText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number
+  ) {
+    const words = text.split(" ")
+    let line = ""
+    let currentY = y
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + " "
+      const metrics = ctx.measureText(testLine)
+      const testWidth = metrics.width
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line, x, currentY)
+        line = words[n] + " "
+        currentY += lineHeight
+      } else {
+        line = testLine
+      }
+    }
+    ctx.fillText(line, x, currentY)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm shadow-2xl" onClick={onClose}>
+      <div className="w-full max-w-md rounded-3xl border-2 border-border bg-card p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-serif text-xl font-black text-foreground">Share Category Progress</h3>
+          <button onClick={onClose} className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors active:scale-90">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <p className="mb-4 text-sm text-muted-foreground">
+          Download a beautiful progress report image for <strong className="text-foreground">{category.localName || category.name}</strong> or share the direct link.
+        </p>
+
+        {/* Quick Stats Grid Preview */}
+        <div className="mb-6 grid grid-cols-4 gap-2 rounded-2xl bg-muted/40 p-3 text-center border border-border/50">
+          <div className="rounded-lg bg-green-500/10 p-2 border border-green-500/20">
+            <p className="text-[10px] font-bold text-green-600">Fulfilled</p>
+            <p className="text-lg font-black text-green-700">{stats.fulfilled}</p>
+          </div>
+          <div className="rounded-lg bg-amber-500/10 p-2 border border-amber-500/20">
+            <p className="text-[10px] font-bold text-amber-600">Running</p>
+            <p className="text-lg font-black text-amber-700">{stats.inProgress}</p>
+          </div>
+          <div className="rounded-lg bg-red-500/10 p-2 border border-red-500/20">
+            <p className="text-[10px] font-bold text-red-600">Broken</p>
+            <p className="text-lg font-black text-red-700">{stats.broken}</p>
+          </div>
+          <div className="rounded-lg bg-neutral-500/10 p-2 border border-neutral-500/20">
+            <p className="text-[10px] font-bold text-neutral-500">Stalled</p>
+            <p className="text-lg font-black text-neutral-600">{stats.pending}</p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          <button
+            onClick={handleDownloadImage}
+            disabled={downloading}
+            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 hover:from-orange-700 hover:to-orange-600 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          >
+            {downloading ? (
+              <span className="flex items-center gap-1.5">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Generating Image...
+              </span>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Download Progress Image
+              </>
+            )}
+          </button>
+
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => handleShare("twitter")}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-3 text-xs font-bold text-foreground hover:bg-muted transition-colors active:scale-95 cursor-pointer"
+            >
+              <Twitter className="h-4 w-4 text-[#1DA1F2]" />
+              Twitter
+            </button>
+            <button
+              onClick={() => handleShare("whatsapp")}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-3 text-xs font-bold text-foreground hover:bg-muted transition-colors active:scale-95 cursor-pointer"
+            >
+              <MessageSquare className="h-4 w-4 text-[#25D366]" />
+              WhatsApp
+            </button>
+            <button
+              onClick={() => handleShare("copy")}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-3 text-xs font-bold text-foreground hover:bg-muted transition-colors active:scale-95 cursor-pointer"
+            >
+              <Share2 className="h-4 w-4 text-orange-600" />
+              Copy Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LatestUpdatesSlider({
   updates,
   categories,
@@ -872,8 +1200,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [selectedPromise, setSelectedPromise] = useState<{ promise: PromiseType; category: Category } | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
-  const [showCategoryShareModal, setShowCategoryShareModal] = useState(false)
-  const [shareCategoryUrl, setShareCategoryUrl] = useState("")
+  const [shareCategory, setShareCategory] = useState<Category | null>(null)
   const [headerHeight, setHeaderHeight] = useState(0)
   const headerRef = useRef<HTMLElement>(null)
   const [hydrated, setHydrated] = useState(false)
@@ -1290,8 +1617,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
                         setTimelines((prev) => ({ ...prev, [promise.id]: updates }))
                       })
                     }}
-                    setShareCategoryUrl={setShareCategoryUrl}
-                    setShowCategoryShareModal={setShowCategoryShareModal}
+                    onShare={() => setShareCategory(category)}
                   />
                 ))}
             </div>
@@ -1606,33 +1932,14 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       )}
 
       {/* Category Share Modal */}
-      {showCategoryShareModal && shareCategoryUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-foreground">Share Category</h3>
-              <button onClick={() => setShowCategoryShareModal(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="mb-3 text-sm text-muted-foreground">Copy this link to share this category:</p>
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
-              <input type="text" value={shareCategoryUrl} readOnly className="flex-1 bg-transparent text-sm text-foreground outline-none" />
-              <button
-                onClick={() => {
-                  const input = document.querySelector("input[readonly]") as HTMLInputElement
-                  if (input) {
-                    input.select()
-                    try { document.execCommand("copy"); alert("Link copied to clipboard!"); setShowCategoryShareModal(false) }
-                    catch { alert("Please copy the link manually") }
-                  }
-                }}
-                className="flex-shrink-0 rounded-lg bg-orange-600 px-3 py-1 text-xs font-bold text-white hover:bg-orange-700 transition-colors active:scale-95"
-              >Copy</button>
-            </div>
-            <button onClick={() => setShowCategoryShareModal(false)} className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-bold text-foreground hover:bg-muted transition-colors">Done</button>
-          </div>
-        </div>
+      {shareCategory && (
+        <CategoryShareModal
+          category={shareCategory}
+          statuses={statuses}
+          overallProgress={overallProgress}
+          stateConfig={stateConfig}
+          onClose={() => setShareCategory(null)}
+        />
       )}
 
       {/* Donation Modal */}

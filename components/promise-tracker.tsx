@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
 import type { StateConfig, PromiseStatus, Promise as PromiseType, Category, TimelineUpdate } from "@/lib/states"
-import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare } from "lucide-react"
+import { Circle, Clock, CircleCheck as CheckCircle2, Circle as XCircle, Share2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, ArrowLeft, Plus, ExternalLink, Calendar, LogIn, Zap, Search, Trophy, Menu, MapPin, Twitter, MessageSquare, Mail } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CommentsSection } from "@/components/comments-section"
@@ -1377,11 +1377,18 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             </div>
 
             {/* Footer links */}
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] text-muted-foreground">Powered by ObserverFile</span>
-              <a href="mailto:toddwake666@gmail.com" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                Contact admin <ArrowLeft className="h-3 w-3 rotate-180" />
-              </a>
+            <div className="mt-4 rounded-xl border border-slate-200/60 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-900/20">
+              <div className="flex flex-col gap-3 text-center">
+                <a href="https://observerfile.com" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
+                  <span className="font-medium">Powered by</span>
+                  <span className="font-bold tracking-wide text-slate-700 dark:text-slate-300 group-hover:text-blue-600 transition-colors">ObserverFile</span>
+                </a>
+                <div className="mx-auto h-px w-12 bg-slate-200 dark:bg-slate-800" />
+                <a href="mailto:shuvo@manifesto.page" className="group inline-flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-500 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
+                  <Mail className="h-3 w-3" />
+                  Contact admin
+                </a>
+              </div>
             </div>
 
           </div>
@@ -1420,7 +1427,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Contact Admin</p>
-              <a href="mailto:toddwake666@gmail.com" className="mt-1 text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors">Email</a>
+              <a href="mailto:shuvo@manifesto.page" className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                <Mail className="h-3.5 w-3.5" /> Email
+              </a>
             </div>
           </div>
           <p className="text-center text-xs text-muted-foreground mb-4">The Manifesto - Citizen-powered accountability for {stateConfig.name}</p>
@@ -1461,10 +1470,14 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           </button>
           
           {/* Footer links */}
-          <div className="flex items-center justify-between px-1 border-t border-border pt-4">
-            <span className="text-[11px] text-muted-foreground">Powered by ObserverFile</span>
-            <a href="mailto:toddwake666@gmail.com" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              Contact admin <ArrowLeft className="h-3 w-3 rotate-180" />
+          <div className="mt-8 flex flex-col items-center justify-center gap-3">
+            <a href="https://observerfile.com" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[11px] text-muted-foreground transition-all hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-800">
+              <span className="font-medium">Powered by</span>
+              <span className="font-bold tracking-wide text-slate-700 transition-colors group-hover:text-blue-600 dark:text-slate-300 dark:group-hover:text-blue-400">ObserverFile</span>
+            </a>
+            <a href="mailto:shuvo@manifesto.page" className="group inline-flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-500 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
+              <Mail className="h-3.5 w-3.5" />
+              Contact admin
             </a>
           </div>
         </div>

@@ -4,8 +4,8 @@ import { neon } from "@neondatabase/serverless"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = "The Manifesto <notifications@themanifesto.in>"
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://themanifesto.in"
+const FROM = "The Manifesto <notifications@manifesto.page>"
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://manifesto.page"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
 

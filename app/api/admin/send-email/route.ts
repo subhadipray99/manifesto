@@ -4,8 +4,8 @@ import { Resend } from "resend"
 
 const ADMIN_IDS = (process.env.ADMIN_USER_IDS || "").split(",").map((s) => s.trim()).filter(Boolean)
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM = "The Manifesto <notifications@themanifesto.in>"
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://themanifesto.in"
+const FROM = "The Manifesto <notifications@manifesto.page>"
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://manifesto.page"
 
 function buildHtml(subject: string, body: string): string {
   const escaped = body

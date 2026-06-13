@@ -17,6 +17,8 @@ const ArticlesSection = dynamic(
   { ssr: false, loading: () => null }
 )
 
+import { NoticeCard } from "@/components/notice-card"
+
 
 
 const STATUS_CONFIG: Record<
@@ -596,7 +598,7 @@ function PromiseDetail({
                             <ExternalLink className="h-3.5 w-3.5" />Read Article
                           </a>
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />{formatDate(update.created_at)}
+                            <Calendar className="h-3 w-3" />{formatDate(update.created_at || "")}
                           </span>
                         </div>
                       </div>
@@ -1143,6 +1145,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
         {/* ── LEFT SIDEBAR: Articles — xl screens only ── */}
         <aside className="max-xl:hidden">
           <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <NoticeCard />
             <ArticlesSection />
           </div>
         </aside>
@@ -1436,6 +1439,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           
           {/* Articles Slider - Mobile */}
           <div className="mb-4">
+            <NoticeCard />
             <p className="mb-2 text-xs font-black uppercase tracking-widest text-muted-foreground">Latest from ObserverFile</p>
             <ArticlesSection mobile />
           </div>

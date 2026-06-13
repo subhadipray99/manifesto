@@ -166,7 +166,7 @@ export default async function StatePage({
   // Serialize the Date object to ISO string for client component
   const serializedConfig = {
     ...stateConfig,
-    startDate: stateConfig.startDate.toISOString(),
+    startDate: typeof stateConfig.startDate === "string" ? stateConfig.startDate : stateConfig.startDate.toISOString(),
   }
 
   return <PromiseTracker stateConfig={serializedConfig as any} />

@@ -22,6 +22,7 @@ import {
   UserCheck,
   Search,
   Loader2,
+  Megaphone,
 } from "lucide-react"
 
 // Types
@@ -67,7 +68,7 @@ interface PendingUpdate {
   status: string
 }
 
-type AdminTab = "submissions" | "states" | "categories" | "promises" | "email"
+type AdminTab = "submissions" | "states" | "categories" | "promises" | "email" | "notice"
 
 export default function AdminDashboard() {
   const { isSignedIn, isLoaded, userId } = useAuth()
@@ -118,6 +119,10 @@ export default function AdminDashboard() {
   const [emailError, setEmailError] = useState("")
   const [showPreview, setShowPreview] = useState(false)
 
+  // Notice state
+  const [noticeForm, setNoticeForm] = useState({ id: "", type: "NOTICE", headline: "", body: "", url: "", url_text: "", is_active: true })
+  const [savingNotice, setSavingNotice] = useState(false)
+
   // Fetch functions — defined with useCallback so they can be stable deps
   const fetchUpdates = useCallback(async (status: "pending" | "approved") => {
     const response = await fetch(`/api/admin/pending-updates?userId=${userId}&status=${status}`)
@@ -152,6 +157,25 @@ export default function AdminDashboard() {
     setPromises(await response.json())
   }, [])
 
+  const fetchNotice = useCallback(async () => {
+    const response = await fetch("/api/notice")
+    if (!response.ok) throw new Error("Failed to fetch notice")
+    const data = await response.json()
+    if (data.notice) {
+      setNoticeForm({
+        id: data.notice.id,
+        type: data.notice.type,
+        headline: data.notice.headline,
+        body: data.notice.body || "",
+        url: data.notice.url || "",
+        url_text: data.notice.url_text || "",
+        is_active: data.notice.is_active,
+      })
+    } else {
+      setNoticeForm({ id: "", type: "NOTICE", headline: "", body: "", url: "", url_text: "", is_active: true })
+    }
+  }, [])
+
   // Main tab loader
   useEffect(() => {
     if (!isLoaded) return
@@ -176,6 +200,9 @@ export default function AdminDashboard() {
             await fetchStates()
             await fetchCategories("")
             await fetchPromises(selectedStateFilter, selectedCategoryFilter)
+            break
+          case "notice":
+            await fetchNotice()
             break
         }
       } catch (err) {
@@ -412,6 +439,51 @@ export default function AdminDashboard() {
     setShowPromiseForm(true)
   }
 
+  // Notice Handlers
+  const handleSaveNotice = async () => {
+    if (!noticeForm.headline) {
+      alert("Headline is required")
+      return
+    }
+    try {
+      setSavingNotice(true)
+      const response = await fetch("/api/admin/notice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(noticeForm),
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to save notice")
+      }
+      alert("Notice saved successfully!")
+      await fetchNotice()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to save notice")
+    } finally {
+      setSavingNotice(false)
+    }
+  }
+
+  const handleDeactivateNotice = async () => {
+    if (!noticeForm.id) return
+    try {
+      setSavingNotice(true)
+      const response = await fetch("/api/admin/notice", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: noticeForm.id, is_active: false }),
+      })
+      if (!response.ok) throw new Error("Failed to deactivate notice")
+      alert("Notice deactivated!")
+      await fetchNotice()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to deactivate notice")
+    } finally {
+      setSavingNotice(false)
+    }
+  }
+
   const formatDate = (timestamp: string) => {
     return new Date(timestamp).toLocaleDateString("en-IN", {
       day: "numeric",
@@ -462,6 +534,7 @@ export default function AdminDashboard() {
             { id: "categories", label: "Categories", icon: FolderOpen },
             { id: "promises", label: "Promises", icon: FileText },
             { id: "email", label: "Send Email", icon: Mail },
+            { id: "notice", label: "Notice Board", icon: Megaphone },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1306,6 +1379,96 @@ export default function AdminDashboard() {
                       Compose another
                     </button>
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notice Tab */}
+        {activeTab === "notice" && (
+          <div className="mt-6">
+            <h2 className="mb-4 text-lg font-black">Manage Notice/Advertisement</h2>
+            <div className="rounded-xl border-2 border-border bg-card p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-muted-foreground">Type</label>
+                  <select
+                    value={noticeForm.type}
+                    onChange={(e) => setNoticeForm({ ...noticeForm, type: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="NOTICE">Notice</option>
+                    <option value="ADVERTISEMENT">Advertisement</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-muted-foreground">Status</label>
+                  <div className="flex items-center gap-2 pt-2">
+                    <span className={`inline-block h-3 w-3 rounded-full ${noticeForm.is_active ? "bg-green-500" : "bg-neutral-300"}`} />
+                    <span className="text-sm font-semibold">{noticeForm.is_active ? "Active" : "Inactive"}</span>
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-bold text-muted-foreground">Headline</label>
+                  <input
+                    type="text"
+                    value={noticeForm.headline}
+                    onChange={(e) => setNoticeForm({ ...noticeForm, headline: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="E.g. Download our app"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-bold text-muted-foreground">Body</label>
+                  <textarea
+                    value={noticeForm.body}
+                    onChange={(e) => setNoticeForm({ ...noticeForm, body: e.target.value })}
+                    rows={3}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="Short description..."
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-muted-foreground">URL (optional)</label>
+                  <input
+                    type="url"
+                    value={noticeForm.url}
+                    onChange={(e) => setNoticeForm({ ...noticeForm, url: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-muted-foreground">URL Text (optional)</label>
+                  <input
+                    type="text"
+                    value={noticeForm.url_text}
+                    onChange={(e) => setNoticeForm({ ...noticeForm, url_text: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="Click here"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={handleSaveNotice}
+                  disabled={savingNotice || !noticeForm.headline}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  {savingNotice ? "Saving..." : "Save Notice"}
+                </button>
+                {noticeForm.id && noticeForm.is_active && (
+                  <button
+                    onClick={handleDeactivateNotice}
+                    disabled={savingNotice}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-200 disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Deactivate
+                  </button>
                 )}
               </div>
             </div>

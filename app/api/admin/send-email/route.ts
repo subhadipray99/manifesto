@@ -93,7 +93,11 @@ export async function POST(req: NextRequest) {
         if (!email) { results.push({ userId: uid, email: "", name: "", status: "no_email" }); continue }
         const name = user.fullName || user.firstName || email
 
-        await resend.emails.send({ from: FROM, to: email, subject: subject.trim(), html })
+        const { error } = await resend.emails.send({ from: FROM, to: email, subject: subject.trim(), html })
+        if (error) {
+          console.error("[v0] Resend error:", error)
+          throw new Error(error.message)
+        }
         results.push({ userId: uid, email, name, status: "sent" })
       } catch {
         results.push({ userId: uid, email: "", name: "", status: "failed" })

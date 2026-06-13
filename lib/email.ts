@@ -175,12 +175,13 @@ export async function sendUpdateApprovedEmail(params: {
   promiseId: string
 }): Promise<void> {
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM,
       to: params.toEmail,
       subject: `Your update was approved — The Manifesto`,
       html: updateApprovedHtml(params),
     })
+    if (error) throw new Error(error.message)
   } catch (err) {
     console.error("[v0] sendUpdateApprovedEmail failed:", err)
   }
@@ -196,12 +197,13 @@ export async function sendFollowedPromiseUpdateEmail(params: {
   promiseId: string
 }): Promise<void> {
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM,
       to: params.toEmail,
       subject: `New update on "${params.promiseTitle}" — The Manifesto`,
       html: followedPromiseUpdateHtml(params),
     })
+    if (error) throw new Error(error.message)
   } catch (err) {
     console.error("[v0] sendFollowedPromiseUpdateEmail failed:", err)
   }
@@ -218,12 +220,13 @@ export async function sendReplyNotificationEmail(params: {
   commentId: string
 }): Promise<void> {
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM,
       to: params.toEmail,
       subject: `${params.replierName} replied to your comment — The Manifesto`,
       html: replyReceivedHtml(params),
     })
+    if (error) throw new Error(error.message)
   } catch (err) {
     console.error("[v0] sendReplyNotificationEmail failed:", err)
   }

@@ -794,210 +794,355 @@ function CategoryShareModal({
   const handleDownloadImage = () => {
     try {
       setDownloading(true)
-      const canvas = document.createElement("canvas")
-      canvas.width = 1200
-      canvas.height = 630
-      const ctx = canvas.getContext("2d")
-      if (!ctx) throw new Error("Could not get canvas context")
+      
+      const loadImage = (src: string): Promise<HTMLImageElement> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image()
+          img.crossOrigin = "anonymous"
+          img.src = src
+          img.onload = () => resolve(img)
+          img.onerror = (e) => reject(e)
+        })
+      }
 
-      // 1. Background Gradient
-      const grad = ctx.createLinearGradient(0, 0, 1200, 630)
-      grad.addColorStop(0, "#1c1917") // stone-900
-      grad.addColorStop(0.5, "#292524") // stone-800
-      grad.addColorStop(1, "#451a03") // orange-950
-      ctx.fillStyle = grad
-      ctx.fillRect(0, 0, 1200, 630)
+      const wrapText = (
+        ctx: CanvasRenderingContext2D,
+        text: string,
+        x: number,
+        y: number,
+        maxWidth: number,
+        lineHeight: number
+      ) => {
+        const words = text.split(" ")
+        let line = ""
+        let currentY = y
 
-      // 2. Decorative background circle/glow
-      ctx.beginPath()
-      const radialGrad = ctx.createRadialGradient(1000, 150, 50, 1000, 150, 400)
-      radialGrad.addColorStop(0, "rgba(249, 115, 22, 0.15)")
-      radialGrad.addColorStop(1, "rgba(249, 115, 22, 0)")
-      ctx.fillStyle = radialGrad
-      ctx.arc(1000, 150, 400, 0, Math.PI * 2)
-      ctx.fill()
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + " "
+          const metrics = ctx.measureText(testLine)
+          const testWidth = metrics.width
+          if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line, x, currentY)
+            line = words[n] + " "
+            currentY += lineHeight
+          } else {
+            line = testLine
+          }
+        }
+        ctx.fillText(line, x, currentY)
+      }
 
-      // 3. Header Branding
-      // Logo text
-      ctx.fillStyle = "#ea580c" // orange-600
-      ctx.font = "black 28px sans-serif"
-      ctx.fillText("THE MANIFESTO", 60, 85)
+      Promise.all([
+        loadImage("/og-image.jpg").catch(() => null),
+        loadImage("/icon.svg").catch(() => null)
+      ]).then(([bgImg, logoImg]) => {
+        const canvas = document.createElement("canvas")
+        canvas.width = 1080
+        canvas.height = 1080
+        const ctx = canvas.getContext("2d")
+        if (!ctx) throw new Error("Could not get canvas context")
 
-      // Logo subtext
-      ctx.fillStyle = "#a8a29e" // stone-400
-      ctx.font = "bold 13px sans-serif"
-      ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 60, 112)
+        // 1. Solid base background (light grey)
+        ctx.fillStyle = "#f8fafc" // slate-50
+        ctx.fillRect(0, 0, 1080, 1080)
 
-      // State Tag (Right Aligned)
-      ctx.font = "bold 18px sans-serif"
-      ctx.fillStyle = "#f5f5f4" // stone-100
-      const stateText = `${stateConfig.name.toUpperCase()} TRACKER`
-      const stateTextWidth = ctx.measureText(stateText).width
-      ctx.fillText(stateText, 1140 - stateTextWidth, 85)
+        // 2. Draw backdrop image if available (page screenshot overlay)
+        if (bgImg) {
+          const canvasSize = 1080
+          const iw = bgImg.width
+          const ih = bgImg.height
+          const r = Math.max(canvasSize / iw, canvasSize / ih)
+          const nw = iw * r
+          const nh = ih * r
+          const cx = (canvasSize - nw) / 2
+          const cy = (canvasSize - nh) / 2
+          
+          ctx.save()
+          ctx.globalAlpha = 0.08 // extremely subtle backdrop
+          ctx.drawImage(bgImg, cx, cy, nw, nh)
+          ctx.restore()
+        }
 
-      // State Subtag (party name)
-      ctx.font = "bold 13px sans-serif"
-      ctx.fillStyle = "#fb923c" // orange-400
-      const partyText = `${stateConfig.party.toUpperCase()} GOVERNMENT`
-      const partyTextWidth = ctx.measureText(partyText).width
-      ctx.fillText(partyText, 1140 - partyTextWidth, 112)
+        // 3. Draw soft radial glow over the backdrop to make it blend beautifully
+        const radialGrad = ctx.createRadialGradient(540, 540, 100, 540, 540, 600)
+        radialGrad.addColorStop(0, "rgba(255, 255, 255, 0.4)")
+        radialGrad.addColorStop(1, "rgba(241, 245, 249, 0.9)") // slate-100/90
+        ctx.fillStyle = radialGrad
+        ctx.fillRect(0, 0, 1080, 1080)
 
-      // Divider line
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.moveTo(60, 145)
-      ctx.lineTo(1140, 145)
-      ctx.stroke()
+        // Helper function for rounded rectangles with shadow and color stripes
+        const drawCardWithStripe = (
+          x: number,
+          y: number,
+          w: number,
+          h: number,
+          r: number,
+          bgColor: string,
+          borderColor: string,
+          stripeColor: string
+        ) => {
+          ctx.save()
+          
+          // Card Shadow
+          ctx.shadowColor = "rgba(15, 23, 42, 0.04)" // slate-900 shadow
+          ctx.shadowBlur = 24
+          ctx.shadowOffsetY = 8
+          
+          // Background fill
+          ctx.fillStyle = bgColor
+          ctx.strokeStyle = borderColor
+          ctx.lineWidth = 1.5
+          ctx.beginPath()
+          if (typeof ctx.roundRect === "function") {
+            ctx.roundRect(x, y, w, h, r)
+          } else {
+            ctx.moveTo(x + r, y)
+            ctx.arcTo(x + w, y, x + w, y + h, r)
+            ctx.arcTo(x + w, y + h, x, y + h, r)
+            ctx.arcTo(x, y + h, x, y, r)
+            ctx.arcTo(x, y, x + w, y, r)
+          }
+          ctx.fill()
+          ctx.stroke()
+          
+          // Left accent stripe (clipped to card's rounded left border)
+          ctx.shadowColor = "transparent"
+          ctx.save()
+          ctx.beginPath()
+          if (typeof ctx.roundRect === "function") {
+            ctx.roundRect(x, y, w, h, r)
+          } else {
+            ctx.moveTo(x + r, y)
+            ctx.arcTo(x + w, y, x + w, y + h, r)
+            ctx.arcTo(x + w, y + h, x, y + h, r)
+            ctx.arcTo(x, y + h, x, y, r)
+            ctx.arcTo(x, y, x + w, y, r)
+          }
+          ctx.clip()
+          ctx.fillStyle = stripeColor
+          ctx.fillRect(x, y, 8, h)
+          ctx.restore()
+          
+          ctx.restore()
+        }
 
-      // 4. Category Title Section
-      ctx.fillStyle = "#f97316" // orange-500
-      ctx.font = "bold 14px sans-serif"
-      ctx.fillText("CATEGORY PROGRESS REPORT", 60, 195)
+        // 4. Main Glassmorphic Panel Container (Frosted card)
+        const panelX = 54
+        const panelY = 54
+        const panelW = 972
+        const panelH = 972
+        const panelR = 32
 
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "black 38px sans-serif"
-      // Wrap category name if it's too long
-      const maxTitleWidth = 1080
-      const categoryTitle = category.localName || category.name
-      wrapText(ctx, categoryTitle, 60, 245, maxTitleWidth, 48)
-
-      // Helper function to draw rounded cards
-      const drawCard = (x: number, y: number, w: number, h: number, r: number, bgColor: string, borderColor: string) => {
         ctx.save()
-        ctx.fillStyle = bgColor
-        ctx.strokeStyle = borderColor
+        ctx.shadowColor = "rgba(15, 23, 42, 0.06)"
+        ctx.shadowBlur = 40
+        ctx.shadowOffsetY = 12
+        ctx.fillStyle = "rgba(255, 255, 255, 0.88)"
+        ctx.strokeStyle = "rgba(226, 232, 240, 0.8)" // slate-200/80
         ctx.lineWidth = 2
         ctx.beginPath()
         if (typeof ctx.roundRect === "function") {
-          ctx.roundRect(x, y, w, h, r)
+          ctx.roundRect(panelX, panelY, panelW, panelH, panelR)
         } else {
-          ctx.moveTo(x + r, y)
-          ctx.arcTo(x + w, y, x + w, y + h, r)
-          ctx.arcTo(x + w, y + h, x, y + h, r)
-          ctx.arcTo(x, y + h, x, y, r)
-          ctx.arcTo(x, y, x + w, y, r)
+          ctx.moveTo(panelX + panelR, panelY)
+          ctx.arcTo(panelX + panelW, panelY, panelX + panelW, panelY + panelH, panelR)
+          ctx.arcTo(panelX + panelW, panelY + panelH, panelX, panelY + panelH, panelR)
+          ctx.arcTo(panelX, panelY + panelH, panelX, panelY, panelR)
+          ctx.arcTo(panelX, panelY, panelX + panelW, panelY, panelR)
         }
         ctx.fill()
         ctx.stroke()
         ctx.restore()
-      }
 
-      // 5. Stats Cards (4 columns)
-      const cardY = 325
-      const cardW = 245
-      const cardH = 135
-      const gap = 30
-      const startX = 60
-      const borderRadius = 16
+        // 5. Header Section
+        // Logo / Icon image
+        if (logoImg) {
+          ctx.drawImage(logoImg, 94, 94, 60, 60)
+        } else {
+          // Fallback logo circle
+          ctx.beginPath()
+          ctx.fillStyle = "#ea580c"
+          ctx.arc(124, 124, 30, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.fillStyle = "#ffffff"
+          ctx.font = "bold 28px sans-serif"
+          ctx.textAlign = "center"
+          ctx.textBaseline = "middle"
+          ctx.fillText("M", 124, 124)
+          ctx.textAlign = "left"
+          ctx.textBaseline = "alphabetic"
+        }
 
-      // Card 1: Fulfilled
-      drawCard(startX, cardY, cardW, cardH, borderRadius, "rgba(22, 163, 74, 0.08)", "rgba(22, 163, 74, 0.3)")
-      ctx.fillStyle = "#4ade80" // green-400
-      ctx.font = "bold 15px sans-serif"
-      ctx.fillText("FULFILLED", startX + 24, cardY + 40)
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "bold 44px sans-serif"
-      ctx.fillText(String(stats.fulfilled), startX + 24, cardY + 98)
+        // Brand Names
+        ctx.fillStyle = "#0f172a" // slate-900
+        ctx.font = "black 24px sans-serif"
+        ctx.fillText("THE MANIFESTO", 174, 122)
 
-      // Card 2: In Progress
-      const x2 = startX + cardW + gap
-      drawCard(x2, cardY, cardW, cardH, borderRadius, "rgba(217, 119, 6, 0.08)", "rgba(217, 119, 6, 0.3)")
-      ctx.fillStyle = "#fbbf24" // amber-400
-      ctx.font = "bold 15px sans-serif"
-      ctx.fillText("IN PROGRESS", x2 + 24, cardY + 40)
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "bold 44px sans-serif"
-      ctx.fillText(String(stats.inProgress), x2 + 24, cardY + 98)
+        ctx.fillStyle = "#64748b" // slate-500
+        ctx.font = "bold 12px sans-serif"
+        ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 174, 144)
 
-      // Card 3: Broken
-      const x3 = x2 + cardW + gap
-      drawCard(x3, cardY, cardW, cardH, borderRadius, "rgba(220, 38, 38, 0.08)", "rgba(220, 38, 38, 0.3)")
-      ctx.fillStyle = "#f87171" // red-400
-      ctx.font = "bold 15px sans-serif"
-      ctx.fillText("BROKEN / STALLED", x3 + 24, cardY + 40)
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "bold 44px sans-serif"
-      ctx.fillText(String(stats.broken), x3 + 24, cardY + 98)
+        // State Tracker Tag
+        ctx.font = "bold 18px sans-serif"
+        ctx.fillStyle = "#0f172a"
+        const stateText = `${stateConfig.name.toUpperCase()} TRACKER`
+        const stateTextWidth = ctx.measureText(stateText).width
+        ctx.fillText(stateText, 986 - stateTextWidth, 122)
 
-      // Card 4: Pending / Not Started
-      const x4 = x3 + cardW + gap
-      drawCard(x4, cardY, cardW, cardH, borderRadius, "rgba(115, 115, 115, 0.08)", "rgba(115, 115, 115, 0.3)")
-      ctx.fillStyle = "#a3a3a3" // neutral-400
-      ctx.font = "bold 15px sans-serif"
-      ctx.fillText("NOT STARTED", x4 + 24, cardY + 40)
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "bold 44px sans-serif"
-      ctx.fillText(String(stats.pending), x4 + 24, cardY + 98)
+        ctx.font = "bold 12px sans-serif"
+        ctx.fillStyle = "#ea580c" // orange-600
+        const partyText = `${stateConfig.party.toUpperCase()} GOVERNMENT`
+        const partyTextWidth = ctx.measureText(partyText).width
+        ctx.fillText(partyText, 986 - partyTextWidth, 144)
 
-      // 6. Overall Progress Banner
-      const progressY = 505
-      ctx.fillStyle = "#e7e5e4" // stone-200
-      ctx.font = "bold 13px sans-serif"
-      ctx.fillText(`STATE OVERALL PROGRESS: ${overallProgress}%`, 60, progressY + 15)
+        // Divider
+        ctx.strokeStyle = "rgba(226, 232, 240, 0.8)" // slate-200
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(94, 185)
+        ctx.lineTo(986, 185)
+        ctx.stroke()
 
-      // Progress Track
-      const trackW = 1080
-      const trackH = 14
-      drawCard(60, progressY + 28, trackW, trackH, 7, "#292524", "rgba(255, 255, 255, 0.05)")
+        // 6. Category Info
+        ctx.fillStyle = "#ea580c" // orange-600
+        ctx.font = "bold 12px sans-serif"
+        ctx.fillText("CATEGORY PROGRESS REPORT", 94, 230)
 
-      // Progress Fill
-      if (overallProgress > 0) {
-        const fillW = Math.max(15, trackW * (overallProgress / 100))
-        const fillGrad = ctx.createLinearGradient(60, 0, 60 + fillW, 0)
-        fillGrad.addColorStop(0, "#ea580c") // orange-600
-        fillGrad.addColorStop(1, "#f59e0b") // amber-500
-        drawCard(60, progressY + 28, fillW, trackH, 7, fillGrad, "transparent")
-      }
+        ctx.fillStyle = "#0f172a" // slate-900
+        ctx.font = "black 38px sans-serif"
+        const maxTitleWidth = 892
+        const categoryTitle = category.localName || category.name
+        wrapText(ctx, categoryTitle, 94, 280, maxTitleWidth, 48)
 
-      // 7. Footer Info
-      ctx.fillStyle = "#78716c" // stone-500
-      ctx.font = "14px sans-serif"
-      ctx.fillText("manifesto.page", 60, 595)
+        // 7. Stats Cards (2x2 Grid)
+        const startX = 94
+        const cardY = 385
+        const cardW = 428
+        const cardH = 175
+        const gap = 36
+        const borderRadius = 20
 
-      const footerRight = "Powered by ObserverFile"
-      const footerRightWidth = ctx.measureText(footerRight).width
-      ctx.fillText(footerRight, 1140 - footerRightWidth, 595)
+        // Card 1: Fulfilled (Row 1 Left)
+        drawCardWithStripe(startX, cardY, cardW, cardH, borderRadius, "#f0fdf4", "#bbf7d0", "#22c55e")
+        ctx.fillStyle = "#15803d" // green-700
+        ctx.font = "bold 14px sans-serif"
+        ctx.fillText("FULFILLED", startX + 32, cardY + 46)
+        ctx.fillStyle = "#166534" // green-800
+        ctx.font = "bold 56px sans-serif"
+        ctx.fillText(String(stats.fulfilled), startX + 32, cardY + 120)
 
-      // Trigger download
-      const dataUrl = canvas.toDataURL("image/png")
-      const link = document.createElement("a")
-      link.download = `${category.id}-progress-manifesto.png`
-      link.href = dataUrl
-      link.click()
-      setDownloading(false)
+        // Card 2: In Progress (Row 1 Right)
+        const x2 = startX + cardW + gap
+        drawCardWithStripe(x2, cardY, cardW, cardH, borderRadius, "#fffbeb", "#fef3c7", "#f59e0b")
+        ctx.fillStyle = "#b45309" // amber-700
+        ctx.font = "bold 14px sans-serif"
+        ctx.fillText("IN PROGRESS", x2 + 32, cardY + 46)
+        ctx.fillStyle = "#92400e" // amber-800
+        ctx.font = "bold 56px sans-serif"
+        ctx.fillText(String(stats.inProgress), x2 + 32, cardY + 120)
+
+        // Card 3: Broken (Row 2 Left)
+        const cardY2 = cardY + cardH + gap
+        drawCardWithStripe(startX, cardY2, cardW, cardH, borderRadius, "#fef2f2", "#fecaca", "#ef4444")
+        ctx.fillStyle = "#b91c1c" // red-700
+        ctx.font = "bold 14px sans-serif"
+        ctx.fillText("BROKEN / STALLED", startX + 32, cardY2 + 46)
+        ctx.fillStyle = "#991b1b" // red-800
+        ctx.font = "bold 56px sans-serif"
+        ctx.fillText(String(stats.broken), startX + 32, cardY2 + 120)
+
+        // Card 4: Not Started (Row 2 Right)
+        drawCardWithStripe(x2, cardY2, cardW, cardH, borderRadius, "#f8fafc", "#e2e8f0", "#64748b")
+        ctx.fillStyle = "#475569" // slate-600
+        ctx.font = "bold 14px sans-serif"
+        ctx.fillText("NOT STARTED", x2 + 32, cardY2 + 46)
+        ctx.fillStyle = "#0f172a" // slate-900
+        ctx.font = "bold 56px sans-serif"
+        ctx.fillText(String(stats.pending), x2 + 32, cardY2 + 120)
+
+        // 8. State overall progress bar
+        const progressY = 820
+        ctx.fillStyle = "#334155" // slate-700
+        ctx.font = "bold 13px sans-serif"
+        ctx.fillText(`STATE OVERALL PROGRESS: ${overallProgress}%`, 94, progressY + 15)
+
+        // Track bar
+        const trackW = 892
+        const trackH = 14
+        // Draw track card
+        ctx.save()
+        ctx.fillStyle = "#e2e8f0"
+        ctx.strokeStyle = "rgba(0,0,0,0.02)"
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(94, progressY + 28, trackW, trackH, 7)
+        } else {
+          ctx.moveTo(94 + 7, progressY + 28)
+          ctx.arcTo(94 + trackW, progressY + 28, 94 + trackW, progressY + 28 + trackH, 7)
+          ctx.arcTo(94 + trackW, progressY + 28 + trackH, 94, progressY + 28 + trackH, 7)
+          ctx.arcTo(94, progressY + 28 + trackH, 94, progressY + 28, 7)
+          ctx.arcTo(94, progressY + 28, 94 + trackW, progressY + 28, 7)
+        }
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+
+        // Fill bar
+        if (overallProgress > 0) {
+          const fillW = Math.max(15, trackW * (overallProgress / 100))
+          const fillGrad = ctx.createLinearGradient(94, 0, 94 + fillW, 0)
+          fillGrad.addColorStop(0, "#ea580c") // orange-600
+          fillGrad.addColorStop(1, "#f59e0b") // amber-500
+          ctx.save()
+          ctx.fillStyle = fillGrad
+          ctx.beginPath()
+          if (typeof ctx.roundRect === "function") {
+            ctx.roundRect(94, progressY + 28, fillW, trackH, 7)
+          } else {
+            ctx.moveTo(94 + 7, progressY + 28)
+            ctx.arcTo(94 + fillW, progressY + 28, 94 + fillW, progressY + 28 + trackH, 7)
+            ctx.arcTo(94 + fillW, progressY + 28 + trackH, 94, progressY + 28 + trackH, 7)
+            ctx.arcTo(94, progressY + 28 + trackH, 94, progressY + 28, 7)
+            ctx.arcTo(94, progressY + 28, 94 + fillW, progressY + 28, 7)
+          }
+          ctx.fill()
+          ctx.restore()
+        }
+
+        // 9. Footer
+        ctx.strokeStyle = "rgba(226, 232, 240, 0.8)" // slate-200
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(94, 915)
+        ctx.lineTo(986, 915)
+        ctx.stroke()
+
+        ctx.fillStyle = "#64748b" // slate-500
+        ctx.font = "14px sans-serif"
+        ctx.fillText("manifesto.page", 94, 952)
+
+        const footerRight = "Powered by ObserverFile"
+        const footerRightWidth = ctx.measureText(footerRight).width
+        ctx.fillText(footerRight, 986 - footerRightWidth, 952)
+
+        // Download trigger
+        const dataUrl = canvas.toDataURL("image/png")
+        const link = document.createElement("a")
+        link.download = `${category.id}-progress-manifesto.png`
+        link.href = dataUrl
+        link.click()
+        setDownloading(false)
+      }).catch((e) => {
+        console.error("Failed to load assets for canvas:", e)
+        alert("Failed to load assets for generating the image.")
+        setDownloading(false)
+      })
     } catch (err) {
       console.error("Failed to generate image:", err)
       alert("Failed to generate image. Please try again.")
       setDownloading(false)
     }
-  }
-
-  function wrapText(
-    ctx: CanvasRenderingContext2D,
-    text: string,
-    x: number,
-    y: number,
-    maxWidth: number,
-    lineHeight: number
-  ) {
-    const words = text.split(" ")
-    let line = ""
-    let currentY = y
-
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + " "
-      const metrics = ctx.measureText(testLine)
-      const testWidth = metrics.width
-      if (testWidth > maxWidth && n > 0) {
-        ctx.fillText(line, x, currentY)
-        line = words[n] + " "
-        currentY += lineHeight
-      } else {
-        line = testLine
-      }
-    }
-    ctx.fillText(line, x, currentY)
   }
 
   return (

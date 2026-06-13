@@ -2,7 +2,7 @@ import { Resend } from "resend"
 
 import { neon } from "@neondatabase/serverless"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || "re_123")
 
 const FROM = "The Manifesto <notifications@manifesto.page>"
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://manifesto.page"

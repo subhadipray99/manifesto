@@ -11,12 +11,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Verify admin status
-    const db = getDb()
-    const admins = await db`SELECT is_admin FROM users WHERE id = ${userId}`
-    if (admins.length === 0 || !admins[0].is_admin) {
+    // Verify admin status using environment variables (consistent with rest of app)
+    const adminIds = process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || []
+    if (!adminIds.includes(userId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
+
+    const db = getDb()
 
     const { type, headline, body, url, url_text, is_active } = await request.json()
 
@@ -50,11 +51,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const db = getDb()
-    const admins = await db`SELECT is_admin FROM users WHERE id = ${userId}`
-    if (admins.length === 0 || !admins[0].is_admin) {
+    // Verify admin status using environment variables (consistent with rest of app)
+    const adminIds = process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || []
+    if (!adminIds.includes(userId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
+
+    const db = getDb()
 
     const { id, is_active } = await request.json()
 

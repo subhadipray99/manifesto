@@ -1052,11 +1052,11 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-4 py-3 shadow-lg sm:py-4">
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <button onClick={() => setShowStateMenu(!showStateMenu)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Select State">
-              <Menu className="h-5 w-5" />
+      <header ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 px-2 py-2.5 sm:px-4 sm:py-4 shadow-lg">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="relative flex-shrink-0">
+            <button onClick={() => setShowStateMenu(!showStateMenu)} className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Select State">
+              <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             {showStateMenu && (
               <>
@@ -1082,35 +1082,35 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
             )}
           </div>
 
-          <div className="flex flex-1 items-center gap-2 min-w-0">
-            <img src="/manifesto-logo.png" alt="Manifesto Logo" className="h-8 w-8 flex-shrink-0 sm:h-10 sm:w-10" />
+          <div className="flex flex-1 items-center gap-1.5 sm:gap-2 min-w-0">
+            <img src="/manifesto-logo.png" alt="Manifesto Logo" className="h-7 w-7 sm:h-10 sm:w-10 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <h1 className="font-serif text-sm font-black leading-tight text-white sm:text-base">THE MANIFESTO</h1>
-              <p className="text-[8px] font-bold uppercase tracking-tight text-white/80 sm:text-[9px]">{stateConfig.party} {stateConfig.name}</p>
+              <h1 className="font-serif text-[12px] sm:text-base font-black leading-tight text-white whitespace-nowrap truncate">THE MANIFESTO</h1>
+              <p className="text-[7px] sm:text-[9px] font-bold uppercase tracking-tight text-white/80 whitespace-nowrap truncate">{stateConfig.party} {stateConfig.name}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button onClick={() => { const el = document.getElementById("leaderboard"); if (el && window.innerWidth >= 1024) { el.scrollIntoView({ behavior: "smooth" }) } else { setShowContributors(true) } }} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Top Contributors">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+            <button onClick={() => { const el = document.getElementById("leaderboard"); if (el && window.innerWidth >= 1024) { el.scrollIntoView({ behavior: "smooth" }) } else { setShowContributors(true) } }} className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Top Contributors">
               <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
-            <button onClick={() => setShowShareModal(true)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95 sm:h-10 sm:w-10" title="Share">
+            <button onClick={() => setShowShareModal(true)} className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Share">
               <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
-            <button onClick={() => setShowShortcuts(true)} className="hidden sm:flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white font-bold text-sm transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Keyboard shortcuts (?)">
+            <button onClick={() => setShowShortcuts(true)} className="hidden sm:flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white font-bold text-sm transition-colors hover:bg-white/30 hover:scale-105 active:scale-95" title="Keyboard shortcuts (?)">
               ?
             </button>
             {isSignedIn && <NotificationBell />}
             {isSignedIn && user ? (
-              <button onClick={() => router.push(`/profile/${myUsername ?? userId}`)} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95 sm:h-10 sm:w-10" title={user.firstName || "My Profile"}>
+              <button onClick={() => router.push(`/profile/${myUsername ?? userId}`)} className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md overflow-hidden transition-all hover:ring-2 hover:ring-white/60 active:scale-95" title={user.firstName || "My Profile"}>
                 {user.imageUrl ? (
                   <img src={user.imageUrl} alt={user.firstName || "Account"} className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-xs font-black text-orange-600 sm:text-sm">{(user.firstName?.[0] || user.emailAddresses?.[0]?.emailAddress?.[0] || "U").toUpperCase()}</span>
+                  <span className="text-[10px] sm:text-sm font-black text-orange-600">{(user.firstName?.[0] || user.emailAddresses?.[0]?.emailAddress?.[0] || "U").toUpperCase()}</span>
                 )}
               </button>
             ) : (
-              <button onClick={() => openSignIn()} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md text-orange-600 font-black transition-all hover:bg-orange-50 active:scale-95 sm:h-10 sm:w-10" title="Sign In">
+              <button onClick={() => openSignIn()} className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-md text-orange-600 font-black transition-all hover:bg-orange-50 active:scale-95" title="Sign In">
                 <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             )}

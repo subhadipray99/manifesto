@@ -984,6 +984,9 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           if (found) {
             if (commentId) setDeepLinkCommentId(commentId)
             setSelectedPromise({ promise: found, category: cat })
+            fetchTimelineUpdatesFromDB(found.id, stateConfig.id).then((updates) => {
+              setTimelines((prev) => ({ ...prev, [found.id]: updates }))
+            })
             break
           }
         }

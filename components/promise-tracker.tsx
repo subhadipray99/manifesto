@@ -834,7 +834,7 @@ function CategoryShareModal({
 
       Promise.all([
         loadImage("/og-image.jpg").catch(() => null),
-        loadImage("/icon.svg").catch(() => null)
+        loadImage("/manifesto-logo.png").catch(() => null)
       ]).then(([bgImg, logoImg]) => {
         const canvas = document.createElement("canvas")
         canvas.width = 1080

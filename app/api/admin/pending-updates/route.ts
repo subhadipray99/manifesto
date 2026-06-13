@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest) {
         const promiseTitle = promise?.title ?? update.promise_id as string
 
         if (toEmail) {
-          sendUpdateApprovedEmail({
+          await sendUpdateApprovedEmail({
             toEmail,
             recipientName,
             updateTitle: update.title as string,
@@ -118,7 +118,7 @@ export async function PUT(request: NextRequest) {
               const followerUser = await client.users.getUser(follower.user_id as string)
               const followerEmail = followerUser.emailAddresses?.[0]?.emailAddress
               if (!followerEmail) continue
-              sendFollowedPromiseUpdateEmail({
+              await sendFollowedPromiseUpdateEmail({
                 toEmail: followerEmail,
                 recipientName: followerUser.fullName || followerUser.firstName || "Follower",
                 promiseTitle,

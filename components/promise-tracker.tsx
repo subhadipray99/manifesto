@@ -329,6 +329,52 @@ function CategoryCard({
   )
 }
 
+function FaviconLink({ url }: { url: string }) {
+  const [imgError, setImgError] = useState(false)
+
+  if (!url) return null
+
+  try {
+    const urlObj = new URL(url)
+    const hostname = urlObj.hostname
+    const displayName = hostname.replace(/^www\./, "")
+    const faviconUrl = `https://www.google.com/s2/favicons?sz=32&domain=${hostname}`
+
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50/50 px-2.5 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-all shadow-sm"
+      >
+        {!imgError ? (
+          <img
+            src={faviconUrl}
+            alt=""
+            className="h-3.5 w-3.5 rounded-sm object-contain"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <ExternalLink className="h-3 w-3 text-orange-600" />
+        )}
+        <span>Read on {displayName}</span>
+      </a>
+    )
+  } catch {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+        <span>Read Article</span>
+      </a>
+    )
+  }
+}
+
 function PromiseDetail({
   promise,
   category,
@@ -594,9 +640,7 @@ function PromiseDetail({
                         <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
                         {update.description && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{update.description}</p>}
                         <div className="mt-2 flex flex-wrap items-center gap-3">
-                          <a href={update.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:underline">
-                            <ExternalLink className="h-3.5 w-3.5" />Read Article
-                          </a>
+                          <FaviconLink url={update.link} />
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />{formatDate(update.created_at || "")}
                           </span>

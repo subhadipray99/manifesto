@@ -846,7 +846,14 @@ function CategoryShareModal({
         ctx.fillStyle = "#f8fafc" // slate-50
         ctx.fillRect(0, 0, 1080, 1080)
 
-        // 2. Draw backdrop image if available (page screenshot overlay)
+        // 2. Draw soft radial glow over the base
+        const radialGrad = ctx.createRadialGradient(540, 540, 100, 540, 540, 600)
+        radialGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)")
+        radialGrad.addColorStop(1, "rgba(241, 245, 249, 0.88)") // slate-100/88
+        ctx.fillStyle = radialGrad
+        ctx.fillRect(0, 0, 1080, 1080)
+
+        // 3. Draw backdrop image if available (page screenshot overlay)
         if (bgImg) {
           const canvasSize = 1080
           const iw = bgImg.width
@@ -858,17 +865,13 @@ function CategoryShareModal({
           const cy = (canvasSize - nh) / 2
           
           ctx.save()
-          ctx.globalAlpha = 0.08 // extremely subtle backdrop
+          ctx.globalAlpha = 0.22 // Make the web feature image clearly visible as backdrop
+          if (typeof ctx.filter !== "undefined") {
+            ctx.filter = "blur(3px)" // Smooth blur to avoid text-on-text clash
+          }
           ctx.drawImage(bgImg, cx, cy, nw, nh)
           ctx.restore()
         }
-
-        // 3. Draw soft radial glow over the backdrop to make it blend beautifully
-        const radialGrad = ctx.createRadialGradient(540, 540, 100, 540, 540, 600)
-        radialGrad.addColorStop(0, "rgba(255, 255, 255, 0.4)")
-        radialGrad.addColorStop(1, "rgba(241, 245, 249, 0.9)") // slate-100/90
-        ctx.fillStyle = radialGrad
-        ctx.fillRect(0, 0, 1080, 1080)
 
         // Helper function for rounded rectangles with shadow and color stripes
         const drawCardWithStripe = (
@@ -934,11 +937,11 @@ function CategoryShareModal({
         const panelR = 32
 
         ctx.save()
-        ctx.shadowColor = "rgba(15, 23, 42, 0.06)"
+        ctx.shadowColor = "rgba(15, 23, 42, 0.08)"
         ctx.shadowBlur = 40
         ctx.shadowOffsetY = 12
-        ctx.fillStyle = "rgba(255, 255, 255, 0.88)"
-        ctx.strokeStyle = "rgba(226, 232, 240, 0.8)" // slate-200/80
+        ctx.fillStyle = "rgba(255, 255, 255, 0.78)" // slightly more translucent for better backdrop visibility
+        ctx.strokeStyle = "rgba(226, 232, 240, 0.85)" // slate-200/85
         ctx.lineWidth = 2
         ctx.beginPath()
         if (typeof ctx.roundRect === "function") {
@@ -957,43 +960,43 @@ function CategoryShareModal({
         // 5. Header Section
         // Logo / Icon image
         if (logoImg) {
-          ctx.drawImage(logoImg, 94, 94, 60, 60)
+          ctx.drawImage(logoImg, 94, 84, 80, 80) // Enlarged for better branding presence
         } else {
           // Fallback logo circle
           ctx.beginPath()
           ctx.fillStyle = "#ea580c"
-          ctx.arc(124, 124, 30, 0, Math.PI * 2)
+          ctx.arc(134, 124, 40, 0, Math.PI * 2)
           ctx.fill()
           ctx.fillStyle = "#ffffff"
-          ctx.font = "bold 28px sans-serif"
+          ctx.font = "bold 36px sans-serif"
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
-          ctx.fillText("M", 124, 124)
+          ctx.fillText("M", 134, 124)
           ctx.textAlign = "left"
           ctx.textBaseline = "alphabetic"
         }
 
         // Brand Names
         ctx.fillStyle = "#0f172a" // slate-900
-        ctx.font = "black 24px sans-serif"
-        ctx.fillText("THE MANIFESTO", 174, 122)
+        ctx.font = "bold 32px sans-serif" // enlarged from 24px and fixed invalid font-weight
+        ctx.fillText("THE MANIFESTO", 194, 118)
 
         ctx.fillStyle = "#64748b" // slate-500
-        ctx.font = "bold 12px sans-serif"
-        ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 174, 144)
+        ctx.font = "bold 13px sans-serif"
+        ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 194, 146)
 
         // State Tracker Tag
-        ctx.font = "bold 18px sans-serif"
+        ctx.font = "bold 24px sans-serif" // enlarged from 18px
         ctx.fillStyle = "#0f172a"
         const stateText = `${stateConfig.name.toUpperCase()} TRACKER`
         const stateTextWidth = ctx.measureText(stateText).width
-        ctx.fillText(stateText, 986 - stateTextWidth, 122)
+        ctx.fillText(stateText, 986 - stateTextWidth, 118)
 
-        ctx.font = "bold 12px sans-serif"
+        ctx.font = "bold 13px sans-serif"
         ctx.fillStyle = "#ea580c" // orange-600
         const partyText = `${stateConfig.party.toUpperCase()} GOVERNMENT`
         const partyTextWidth = ctx.measureText(partyText).width
-        ctx.fillText(partyText, 986 - partyTextWidth, 144)
+        ctx.fillText(partyText, 986 - partyTextWidth, 146)
 
         // Divider
         ctx.strokeStyle = "rgba(226, 232, 240, 0.8)" // slate-200
@@ -1005,14 +1008,14 @@ function CategoryShareModal({
 
         // 6. Category Info
         ctx.fillStyle = "#ea580c" // orange-600
-        ctx.font = "bold 12px sans-serif"
+        ctx.font = "bold 14px sans-serif"
         ctx.fillText("CATEGORY PROGRESS REPORT", 94, 230)
 
         ctx.fillStyle = "#0f172a" // slate-900
-        ctx.font = "black 38px sans-serif"
+        ctx.font = "900 48px sans-serif" // enlarged from 38px and fixed font-weight
         const maxTitleWidth = 892
         const categoryTitle = category.localName || category.name
-        wrapText(ctx, categoryTitle, 94, 280, maxTitleWidth, 48)
+        wrapText(ctx, categoryTitle, 94, 290, maxTitleWidth, 58)
 
         // 7. Stats Cards (2x2 Grid)
         const startX = 94
@@ -1025,45 +1028,45 @@ function CategoryShareModal({
         // Card 1: Fulfilled (Row 1 Left)
         drawCardWithStripe(startX, cardY, cardW, cardH, borderRadius, "#f0fdf4", "#bbf7d0", "#22c55e")
         ctx.fillStyle = "#15803d" // green-700
-        ctx.font = "bold 14px sans-serif"
+        ctx.font = "bold 15px sans-serif"
         ctx.fillText("FULFILLED", startX + 32, cardY + 46)
         ctx.fillStyle = "#166534" // green-800
-        ctx.font = "bold 56px sans-serif"
-        ctx.fillText(String(stats.fulfilled), startX + 32, cardY + 120)
+        ctx.font = "bold 64px sans-serif" // enlarged from 56px
+        ctx.fillText(String(stats.fulfilled), startX + 32, cardY + 124)
 
         // Card 2: In Progress (Row 1 Right)
         const x2 = startX + cardW + gap
         drawCardWithStripe(x2, cardY, cardW, cardH, borderRadius, "#fffbeb", "#fef3c7", "#f59e0b")
         ctx.fillStyle = "#b45309" // amber-700
-        ctx.font = "bold 14px sans-serif"
+        ctx.font = "bold 15px sans-serif"
         ctx.fillText("IN PROGRESS", x2 + 32, cardY + 46)
         ctx.fillStyle = "#92400e" // amber-800
-        ctx.font = "bold 56px sans-serif"
-        ctx.fillText(String(stats.inProgress), x2 + 32, cardY + 120)
+        ctx.font = "bold 64px sans-serif" // enlarged from 56px
+        ctx.fillText(String(stats.inProgress), x2 + 32, cardY + 124)
 
         // Card 3: Broken (Row 2 Left)
         const cardY2 = cardY + cardH + gap
         drawCardWithStripe(startX, cardY2, cardW, cardH, borderRadius, "#fef2f2", "#fecaca", "#ef4444")
         ctx.fillStyle = "#b91c1c" // red-700
-        ctx.font = "bold 14px sans-serif"
+        ctx.font = "bold 15px sans-serif"
         ctx.fillText("BROKEN / STALLED", startX + 32, cardY2 + 46)
         ctx.fillStyle = "#991b1b" // red-800
-        ctx.font = "bold 56px sans-serif"
-        ctx.fillText(String(stats.broken), startX + 32, cardY2 + 120)
+        ctx.font = "bold 64px sans-serif" // enlarged from 56px
+        ctx.fillText(String(stats.broken), startX + 32, cardY2 + 124)
 
         // Card 4: Not Started (Row 2 Right)
         drawCardWithStripe(x2, cardY2, cardW, cardH, borderRadius, "#f8fafc", "#e2e8f0", "#64748b")
         ctx.fillStyle = "#475569" // slate-600
-        ctx.font = "bold 14px sans-serif"
+        ctx.font = "bold 15px sans-serif"
         ctx.fillText("NOT STARTED", x2 + 32, cardY2 + 46)
         ctx.fillStyle = "#0f172a" // slate-900
-        ctx.font = "bold 56px sans-serif"
-        ctx.fillText(String(stats.pending), x2 + 32, cardY2 + 120)
+        ctx.font = "bold 64px sans-serif" // enlarged from 56px
+        ctx.fillText(String(stats.pending), x2 + 32, cardY2 + 124)
 
         // 8. State overall progress bar
         const progressY = 820
         ctx.fillStyle = "#334155" // slate-700
-        ctx.font = "bold 13px sans-serif"
+        ctx.font = "bold 15px sans-serif" // enlarged from 13px
         ctx.fillText(`STATE OVERALL PROGRESS: ${overallProgress}%`, 94, progressY + 15)
 
         // Track bar
@@ -1119,7 +1122,7 @@ function CategoryShareModal({
         ctx.stroke()
 
         ctx.fillStyle = "#64748b" // slate-500
-        ctx.font = "14px sans-serif"
+        ctx.font = "16px sans-serif" // enlarged from 14px
         ctx.fillText("manifesto.page", 94, 952)
 
         const footerRight = "Powered by ObserverFile"

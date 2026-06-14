@@ -679,18 +679,31 @@ function ShareModal({
   stats,
   stateConfig,
   onClose,
+  promise,
+  promiseStatus,
 }: {
   stats: { total: number; fulfilled: number; inProgress: number; broken: number; pending: number }
   stateConfig: StateConfig
   onClose: () => void
+  promise?: PromiseType
+  promiseStatus?: PromiseStatus
 }) {
   const generateShareText = () => {
+    if (promise && promiseStatus) {
+      const statusLabel = STATUS_CONFIG[promiseStatus]?.label || "Not Rated"
+      return `THE MANIFESTO | ${stateConfig.name} Tracker\n\nPromise: ${promise.title}\nStatus: ${statusLabel}\n\nTrack progress:`
+    }
     return `THE MANIFESTO | ${stateConfig.party} ${stateConfig.name}\n\n${stats.fulfilled} Fulfilled\n${stats.inProgress} In Progress\n${stats.broken} Broken\n${stats.pending} Not Rated\n\nTrack yourself:`
   }
 
   const handleShare = async (platform: "twitter" | "whatsapp" | "copy") => {
     const text = generateShareText()
-    const url = typeof window !== "undefined" ? window.location.href : ""
+    let url = ""
+    if (typeof window !== "undefined") {
+      const origin = window.location.origin
+      const pathname = window.location.pathname
+      url = promise ? `${origin}${pathname}?promise=${promise.id}` : window.location.href
+    }
     if (platform === "twitter") {
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank")
     } else if (platform === "whatsapp") {
@@ -707,22 +720,45 @@ function ShareModal({
       <div className="w-full max-w-md rounded-t-3xl bg-card p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="font-serif text-xl font-black text-foreground">Share Progress</h2>
-            <p className="text-sm text-muted-foreground">Show how {stateConfig.party} is tracking</p>
+            <h2 className="font-serif text-xl font-black text-foreground">
+              {promise ? "Share Promise" : "Share Progress"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {promise ? "Spread the word on this commitment" : `Show how ${stateConfig.party} is tracking`}
+            </p>
           </div>
           <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
             <X className="h-5 w-5 text-foreground" />
           </button>
         </div>
-        <div className="mt-4 rounded-2xl bg-foreground p-4 text-white">
-          <p className="font-black">THE MANIFESTO</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-green-500" /><span>{stats.fulfilled} Fulfilled</span></div>
-            <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-500" /><span>{stats.inProgress} In Progress</span></div>
-            <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-red-500" /><span>{stats.broken} Broken</span></div>
-            <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-white/40" /><span className="text-white/70">{stats.pending} Not Rated</span></div>
+        
+        {promise && promiseStatus ? (
+          <div className="mt-4 rounded-2xl bg-foreground p-4 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+              {stateConfig.name.toUpperCase()} GOVERNMENT PROMISE
+            </p>
+            <p className="mt-2 font-serif font-black leading-tight text-white line-clamp-2">
+              {promise.title}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${STATUS_CONFIG[promiseStatus]?.color === "text-green-600" ? "bg-green-500" : STATUS_CONFIG[promiseStatus]?.color === "text-amber-600" ? "bg-amber-500" : STATUS_CONFIG[promiseStatus]?.color === "text-red-600" ? "bg-red-500" : "bg-white/40"}`} />
+              <span className="text-sm font-bold text-white/80">
+                Status: {STATUS_CONFIG[promiseStatus]?.label || "Not Rated"}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mt-4 rounded-2xl bg-foreground p-4 text-white">
+            <p className="font-black">THE MANIFESTO</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-green-500" /><span>{stats.fulfilled} Fulfilled</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-500" /><span>{stats.inProgress} In Progress</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-red-500" /><span>{stats.broken} Broken</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-white/40" /><span className="text-white/70">{stats.pending} Not Rated</span></div>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 grid grid-cols-3 gap-3">
           <button onClick={() => handleShare("twitter")} className="flex flex-col items-center gap-2 rounded-2xl bg-[#1DA1F2] p-4 text-white transition-all active:scale-95">
             <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
@@ -1349,6 +1385,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
   const [selectedPromise, setSelectedPromise] = useState<{ promise: PromiseType; category: Category } | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareCategory, setShareCategory] = useState<Category | null>(null)
+  const [sharingPromise, setSharingPromise] = useState<{ promise: PromiseType; status: PromiseStatus } | null>(null)
   const [headerHeight, setHeaderHeight] = useState(0)
   const headerRef = useRef<HTMLElement>(null)
   const [hydrated, setHydrated] = useState(false)
@@ -1514,6 +1551,46 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      if (selectedPromise) {
+        url.searchParams.set("promise", selectedPromise.promise.id)
+      } else {
+        if (url.searchParams.has("promise")) {
+          url.searchParams.delete("promise")
+          url.searchParams.delete("comment")
+        }
+      }
+      if (url.search !== window.location.search) {
+        window.history.pushState(null, "", url.pathname + url.search)
+      }
+    }
+  }, [selectedPromise])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      const promiseId = params.get("promise")
+      if (!promiseId && selectedPromise) {
+        setSelectedPromise(null)
+        setDeepLinkCommentId(null)
+      } else if (promiseId && (!selectedPromise || selectedPromise.promise.id !== promiseId)) {
+        for (const cat of CATEGORIES) {
+          const found = cat.promises.find((p) => p.id === promiseId)
+          if (found) {
+            const commentId = params.get("comment")
+            if (commentId) setDeepLinkCommentId(commentId)
+            setSelectedPromise({ promise: found, category: cat })
+            break
+          }
+        }
+      }
+    }
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [selectedPromise])
 
   useEffect(() => {
     const measureHeaderHeight = () => { if (headerRef.current) setHeaderHeight(headerRef.current.offsetHeight) }
@@ -2016,7 +2093,7 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
           onStatusChange={(s) => handleStatusChange(selectedPromise.promise.id, s)}
           onAddUpdate={(update) => handleAddTimelineUpdate(selectedPromise.promise.id, update)}
           onClose={() => { setSelectedPromise(null); setDeepLinkCommentId(null) }}
-          onShare={() => setShowShareModal(true)}
+          onShare={() => setSharingPromise({ promise: selectedPromise.promise, status: statuses[selectedPromise.promise.id] || "pending" })}
           isSignedIn={isSignedIn ?? false}
           userId={userId ?? null}
           isAdmin={isAdmin}
@@ -2025,7 +2102,18 @@ export default function PromiseTracker({ stateConfig }: { stateConfig: StateConf
       )}
 
       {/* Share Modal */}
-      {showShareModal && <ShareModal stats={stats} stateConfig={stateConfig} onClose={() => setShowShareModal(false)} />}
+      {(showShareModal || sharingPromise) && (
+        <ShareModal
+          stats={stats}
+          stateConfig={stateConfig}
+          promise={sharingPromise?.promise}
+          promiseStatus={sharingPromise?.status}
+          onClose={() => {
+            setShowShareModal(false)
+            setSharingPromise(null)
+          }}
+        />
+      )}
 
       {/* Keyboard Shortcuts Modal */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}

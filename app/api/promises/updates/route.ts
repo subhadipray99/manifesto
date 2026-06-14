@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextRequest, NextResponse } from "next/server"
-import { currentUser } from "@clerk/nextjs/server"
+import { currentUser, clerkClient } from "@clerk/nextjs/server"
 import { ensureUsername } from "@/lib/usernames"
 
 const getDb = () => neon(process.env.DATABASE_URL!)
@@ -53,7 +53,29 @@ export async function GET(request: NextRequest) {
       ORDER BY t.created_at DESC
     `
 
-    return NextResponse.json(updates)
+    // Batch-fetch Clerk profile images for all unique user_ids
+    const uniqueUserIds = [...new Set(updates.map((t: any) => t.user_id).filter(Boolean))] as string[]
+    const avatarMap: Record<string, string> = {}
+    if (uniqueUserIds.length > 0) {
+      try {
+        const client = await clerkClient()
+        await Promise.all(
+          uniqueUserIds.map(async (uid) => {
+            try {
+              const u = await client.users.getUser(uid)
+              if (u.imageUrl) avatarMap[uid] = u.imageUrl
+            } catch { /* skip */ }
+          })
+        )
+      } catch { /* skip avatar enrichment */ }
+    }
+
+    const updatesWithAvatars = updates.map((t: any) => ({
+      ...t,
+      image_url: avatarMap[t.user_id] || null,
+    }))
+
+    return NextResponse.json(updatesWithAvatars)
   } catch (error) {
     console.error("[v0] Error fetching updates:", error)
     return NextResponse.json({ error: "Failed to fetch updates" }, { status: 500 })

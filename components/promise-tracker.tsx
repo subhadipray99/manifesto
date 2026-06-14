@@ -604,14 +604,26 @@ function PromiseDetail({
                     <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
                     <div className="flex items-start gap-3">
                       {/* Submitter Avatar */}
-                      {profileHref ? (
-                        <a href={profileHref} className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm hover:opacity-80 transition-opacity`}>
-                          {initials}
-                        </a>
+                      {update.image_url ? (
+                        profileHref ? (
+                          <a href={profileHref} className="flex h-9 w-9 flex-shrink-0 overflow-hidden rounded-full shadow-sm hover:opacity-80 transition-opacity">
+                            <img src={update.image_url} alt={name} className="h-full w-full object-cover" />
+                          </a>
+                        ) : (
+                          <div className="flex h-9 w-9 flex-shrink-0 overflow-hidden rounded-full shadow-sm">
+                            <img src={update.image_url} alt={name} className="h-full w-full object-cover" />
+                          </div>
+                        )
                       ) : (
-                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
-                          {initials}
-                        </div>
+                        profileHref ? (
+                          <a href={profileHref} className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm hover:opacity-80 transition-opacity`}>
+                            {initials}
+                          </a>
+                        ) : (
+                          <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colors[colorIndex]} text-xs font-bold text-white shadow-sm`}>
+                            {initials}
+                          </div>
+                        )
                       )}
                       <div className="flex-1 min-w-0">
                         {/* Submitter Name */}

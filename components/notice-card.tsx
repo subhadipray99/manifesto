@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronDown, ChevronUp, ExternalLink, Megaphone, Target } from "lucide-react"
+import { ChevronDown, ChevronUp, ExternalLink, Megaphone, Target, Bell } from "lucide-react"
 
 type Notice = {
   id: string
@@ -47,12 +47,20 @@ export function NoticeCard() {
         <div className="flex-1 pr-4">
           <div className="mb-2 flex items-center gap-2">
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-              isAd 
+              notice.type === "ADVERTISEMENT" 
                 ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
+                : notice.type === "UPDATE"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                 : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             }`}>
-              {isAd ? <Target className="h-3 w-3" /> : <Megaphone className="h-3 w-3" />}
-              {isAd ? "Advertisement" : "Notice"}
+              {notice.type === "ADVERTISEMENT" ? (
+                <Target className="h-3 w-3" />
+              ) : notice.type === "UPDATE" ? (
+                <Bell className="h-3 w-3" />
+              ) : (
+                <Megaphone className="h-3 w-3" />
+              )}
+              {notice.type === "ADVERTISEMENT" ? "Advertisement" : notice.type === "UPDATE" ? "Updates" : "Notice"}
             </span>
           </div>
           <h3 className="font-bold text-foreground leading-tight">{notice.headline}</h3>
@@ -80,7 +88,7 @@ export function NoticeCard() {
               target="_blank" 
               rel="noopener noreferrer"
               className={`mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90 ${
-                isAd ? "bg-red-600" : "bg-green-600"
+                notice.type === "ADVERTISEMENT" ? "bg-red-600" : notice.type === "UPDATE" ? "bg-blue-600" : "bg-green-600"
               }`}
             >
               {notice.url_text || "Learn More"}

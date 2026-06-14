@@ -1400,6 +1400,7 @@ export default function AdminDashboard() {
                   >
                     <option value="NOTICE">Notice</option>
                     <option value="ADVERTISEMENT">Advertisement</option>
+                    <option value="UPDATE">Updates</option>
                   </select>
                 </div>
                 <div>

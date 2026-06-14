@@ -38,35 +38,39 @@ export function NoticeCard() {
   const isAd = notice.type === "ADVERTISEMENT"
 
   return (
-    <div className="mb-6 overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300">
+    <div className="mb-6 overflow-hidden rounded-2xl border-2 border-slate-900 bg-[#faf5ff] shadow-[5px_5px_0px_0px_#8b5cf6] transition-all duration-300 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0px_0px_#8b5cf6] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_0px_#8b5cf6] dark:border-slate-100 dark:bg-[#1f153a]/40 dark:shadow-[5px_5px_0px_0px_#a855f7] dark:hover:shadow-[7px_7px_0px_0px_#a855f7] dark:active:shadow-[2px_2px_0px_0px_#a855f7]">
       {/* Header section (Always visible) */}
       <div 
-        className={`flex cursor-pointer items-start justify-between p-4 ${isExpanded ? "border-b border-border bg-muted/20" : ""}`}
+        className={`flex cursor-pointer items-start justify-between p-4 transition-colors ${
+          isExpanded 
+            ? "border-b-2 border-slate-900 bg-violet-100/50 dark:border-slate-100 dark:bg-violet-950/20" 
+            : "hover:bg-violet-100/20 dark:hover:bg-violet-950/10"
+        }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex-1 pr-4">
           <div className="mb-2 flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+            <span className={`inline-flex items-center gap-1 rounded-lg border-2 border-slate-900 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider dark:border-slate-100 ${
               notice.type === "ADVERTISEMENT" 
-                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
+                ? "bg-rose-300 text-slate-900" 
                 : notice.type === "UPDATE"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                ? "bg-cyan-300 text-slate-900"
+                : "bg-amber-300 text-slate-900"
             }`}>
               {notice.type === "ADVERTISEMENT" ? (
-                <Target className="h-3 w-3" />
+                <Target className="h-3 w-3 text-slate-900" />
               ) : notice.type === "UPDATE" ? (
-                <Bell className="h-3 w-3" />
+                <Bell className="h-3 w-3 text-slate-900" />
               ) : (
-                <Megaphone className="h-3 w-3" />
+                <Megaphone className="h-3 w-3 text-slate-900" />
               )}
               {notice.type === "ADVERTISEMENT" ? "Advertisement" : notice.type === "UPDATE" ? "Updates" : "Notice"}
             </span>
           </div>
-          <h3 className="font-bold text-foreground leading-tight">{notice.headline}</h3>
+          <h3 className="font-serif text-base font-black text-slate-900 leading-snug dark:text-slate-100">{notice.headline}</h3>
         </div>
         <button 
-          className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+          className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border-2 border-slate-900 bg-white text-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_0px_rgba(15,23,42,1)] dark:border-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.8)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.8)] dark:active:shadow-[1px_1px_0px_0px_rgba(255,255,255,0.8)]"
           aria-label={isExpanded ? "Collapse notice" : "Expand notice"}
         >
           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -75,9 +79,9 @@ export function NoticeCard() {
 
       {/* Expandable Body */}
       {isExpanded && (notice.body || notice.url) && (
-        <div className="p-4 animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="p-4 animate-in slide-in-from-top-2 fade-in duration-200 bg-white/40 dark:bg-transparent">
           {notice.body && (
-            <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">
+            <p className="whitespace-pre-wrap text-sm font-medium text-slate-700 leading-relaxed dark:text-slate-300">
               {notice.body}
             </p>
           )}
@@ -87,12 +91,16 @@ export function NoticeCard() {
               href={notice.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90 ${
-                notice.type === "ADVERTISEMENT" ? "bg-red-600" : notice.type === "UPDATE" ? "bg-blue-600" : "bg-green-600"
+              className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-900 py-2.5 text-sm font-black text-slate-900 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 dark:border-slate-100 dark:text-slate-900 ${
+                notice.type === "ADVERTISEMENT" 
+                  ? "bg-rose-300 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:shadow-[5px_5px_0px_0px_rgba(15,23,42,1)] active:shadow-[1px_1px_0px_0px_rgba(15,23,42,1)] dark:bg-rose-300 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.9)] dark:hover:shadow-[5px_5px_0px_0px_rgba(255,255,255,0.9)]" 
+                  : notice.type === "UPDATE" 
+                  ? "bg-cyan-300 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:shadow-[5px_5px_0px_0px_rgba(15,23,42,1)] active:shadow-[1px_1px_0px_0px_rgba(15,23,42,1)] dark:bg-cyan-300 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.9)] dark:hover:shadow-[5px_5px_0px_0px_rgba(255,255,255,0.9)]" 
+                  : "bg-amber-300 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:shadow-[5px_5px_0px_0px_rgba(15,23,42,1)] active:shadow-[1px_1px_0px_0px_rgba(15,23,42,1)] dark:bg-amber-300 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.9)] dark:hover:shadow-[5px_5px_0px_0px_rgba(255,255,255,0.9)]"
               }`}
             >
               {notice.url_text || "Learn More"}
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4 text-slate-900" />
             </a>
           )}
         </div>

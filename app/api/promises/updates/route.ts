@@ -37,6 +37,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing promiseId" }, { status: 400 })
     }
 
+    try {
+      await getDb()`ALTER TABLE timeline_updates ADD COLUMN IF NOT EXISTS impact VARCHAR(20) DEFAULT 'neutral'`
+    } catch { /* ignore */ }
+
     const updates = await getDb()`
       SELECT 
         t.id, 
@@ -46,6 +50,7 @@ export async function GET(request: NextRequest) {
         t.created_at, 
         COALESCE(NULLIF(TRIM(t.submitted_by), ''), 'Community Member') as submitted_by,
         t.user_id,
+        t.impact,
         u.username
       FROM timeline_updates t
       LEFT JOIN usernames u ON u.user_id = t.user_id
@@ -103,7 +108,7 @@ export async function POST(request: NextRequest) {
       clerkUser.primaryEmailAddress?.emailAddress?.split("@")[0] ||
       "Community Member"
 
-    const { promiseId, title, link, description, stateId = "west-bengal" } = await request.json()
+    const { promiseId, title, link, description, impact = "neutral", stateId = "west-bengal" } = await request.json()
 
     // Rate limiting
     const rateLimit = checkRateLimit(userId)
@@ -121,15 +126,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    try {
+      await getDb()`ALTER TABLE timeline_updates ADD COLUMN IF NOT EXISTS impact VARCHAR(20) DEFAULT 'neutral'`
+    } catch { /* ignore */ }
+
     const updateId = `${promiseId}-${Date.now()}`
     await getDb()`
       INSERT INTO timeline_updates (
         id, promise_id, title, link, description, status, 
-        user_id, submitted_by, state_id
+        user_id, submitted_by, state_id, impact
       )
       VALUES (
         ${updateId}, ${promiseId}, ${title}, ${link}, ${description || null}, 'pending',
-        ${userId}, ${resolvedName}, ${stateId}
+        ${userId}, ${resolvedName}, ${stateId}, ${impact}
       )
     `
 

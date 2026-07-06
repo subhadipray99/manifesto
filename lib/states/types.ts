@@ -11,6 +11,7 @@ export type TimelineUpdate = {
   username?: string | null
   image_url?: string | null
   created_at?: string
+  impact?: "progress" | "setback" | "neutral"
 }
 
 export type Promise = {

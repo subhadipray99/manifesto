@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       ? await getDb()`
           SELECT 
             tu.id, tu.promise_id, tu.title, tu.link, tu.description,
-            tu.submitted_by, tu.user_email, tu.created_at, tu.status,
+            tu.submitted_by, tu.user_email, tu.created_at, tu.status, tu.impact,
             ps.status as promise_status
           FROM timeline_updates tu
           LEFT JOIN promise_statuses ps ON tu.promise_id = ps.id
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       : await getDb()`
           SELECT 
             tu.id, tu.promise_id, tu.title, tu.link, tu.description,
-            tu.submitted_by, tu.user_email, tu.created_at, tu.status,
+            tu.submitted_by, tu.user_email, tu.created_at, tu.status, tu.impact,
             ps.status as promise_status
           FROM timeline_updates tu
           LEFT JOIN promise_statuses ps ON tu.promise_id = ps.id

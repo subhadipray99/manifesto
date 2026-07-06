@@ -400,8 +400,10 @@ function PromiseDetail({
   const [formTitle, setFormTitle] = useState("")
   const [formLink, setFormLink] = useState("")
   const [formDescription, setFormDescription] = useState("")
+  const [formImpact, setFormImpact] = useState<"progress" | "setback" | "neutral">("neutral")
   const [titleError, setTitleError] = useState("")
-  const [submitting, setSubmitting] = useState(false)
+  const [submitting, setSubmitting] = useState("")
+  const [submittingState, setSubmittingState] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [submitSuccess, setSubmitSuccess] = useState("")
   const [following, setFollowing] = useState(false)
@@ -447,7 +449,7 @@ function PromiseDetail({
       return
     }
     if (!formTitle.trim() || !formLink.trim()) return
-    setSubmitting(true)
+    setSubmittingState(true)
     try {
       const response = await fetch("/api/promises/updates", {
         method: "POST",
@@ -457,6 +459,7 @@ function PromiseDetail({
           title: formTitle.trim(),
           link: formLink.trim(),
           description: formDescription.trim() || undefined,
+          impact: formImpact,
           stateId: stateId,
         }),
       })
@@ -468,6 +471,7 @@ function PromiseDetail({
       setFormTitle("")
       setFormLink("")
       setFormDescription("")
+      setFormImpact("neutral")
       setTitleError("")
       setTimeout(() => {
         setShowAddForm(false)
@@ -476,7 +480,7 @@ function PromiseDetail({
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to submit update")
     } finally {
-      setSubmitting(false)
+      setSubmittingState(false)
     }
   }
 
@@ -568,23 +572,63 @@ function PromiseDetail({
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Update Type / Impact
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormImpact("progress")}
+                      className={`flex items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-black transition-all ${
+                        formImpact === "progress"
+                          ? "border-green-600 bg-green-500 text-white shadow-sm dark:border-green-500"
+                          : "border-border bg-background text-muted-foreground hover:border-green-500/50 hover:text-foreground"
+                      }`}
+                    >
+                      <span>📈 Progress</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormImpact("setback")}
+                      className={`flex items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-black transition-all ${
+                        formImpact === "setback"
+                          ? "border-rose-600 bg-rose-500 text-white shadow-sm dark:border-rose-500"
+                          : "border-border bg-background text-muted-foreground hover:border-rose-500/50 hover:text-foreground"
+                      }`}
+                    >
+                      <span>⚠️ Setback / Hampered</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormImpact("neutral")}
+                      className={`flex items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-black transition-all ${
+                        formImpact === "neutral"
+                          ? "border-orange-600 bg-orange-500 text-white shadow-sm dark:border-orange-500"
+                          : "border-border bg-background text-muted-foreground hover:border-orange-500/50 hover:text-foreground"
+                      }`}
+                    >
+                      <span>📢 General News</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
                     Title <span className="text-red-500">*</span>
                     <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(max 10 words)</span>
                   </label>
-                  <input type="text" value={formTitle} onChange={(e) => { setFormTitle(e.target.value); setTitleError("") }} placeholder="e.g., Government announces new policy" className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none" required disabled={submitting} />
+                  <input type="text" value={formTitle} onChange={(e) => { setFormTitle(e.target.value); setTitleError("") }} placeholder="e.g., Government announces new policy" className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none" required disabled={submittingState} />
                   {titleError && <p className="mt-1 text-sm text-red-500">{titleError}</p>}
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Article Link <span className="text-red-500">*</span></label>
-                  <input type="url" value={formLink} onChange={(e) => setFormLink(e.target.value)} placeholder="https://example.com/article" className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none" required disabled={submitting} />
+                  <input type="url" value={formLink} onChange={(e) => setFormLink(e.target.value)} placeholder="https://example.com/article" className="w-full rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none" required disabled={submittingState} />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Description <span className="text-muted-foreground/70">(optional)</span></label>
                   <textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief summary of the update..." rows={3} className="w-full resize-none rounded-lg border-2 border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:border-orange-500 focus:outline-none" />
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => { setShowAddForm(false); setFormTitle(""); setFormLink(""); setFormDescription(""); setTitleError(""); setSubmitError(""); setSubmitSuccess("") }} className="flex-1 rounded-lg border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted active:scale-[0.98] disabled:opacity-50" disabled={submitting}>Cancel</button>
-                  <button type="submit" className="flex-1 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white transition-colors active:scale-[0.98] disabled:opacity-50" disabled={submitting}>{submitting ? "Submitting..." : "Submit Update"}</button>
+                  <button type="button" onClick={() => { setShowAddForm(false); setFormTitle(""); setFormLink(""); setFormDescription(""); setFormImpact("neutral"); setTitleError(""); setSubmitError(""); setSubmitSuccess("") }} className="flex-1 rounded-lg border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted active:scale-[0.98] disabled:opacity-50" disabled={submittingState}>Cancel</button>
+                  <button type="submit" className="flex-1 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white transition-colors active:scale-[0.98] disabled:opacity-50" disabled={submittingState}>{submittingState ? "Submitting..." : "Submit Update"}</button>
                 </div>
               </div>
             </form>
@@ -599,20 +643,22 @@ function PromiseDetail({
                 const colorIndex = name.charCodeAt(0) % colors.length
                 
                 const profileHref = update.username ? `/profile/${update.username}` : update.user_id ? `/profile/${update.user_id}` : null
+                const resolvedImageUrl = update.user_id === user?.id ? user?.imageUrl : update.image_url
+                const stripeColor = update.impact === "setback" ? "bg-rose-500" : update.impact === "progress" ? "bg-green-500" : "bg-orange-500"
 
                 return (
                   <div key={update.id} className="relative rounded-xl border-2 border-border bg-card p-4 pl-5">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-orange-500" />
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl ${stripeColor}`} />
                     <div className="flex items-start gap-3">
                       {/* Submitter Avatar */}
-                      {update.image_url ? (
+                      {resolvedImageUrl ? (
                         profileHref ? (
                           <a href={profileHref} className="flex h-9 w-9 flex-shrink-0 overflow-hidden rounded-full shadow-sm hover:opacity-80 transition-opacity">
-                            <img src={update.image_url} alt={name} className="h-full w-full object-cover" />
+                            <img src={resolvedImageUrl} alt={name} className="h-full w-full object-cover" />
                           </a>
                         ) : (
                           <div className="flex h-9 w-9 flex-shrink-0 overflow-hidden rounded-full shadow-sm">
-                            <img src={update.image_url} alt={name} className="h-full w-full object-cover" />
+                            <img src={resolvedImageUrl} alt={name} className="h-full w-full object-cover" />
                           </div>
                         )
                       ) : (
@@ -627,14 +673,24 @@ function PromiseDetail({
                         )
                       )}
                       <div className="flex-1 min-w-0">
-                        {/* Submitter Name */}
-                        <div className="flex items-center gap-2 mb-1">
+                        {/* Submitter Name & Impact Badge */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                           {profileHref ? (
                             <a href={profileHref} className="text-sm font-bold text-foreground hover:text-orange-600 hover:underline transition-colors">
                               {name}
                             </a>
                           ) : (
                             <p className="text-sm font-bold text-foreground">{name}</p>
+                          )}
+                          {update.impact === "setback" && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-rose-100 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-300">
+                              ⚠️ Hampered / Setback
+                            </span>
+                          )}
+                          {update.impact === "progress" && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-green-100 dark:bg-green-950/50 border border-green-300 dark:border-green-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-green-700 dark:text-green-300">
+                              📈 Progress
+                            </span>
                           )}
                         </div>
                         <h3 className="font-bold text-foreground leading-snug">{update.title}</h3>
@@ -722,8 +778,8 @@ function ShareModal({
     } else if (platform === "whatsapp") {
       window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, "_blank")
     } else if (platform === "copy") {
-      await navigator.clipboard.writeText(text + " " + url)
-      alert("Copied to clipboard!")
+      await navigator.clipboard.writeText(url)
+      alert("Link copied to clipboard!")
     }
     onClose()
   }
@@ -914,9 +970,9 @@ function CategoryShareModal({
           const cy = (canvasSize - nh) / 2
           
           ctx.save()
-          ctx.globalAlpha = 0.22 // Make the web feature image clearly visible as backdrop
+          ctx.globalAlpha = 0.45 // Make the web feature image more visible as backdrop
           if (typeof ctx.filter !== "undefined") {
-            ctx.filter = "blur(3px)" // Smooth blur to avoid text-on-text clash
+            ctx.filter = "blur(1.5px)" // Smooth blur to avoid text-on-text clash
           }
           ctx.drawImage(bgImg, cx, cy, nw, nh)
           ctx.restore()
@@ -1027,25 +1083,25 @@ function CategoryShareModal({
 
         // Brand Names
         ctx.fillStyle = "#0f172a" // slate-900
-        ctx.font = "bold 32px sans-serif" // enlarged from 24px and fixed invalid font-weight
-        ctx.fillText("THE MANIFESTO", 194, 118)
+        ctx.font = "bold 44px sans-serif" // enlarged from 32px
+        ctx.fillText("THE MANIFESTO", 204, 118)
 
         ctx.fillStyle = "#64748b" // slate-500
-        ctx.font = "bold 13px sans-serif"
-        ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 194, 146)
+        ctx.font = "bold 16px sans-serif"
+        ctx.fillText("CITIZEN-POWERED ACCOUNTABILITY", 204, 150)
 
         // State Tracker Tag
-        ctx.font = "bold 24px sans-serif" // enlarged from 18px
+        ctx.font = "bold 32px sans-serif" // enlarged from 24px
         ctx.fillStyle = "#0f172a"
         const stateText = `${stateConfig.name.toUpperCase()} TRACKER`
         const stateTextWidth = ctx.measureText(stateText).width
         ctx.fillText(stateText, 986 - stateTextWidth, 118)
 
-        ctx.font = "bold 13px sans-serif"
+        ctx.font = "bold 16px sans-serif"
         ctx.fillStyle = "#ea580c" // orange-600
         const partyText = `${stateConfig.party.toUpperCase()} GOVERNMENT`
         const partyTextWidth = ctx.measureText(partyText).width
-        ctx.fillText(partyText, 986 - partyTextWidth, 146)
+        ctx.fillText(partyText, 986 - partyTextWidth, 150)
 
         // Divider
         ctx.strokeStyle = "rgba(226, 232, 240, 0.8)" // slate-200
@@ -1057,14 +1113,14 @@ function CategoryShareModal({
 
         // 6. Category Info
         ctx.fillStyle = "#ea580c" // orange-600
-        ctx.font = "bold 14px sans-serif"
+        ctx.font = "bold 18px sans-serif"
         ctx.fillText("CATEGORY PROGRESS REPORT", 94, 230)
 
         ctx.fillStyle = "#0f172a" // slate-900
-        ctx.font = "900 48px sans-serif" // enlarged from 38px and fixed font-weight
+        ctx.font = "900 64px sans-serif" // enlarged from 48px
         const maxTitleWidth = 892
         const categoryTitle = category.localName || category.name
-        wrapText(ctx, categoryTitle, 94, 290, maxTitleWidth, 58)
+        wrapText(ctx, categoryTitle, 94, 298, maxTitleWidth, 76)
 
         // 7. Stats Cards (2x2 Grid)
         const startX = 94

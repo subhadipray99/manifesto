@@ -6,6 +6,7 @@ export type TimelineUpdate = {
   link: string
   description?: string
   timestamp: string
+  impact?: "progress" | "setback" | "neutral"
 }
 
 export type Promise = {

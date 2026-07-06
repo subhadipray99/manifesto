@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const stateId = request.nextUrl.searchParams.get("stateId") || "west-bengal"
     
     const updates = await getDb()`
-      SELECT id, promise_id, title, link, description, submitted_by, created_at
+      SELECT id, promise_id, title, link, description, submitted_by, created_at, impact
       FROM timeline_updates
       WHERE status = 'approved' AND state_id = ${stateId}
       ORDER BY created_at DESC

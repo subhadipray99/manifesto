@@ -1341,7 +1341,7 @@ function LatestUpdatesSlider({
   categories,
   onSelectPromise,
 }: {
-  updates: Array<{ id: string; promise_id: string; title: string; link: string; submitted_by: string | null; created_at: string }>
+  updates: Array<{ id: string; promise_id: string; title: string; link: string; submitted_by: string | null; created_at: string; impact?: "progress" | "setback" | "neutral" }>
   categories: Category[]
   onSelectPromise: (promise: PromiseType, category: Category) => void
 }) {
@@ -1414,17 +1414,39 @@ function LatestUpdatesSlider({
           onTouchStart={() => { isPausedRef.current = true }}
           onPointerDown={() => { isPausedRef.current = true }}
         >
-          {resolved.map(({ update, promise, category }, i) => (
-            <button key={`${update.id}-${i}`} onClick={() => onSelectPromise(promise, category)} className="group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border hover:border-orange-300 bg-card p-4 text-left shadow-sm transition-all hover:shadow-lg active:scale-[0.98]">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">{category.localName || category.name}</span>
-                <span className="text-[10px] text-muted-foreground">{new Date(update.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
-              </div>
-              <p className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-orange-600">{update.title}</p>
-              <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">Re: {promise.title}</p>
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl bg-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
-            </button>
-          ))}
+          {resolved.map(({ update, promise, category }, i) => {
+            const impact = update.impact || "neutral"
+            const shadowStyles = 
+              impact === "setback" ? "shadow-[0_4px_16px_rgba(239,68,68,0.22)] hover:shadow-[0_8px_24px_rgba(239,68,68,0.4)] border-red-500/40 hover:border-red-500" :
+              impact === "progress" ? "shadow-[0_4px_16px_rgba(34,197,94,0.22)] hover:shadow-[0_8px_24px_rgba(34,197,94,0.4)] border-green-500/40 hover:border-green-500" :
+              "shadow-[0_4px_16px_rgba(59,130,246,0.22)] hover:shadow-[0_8px_24px_rgba(59,130,246,0.4)] border-blue-500/40 hover:border-blue-500"
+
+            const lineBg = 
+              impact === "setback" ? "bg-red-500" :
+              impact === "progress" ? "bg-green-500" :
+              "bg-blue-500"
+
+            const titleHoverColor = 
+              impact === "setback" ? "group-hover:text-red-600 dark:group-hover:text-red-400" :
+              impact === "progress" ? "group-hover:text-green-600 dark:group-hover:text-green-400" :
+              "group-hover:text-blue-600 dark:group-hover:text-blue-400"
+
+            return (
+              <button key={`${update.id}-${i}`} onClick={() => onSelectPromise(promise, category)} className={`group relative flex w-[75vw] max-w-[350px] flex-shrink-0 flex-col justify-between rounded-2xl border-2 bg-card p-4 text-left transition-all active:scale-[0.98] ${shadowStyles}`}>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">{category.localName || category.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    {impact === "setback" && <span className="text-xs" title="Setback / Hampered">⚠️</span>}
+                    {impact === "progress" && <span className="text-xs" title="Progress">📈</span>}
+                    <span className="text-[10px] text-muted-foreground">{new Date(update.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                  </div>
+                </div>
+                <p className={`line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors ${titleHoverColor}`}>{update.title}</p>
+                <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">Re: {promise.title}</p>
+                <div className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl ${lineBg} opacity-0 transition-opacity group-hover:opacity-100`} />
+              </button>
+            )
+          })}
         </div>
         {/* Right Arrow - desktop only */}
         <button
